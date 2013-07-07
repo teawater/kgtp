@@ -1,0 +1,468 @@
+*** 20130706
+
+* https://kgtp.googlecode.com/files/kgtp_20130706.tar.bz2
+  svn checkout https://kgtp.googlecode.com/svn/tags/20130706
+
+* Fix build issue with Linux kernel 2.6.37.
+  Thanks report from D___linux.
+
+* Fix build issue with Linux kernel 2.6.32-358.el6.
+  Thanks report from Dong Zhu.
+
+* Fix bug with functions return value.
+
+* Fix dead lock with dynamic watch tracepoint.
+  https://code.google.com/p/kgtp/source/detail?r=1626
+
+* Add build warning if KGTP build with Linux kernel that open the runtime
+  locking correctness validator (CONFIG_LOCKDEP).
+  Because trace function about locks with  Linux kernel that open
+  CONFIG_LOCKDEP will deadlock.
+
+* Add $watch_prev_val to show the previous value that watch tracepoint is watching on.
+  https://code.google.com/p/kgtp/wiki/HOWTO#Howto_use_watch_tracepoint_control_hardware_breakpoints_to_recor
+  https://code.google.com/p/kgtp/wiki/HOWTOCN#如何用watch_tracepoint控制硬件断点记录内存访问
+
+* Update doc add section about use KGTP with Android.
+  https://code.google.com/p/kgtp/wiki/HOWTO#If_use_with_Linux_kernel_of_Android
+  https://code.google.com/p/kgtp/wiki/HOWTOCN#如果是Android内核
+  https://code.google.com/p/kgtp/wiki/HOWTO#Android
+  https://code.google.com/p/kgtp/wiki/HOWTOCN#Android
+
+* Update doc add "The second method of install the Linux kernel debug image" for UBUNTU.
+  https://code.google.com/p/kgtp/wiki/HOWTO#The_second_method_of_install_the_Linux_kernel_debug_image
+  https://code.google.com/p/kgtp/wiki/HOWTOCN#安装Linux内核调试镜像的第二方法
+
+* Update doc "Install GDB for KGTP".
+  https://code.google.com/p/kgtp/wiki/HOWTO#Install_GDB_for_KGTP
+  https://code.google.com/p/kgtp/wiki/HOWTOCN#安装可以和KGTP一起使用的GDB
+
+* Update doc "How to use getmod.py".
+  https://code.google.com/p/kgtp/wiki/HOWTO#How_to_use_getmod.py
+  https://code.google.com/p/kgtp/wiki/HOWTOCN#如何使用getmod.py
+
+* Let $current can be set to support some special Linux kernel functions.
+  https://code.google.com/p/kgtp/wiki/HOWTO#collect_stack_(for_backtrace)_of_user_space_program_in_tracepoin
+  https://code.google.com/p/kgtp/wiki/HOWTOCN#在tracepoint收集用户层程序的栈信息(可用来做backt
+
+* Update doc "Normal compile" add introduce about howto handle the build error in Fedora.
+  https://code.google.com/p/kgtp/wiki/HOWTO#Normal_compile
+  https://code.google.com/p/kgtp/wiki/HOWTOCN#普通编译
+
+* Update doc "Get KGTP through svn" add introduce about get the last release version of KGTP.
+  https://code.google.com/p/kgtp/wiki/HOWTO#Get_KGTP_through_svn
+  https://code.google.com/p/kgtp/wiki/HOWTOCN#通过svn下载KGTP
+
+* Update doc "Install the Linux kernel debug image" add debuginfo-install.
+  https://code.google.com/p/kgtp/wiki/HOWTO#Install_the_Linux_kernel_debug_image
+  https://code.google.com/p/kgtp/wiki/HOWTOCN#安装Linux内核调试镜像
+
+* Update doc "Install the Linux kernel devel package" add a note.
+  https://code.google.com/p/kgtp/wiki/HOWTO#Install_the_Linux_kernel_devel_package
+  https://code.google.com/p/kgtp/wiki/HOWTOCN#安装Linux内核开发包
+
+* Update doc add "Get the way that access the variable that has been out through parse ASM code".
+  https://code.google.com/p/kgtp/wiki/HOWTO#Get_the_way_that_access_the_variable_that_has_been__out_through
+  https://code.google.com/p/kgtp/wiki/HOWTOCN#通过分析汇编代码取得访问被优化掉变量的方法
+
+*** 20130508
+
+* https://lkml.org/lkml/2013/5/8/86
+
+* http://kgtp.googlecode.com/files/kgtp_20130508.tar.bz2
+  svn checkout https://kgtp.googlecode.com/svn/tags/20130508
+
+* Add "Where is the current Linux kernel debug image" to howto.
+  http://code.google.com/p/kgtp/wiki/HOWTO#Where_is_the_current_Linux_kernel_debug_image
+  http://code.google.com/p/kgtp/wiki/HOWTOCN#当前Linux内核调试镜像在哪
+
+* Add "Table of different between GDB debug normal program and KGTP" to howto.
+  https://code.google.com/p/kgtp/wiki/HOWTO#Table_of_different_between_GDB_debug_normal_program_and_KGTP
+  https://code.google.com/p/kgtp/wiki/HOWTOCN#GDB调试普通程序和KGTP的区别表
+
+* Add check if $kret use with while-stepping or watch.  Make them cannot work together.
+
+* Change $no_self_trace to $self_trace.
+  https://code.google.com/p/kgtp/wiki/HOWTO#Special_trace_state_variable_$self_trace
+  https://code.google.com/p/kgtp/wiki/HOWTOCN#特殊trace状态变量_$self_trace
+
+* Update getmod.
+  Add a '#' at the beginning make the output as comments if this output does not mean getmod will error quit.
+  Add a '#' at the beginning make the add-symbol-file that cannot find module file as comments.
+
+* Complete the support of while-stepping.  KGTP can let Linux kernel do single step now.
+  https://code.google.com/p/kgtp/wiki/HOWTO#Use_while-stepping_let_Linux_kernel_do_single_step
+  https://code.google.com/p/kgtp/wiki/HOWTOCN#使用while-stepping让Linux内核做单步
+
+*** 20130218
+
+* https://lkml.org/lkml/2013/2/18/145
+
+* http://kgtp.googlecode.com/files/kgtp_20130218.tar.bz2
+  svn checkout https://kgtp.googlecode.com/svn/tags/20130218
+
+* Add watch tracepoint control hardware breakpoints to record memory access.
+  http://code.google.com/p/kgtp/wiki/HOWTO#Howto_use_watch_tracepoint_control_hardware_breakpoints_to_recor
+  http://code.google.com/p/kgtp/wiki/HOWTOCN#如何用watch_tracepoint控制硬件断点记录内存访问
+
+* Update
+  http://code.google.com/p/kgtp/wiki/HOWTOCN#/sys/kernel/debug/gtpframe和离线调试
+  http://code.google.com/p/kgtp/wiki/HOWTO#/sys/kernel/debug/gtpframe_and_offline_debug
+  add a workaround to handle issue 136.
+
+* Update usage of putgtprsp.
+  http://code.google.com/p/kgtp/wiki/HOWTOCN#/sys/kernel/debug/gtpframe和离线调试
+  http://code.google.com/p/kgtp/wiki/HOWTO#/sys/kernel/debug/gtpframe_and_offline_debug
+
+* Fix memory leak of output the value directly function.
+
+* Make $cpu_id can be access by tracepoint action.
+
+*** 20121204
+
+* https://lkml.org/lkml/2012/12/9/156
+
+* http://kgtp.googlecode.com/files/kgtp_20121204.tar.bz2
+  svn checkout https://kgtp.googlecode.com/svn/tags/20121204
+
+* Remove __exit from gtp_exit to fix a section mismatch.
+
+* Add "Direct access the current value in normal mode" to make tfind
+  more clear.
+  http://code.google.com/p/kgtp/wiki/HOWTO#Direct_access_the_current_value_in_normal_mode
+  http://code.google.com/p/kgtp/wiki/HOWTOCN#在普通模式直接访问当前值
+
+* Add "Save the trace frame info to a file" to doc.
+  http://code.google.com/p/kgtp/wiki/HOWTO#Save_the_trace_frame_info_to_a_file
+  http://code.google.com/p/kgtp/wiki/HOWTOCN#保存trace帧信息到一个文件中\
+
+* Make getgtprsp.pl generate files that the last char is not "\n" that
+  will make "cat gtpstart > /sys/kernel/debug/gtp" get error.
+
+* Show CPU id in $printk_level function.
+
+* Show CPU id in $dump_stack function.
+
+* Make $printk_level function show right val name.
+
+* Add "putgtprsp" to handle the offline debug GDB command line file.
+  Thanks report from alex.zhu.az.
+  http://code.google.com/p/kgtp/wiki/HOWTO#/sys/kernel/debug/gtpframe_and_offline_debug
+  http://code.google.com/p/kgtp/wiki/HOWTOCN#/sys/kernel/debug/gtpframe和离线调试
+
+* Fix issue 130.  Thanks help from bergwolf.
+
+* Fix issue 131.  Thanks report from Oliver Yang.
+
+* Add How to handle error "No such file or directory." to howto.
+  http://code.google.com/p/kgtp/wiki/HOWTO#How_to_handle_error_"No_such_file_or_directory."
+  http://code.google.com/p/kgtp/wiki/HOWTOCN#如何处理错误_"No_such_file_or_directory."_或者
+
+* Add Handle the issue that cannot find any file in "/sys/" or "/sys/kernel/debug/" to howto.
+  Thanks report from Oliver Yang.
+  http://code.google.com/p/kgtp/wiki/HOWTO#Handle_the_issue_that_cannot_find_any_file_in_"/sys/"
+  http://code.google.com/p/kgtp/wiki/HOWTOCN#处理不能在"/sys/"或者"/sys/kernel/debug/&q
+
+*** 20120920
+
+* https://lkml.org/lkml/2012/9/20/697
+
+* http://kgtp.googlecode.com/files/kgtp_20120920.tar.bz2
+  svn checkout https://kgtp.googlecode.com/svn/tags/20120920
+
+* Add KGTP_API_VERSION to patch and gtp.c to help gtp.c know which
+  KGTP API is support by current kernel.
+
+* Set KGTP_API_VERSION to 20120917, it include API:
+  __flush_anon_page(Just just available on ARM Linux kernel 2.6.20
+  and newer version)
+  Following function is just available on Linux kernel that have perf: 
+  perf_event_disable and perf_event_enable (Only available older
+  than 3.3.0 because 3.3.0 and newer already have it.)
+  local_perf_event_disable
+  local_perf_event_enable
+  perf_event_set
+
+* Add $disable and $enable to disable and enable tracepoint in tracepoint
+  action.
+
+* Fix bug that complex conditon or action that access special TSV get error
+  with function gtp_check_x_simple or gtp_check_x_loop.
+
+* Fix a long size line bug of getmod.
+
+* Update howto for "How to set tracepoint condition".
+  http://code.google.com/p/kgtp/wiki/HOWTO#How_to_set_tracepoint_condition
+  http://code.google.com/p/kgtp/wiki/HOWTOCN#如何设置条件tracepoint
+
+* Update How to handle "Unsupported operator (null) (52) in expression."
+  http://code.google.com/p/kgtp/wiki/HOWTO#How_to_handle_"Unsupported_operator_(null)_(52)_in_expressi
+  http://code.google.com/p/kgtp/wiki/HOWTOCN#如何处理_"Unsupported_operator_(null)_(52)_in_expressio
+
+* Add introduce for collect ptr and collect *ptr to howto.
+  http://code.google.com/p/kgtp/wiki/HOWTO#collect_expr1,_expr2,_...
+  http://code.google.com/p/kgtp/wiki/HOWTOCN#collect_expr1,_expr2,_...
+
+* Fix memleak of gtp_traceframe_info and gtp_modules_traceframe_info.
+
+* Change the format of per_cpu TSR from "pc_" to "p_"
+  and change the usage of it.
+  http://code.google.com/p/kgtp/wiki/HOWTO#Per_cpu_trace_state_variables
+  http://code.google.com/p/kgtp/wiki/HOWTOCN#Per_cpu_trace状态变量
+
+* To follow the change of per_cpu TSR update, change $pc_pe_en to $p_pe_en.
+  http://code.google.com/p/kgtp/wiki/HOWTO#Enable_and_disable_all_the_perf_event_in_a_CPU_with_$p_pe_en
+  http://code.google.com/p/kgtp/wiki/HOWTOCN#用$p_pe_en打开和关闭一个CPU上所有的perf_event
+
+* Add new option "-n" to getmod.
+
+* Rename gtp_older_to_2.6.32.patch to gtp_2.6.20_to_2.6.32.patch.
+  Add gtp_older_to_2.6.19.patch.
+
+* Add plugin support.
+  http://code.google.com/p/kgtp/wiki/HOWTO#How_to_add_plugin_in_C
+  http://code.google.com/p/kgtp/wiki/HOWTOCN#如何增加用C写的插件
+
+*** 20120806
+
+* http://sourceware.org/ml/gdb/2012-08/msg00014.html
+
+* http://kgtp.googlecode.com/files/kgtp_20120806.tar.bz2
+  svn checkout https://kgtp.googlecode.com/svn/tags/20120806
+
+* When "make clean" with new Linux kernel.  Linux kernel will clean itself.
+  So change "make clean" to "rm" to handle it.
+
+* Remove S_IFIFO from debugfs_create_file because new Kernel doesn't
+  like it.
+
+* Fix a bug of gtp_task_read.  This bug will make this function can
+  sleep sometimes.  This bug is dangerous when tracepoint access user
+  space memory.
+
+* Support enable and disable when tracepoint is running.
+
+* Fix build error with RHEL 6.3.
+
+*** 20120605
+
+* https://lkml.org/lkml/2012/6/5/67
+
+* http://kgtp.googlecode.com/files/kgtp_20120605.tar.bz2
+  svn checkout https://kgtp.googlecode.com/svn/tags/20120605
+
+* Add "Make sure current Linux kernel debug image is right" to howto.
+  http://code.google.com/p/kgtp/wiki/HOWTO#Make_sure_current_Linux_kernel_debug_image_is_right
+  http://code.google.com/p/kgtp/wiki/HOWTOCN#确定Linux内核调试镜像是正确的
+
+* Update "tfind" in howto to make it more clear.
+  http://code.google.com/p/kgtp/wiki/HOWTO#tfind
+  http://code.google.com/p/kgtp/wiki/HOWTOCN#tfind
+
+* Add "Show and save the tracepoint" to howto.
+  http://code.google.com/p/kgtp/wiki/HOWTO#Show_and_save_the_tracepoint
+  http://code.google.com/p/kgtp/wiki/HOWTOCN#显示和存储tracepoint
+
+* Add "Handle the issue that Linux kernel debug image's address info is not
+  same with Linux kernel when it running" to howto.
+  http://code.google.com/p/kgtp/wiki/HOWTO#Handle_the_issue_that_Linux_kernel_debug_image's_address_in
+  http://code.google.com/p/kgtp/wiki/HOWTOCN#处理Linux内核调试镜像地址信息和Linux内核执行时
+
+* Add "Howto handle the function is there but set tracepoint on it got fail" to howto.
+  http://code.google.com/p/kgtp/wiki/HOWTO#Howto_handle_the_function_is_there_but_set_tracepoint_on_it_got
+  http://code.google.com/p/kgtp/wiki/HOWTOCN#这个函数确实存在但是设置tracepoint到上面会失败
+
+* Fix bug of getmod.py with new GDB.
+
+* Add new function "Read memory of user space program directly"
+  http://code.google.com/p/kgtp/wiki/HOWTO#Read_memory_of_user_space_program_directly
+  http://code.google.com/p/kgtp/wiki/HOWTOCN#直接读用户层程序的内存
+
+* Add new function "collect stack (for backtrace) of user space program in tracepoint"
+  http://code.google.com/p/kgtp/wiki/HOWTO#collect_stack_(for_backtrace)_of_user_space_program_in_tracepoin
+  http://code.google.com/p/kgtp/wiki/HOWTOCN#在tracepoint收集用户层程序的栈信息(可用来做backt
+
+* Add new introduce about howto show more than one variable with one GDB commands in "Access memory directly" of howto.
+  http://code.google.com/p/kgtp/wiki/HOWTO#Access_memory_directly
+  http://code.google.com/p/kgtp/wiki/HOWTOCN#直接访问内存
+  Thanks help from qw.hust.
+
+* Update some sections of howto to make it more clear.
+
+* Fix bug in getmod.c.  Thanks report from scorpionfish.
+
+*** 20120424
+
+* https://lkml.org/lkml/2012/4/24/194
+  https://lkml.org/lkml/2012/4/24/195
+  https://lkml.org/lkml/2012/4/24/196
+  https://lkml.org/lkml/2012/4/24/197
+
+* http://kgtp.googlecode.com/files/kgtp_20120424.tar.bz2
+  svn checkout https://kgtp.googlecode.com/svn/tags/20120424
+
+* Update "How to use /sys/kernel/debug/gtpframe_pipe" in howto.
+  http://code.google.com/p/kgtp/wiki/HOWTO#How_to_use_/sys/kernel/debug/gtpframe_pipe
+
+* Add How to handle "Unsupported operator (null) (52) in expression." to howto.
+  http://code.google.com/p/kgtp/wiki/HOWTO#How_to_handle_"Unsupported_operator_(null)_(52)_in_expressi
+
+* Separate actions and actions src to handle the status
+  that will delete some actions.
+
+* Add $bt to collect the stack and update the stack dump in the howto to make
+  it more clear.
+  http://code.google.com/p/kgtp/wiki/HOWTO#Howto_backtrace_(stack_dump)
+
+* Update the format of example in the HOWTO to make it more clear.
+
+* Remove the crc check and suport QStartNoAckMode+.
+
+* Add Chinese howto.
+  http://code.google.com/p/kgtp/wiki/HOWTOCN
+
+* Update a lot of parts of howto to make it more clear.
+  http://code.google.com/p/kgtp/wiki/HOWTO
+  http://code.google.com/p/kgtp/wiki/HOWTOCN
+
+* Add introduce of $_ret to howto.
+  http://code.google.com/p/kgtp/wiki/HOWTO#Collect_stack_of_current_function's_caller_with_$_ret
+
+*** 20120406
+
+* https://lkml.org/lkml/2012/4/7/35
+
+* http://kgtp.googlecode.com/files/kgtp_20120406.tar.bz2
+  svn checkout https://kgtp.googlecode.com/svn/tags/20120406
+
+* Fix build error with Linux kernel that older than 2.6.34 in ARM.
+  Thanks report and help from Adam Huang (sniperpr).
+
+* Update howto.txt (http://code.google.com/p/kgtp/wiki/HOWTO) to
+  make it more clear.
+
+* Update the GDB in http://code.google.com/p/gdbt/ (add static binary
+  and change the source of code) to make people use it easily.
+
+* Fix bug of add-ons/hotcode.py when it use with user space task.
+
+* add-ons/hotcode.py output hot code info to html file.
+
+* getmod.py auto call "set pagination off".
+
+*** 20120319
+
+* https://lkml.org/lkml/2012/3/19/210
+
+* http://kgtp.googlecode.com/files/kgtp_20120319.tar.bz2
+  svn checkout https://kgtp.googlecode.com/svn/tags/20120319
+
+* Fix bug with GDB RSP package sum check.
+
+* Increase the speed of access to trace state variables.
+
+* Increase the speed of agent code execution.
+
+* Remove the current agent code "printf" support because GDB will support new
+  format of agent code "printf".
+
+* Fix bug about access $current_task_pid.
+
+* Add new debug switch GTP_DEBUG_V (just for developer).
+
+* Add new add-ons hotcode.py.  It can show the hotest code line
+  in the Kernel or user space program through parse and record
+  the pc address in the interrupt handler.
+
+*** 20120224
+
+* https://lkml.org/lkml/2012/2/26/127
+
+* http://kgtp.googlecode.com/files/kgtp_20120224.tar.bz2
+  svn checkout https://kgtp.googlecode.com/svn/tags/20120224
+
+* Fix build error with Linux Kernel 3.0.x version.
+  Thanks for report from sam.wanshan.
+
+* Make getgtprsp.pl support all special trace state variables.
+
+* Fix the bug that set the id of FID_PAGE_BEGIN inside gtp_rb.
+
+* Change code to ignore the task that read the /sys/kernel/debug/gtpframe_pipe
+  in default.  And add special trace state variable $pipe_trace to control it.
+
+* Fix error of doc about $ignore_error.
+
+* Add $current_task_pid to access to get_current()->pid.
+
+* Remove GTP_VAR_NOT_GETV, GTP_VAR_NOT_SETV and GTP_VAR_NOT_TRACEV.
+
+* Fix bug in gtp_frame_file_header that affect stack when src of conditon
+  or action is bigger than 200.
+
+*** 20120131
+
+* https://lkml.org/lkml/2012/1/31/215
+
+* http://kgtp.googlecode.com/files/kgtp_20120131.tar.bz2
+  svn checkout https://kgtp.googlecode.com/svn/tags/20120131
+
+* Add ignore gtp.ko function to getmod.py.
+
+* Add support for GDB rsp package "qXfer:traceframe-info:read".
+  Then tfind mode will show the memory that is not in traceframe
+  as "<unavailable>".  It is more accurate than before.
+  It fixed issue 1 and Issue 101.
+
+* Fix bug of gtp_rb page release in function gtp_rb_page_free.
+
+* Fix bug of gtp_rb_put_page that is used by gtpframe_pipe.
+
+* Add define for perf_event_enable and perf_event_disable in gtp.c
+  and perf_event.c because both of them EXPORT_SYMBOL_GPL in Linux Kernel 3.3.
+
+*** 20111218
+
+* https://lkml.org/lkml/2011/12/18/36
+
+* http://kgtp.googlecode.com/files/kgtp_20111218.tar.bz2
+  svn checkout https://kgtp.googlecode.com/svn/tags/20111218
+
+* Add gtp_rb to be the new frame buffer to make trace record speed up and more
+  friendly to the older version Linux kernel.
+
+* Rename gtp.patch to gtp_for_review.patch.
+
+* Add Linux Kernel patch gtp_3.0_to_upstream.patch(3.0 to upstream),
+  gtp_2.6.39.patch(2.6.39), gtp_2.6.33_to_2.6.38.patch(2.6.33 to 2.6.38)
+  and gtp_older_to_2.6.32.patch(older to 2.6.32).
+  Then you can include KGTP in your Kernel source tree.
+
+* Add special trace state variable $gtp_version to show the version of KGTP.
+
+* Fix some build errors of gtp_for_review.patch.
+
+* Fix some build errors in ARM.
+
+* Update doc.
+
+*** 20111111
+
+* https://lkml.org/lkml/2011/11/14/4
+
+* http://kgtp.googlecode.com/files/kgtp_20111111.tar.bz2
+  svn checkout https://kgtp.googlecode.com/svn/tags/20111111
+
+* post_handler will make kprobes-optimization cannot be used.  So make
+  gtp_kp_post_handler be call only when tpe->step is true.
+
+* Make rdtsc_current to x86 special.
+
+* Register easy Kprobe handler to speed up it when no tracepoint access
+  $cooked_clock, $cooked_rdtsc or "pc_pe_" tvariable.
+
+* Fix a bug of ARM build.
+
+* Add a doc for use KGTP with Android in
+  https://code.google.com/p/kgtp/wiki/HowToUseKGTPinAndroid
+
