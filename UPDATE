@@ -1,3 +1,8 @@
+*** 20130706+
+
+* Remove gtp_taobao.patch because we can post pull request to ali_kernel
+  in github directly.
+
 *** 20130706
 
 * https://kgtp.googlecode.com/files/kgtp_20130706.tar.bz2
