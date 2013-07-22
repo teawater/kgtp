@@ -20,7 +20,7 @@
  */
 
 /* If "* 10" means that this is not a release version.  */
-#define GTP_VERSION			(20130706)
+#define GTP_VERSION			(201307060)
 
 #include <linux/version.h>
 #ifndef RHEL_RELEASE_VERSION
