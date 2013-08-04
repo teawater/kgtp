@@ -12764,7 +12764,66 @@ out:
 }
 EXPORT_SYMBOL(gtp_plugin_var_del);
 
-static void gtp_exit(void);
+static void
+gtp_release_all_mod(void)
+{
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30))
+	unregister_module_notifier(&gtp_modules_load_del_nb);
+#endif
+
+#ifdef USE_PROC
+	remove_proc_entry("gtp", NULL);
+	remove_proc_entry("gtpframe", NULL);
+#if defined(GTP_FTRACE_RING_BUFFER) || defined(GTP_RB)
+	remove_proc_entry("gtpframe_pipe", NULL);
+#endif
+#else
+	if (gtp_dir)
+		debugfs_remove(gtp_dir);
+	if (gtpframe_dir)
+		debugfs_remove(gtpframe_dir);
+#if defined(GTP_FTRACE_RING_BUFFER) || defined(GTP_RB)
+	if (gtpframe_pipe_dir)
+		debugfs_remove(gtpframe_pipe_dir);
+#endif
+#endif
+
+	gtp_gdbrsp_qtstop();
+	gtp_gdbrsp_qtinit();
+#ifdef GTP_RB
+	if (!GTP_RB_PAGE_IS_EMPTY)
+		gtp_rb_page_free();
+#endif
+#if defined(GTP_FRAME_SIMPLE) || defined(GTP_FTRACE_RING_BUFFER)
+	if (gtp_frame) {
+#ifdef GTP_FRAME_SIMPLE
+		vfree(gtp_frame);
+#endif
+#ifdef GTP_FTRACE_RING_BUFFER
+		ring_buffer_free(gtp_frame);
+#endif
+		gtp_frame = NULL;
+	}
+#endif
+
+	if (gtp_wq)
+		destroy_workqueue(gtp_wq);
+
+#ifdef GTP_RB
+	gtp_rb_release();
+#endif
+	gtp_var_release(1);
+
+#ifdef GTP_RB
+	if (gtp_traceframe_info)
+		vfree(gtp_traceframe_info);
+#endif
+
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30))
+	if (gtp_modules_traceframe_info)
+		vfree(gtp_modules_traceframe_info);
+#endif
+}
 
 static int __init gtp_init(void)
 {
@@ -12933,69 +12992,14 @@ static int __init gtp_init(void)
 	ret = 0;
 out:
 	if (ret < 0)
-		gtp_exit();
+		gtp_release_all_mod();
 
 	return ret;
 }
 
-static void gtp_exit(void)
+static void __exit gtp_exit(void)
 {
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30))
-	unregister_module_notifier(&gtp_modules_load_del_nb);
-#endif
-
-#ifdef USE_PROC
-	remove_proc_entry("gtp", NULL);
-	remove_proc_entry("gtpframe", NULL);
-#if defined(GTP_FTRACE_RING_BUFFER) || defined(GTP_RB)
-	remove_proc_entry("gtpframe_pipe", NULL);
-#endif
-#else
-	if (gtp_dir)
-		debugfs_remove(gtp_dir);
-	if (gtpframe_dir)
-		debugfs_remove(gtpframe_dir);
-#if defined(GTP_FTRACE_RING_BUFFER) || defined(GTP_RB)
-	if (gtpframe_pipe_dir)
-		debugfs_remove(gtpframe_pipe_dir);
-#endif
-#endif
-
-	gtp_gdbrsp_qtstop();
-	gtp_gdbrsp_qtinit();
-#ifdef GTP_RB
-	if (!GTP_RB_PAGE_IS_EMPTY)
-		gtp_rb_page_free();
-#endif
-#if defined(GTP_FRAME_SIMPLE) || defined(GTP_FTRACE_RING_BUFFER)
-	if (gtp_frame) {
-#ifdef GTP_FRAME_SIMPLE
-		vfree(gtp_frame);
-#endif
-#ifdef GTP_FTRACE_RING_BUFFER
-		ring_buffer_free(gtp_frame);
-#endif
-		gtp_frame = NULL;
-	}
-#endif
-
-	if (gtp_wq)
-		destroy_workqueue(gtp_wq);
-
-#ifdef GTP_RB
-	gtp_rb_release();
-#endif
-	gtp_var_release(1);
-
-#ifdef GTP_RB
-	if (gtp_traceframe_info)
-		vfree(gtp_traceframe_info);
-#endif
-
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30))
-	if (gtp_modules_traceframe_info)
-		vfree(gtp_modules_traceframe_info);
-#endif
+	gtp_release_all_mod();
 }
 
 module_init(gtp_init)
