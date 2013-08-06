@@ -480,6 +480,9 @@ static int			gtp_noack_mode;
 
 static pid_t			gtp_current_pid;
 
+/* gtpd_task->pid is used as the pid of Linux kernel.  */
+static struct task_struct	*gtpd_task;
+
 #ifdef CONFIG_X86
 /* Following part is for while-stepping.  */
 struct gtp_step_s {
@@ -10416,7 +10419,7 @@ gtp_gdbrsp_m(char *pkg)
 #elif defined(GTP_FTRACE_RING_BUFFER) || defined(GTP_RB)
 	if (gtp_start || gtp_frame_current_num < 0) {
 #endif
-		if (gtp_current_pid) {
+		if (gtp_current_pid != gtpd_task->pid) {
 			int ret = gtp_task_read(gtp_current_pid, NULL, addr,
 						gtp_m_buffer, (int)len, 0);
 			if (ret < 0)
@@ -10809,8 +10812,6 @@ gtp_gdbrsp_H(char *pkg)
 		gtp_replay_reset();
 #endif
 
-	gtp_current_pid = (pid_t)pid;
-
 	return 0;
 }
 
@@ -11184,7 +11185,7 @@ gtp_release(struct inode *inode, struct file *file)
 
 	gtp_gtp_pid_count--;
 	if (gtp_gtp_pid_count == 0) {
-		gtp_current_pid = 0;
+		gtp_current_pid = gtpd_task->pid;
 		gtp_gtp_pid = -1;
 	}
 
@@ -11290,9 +11291,13 @@ gtp_write(struct file *file, const char __user *buf, size_t size,
 	is_reverse = 0;
 	switch (rsppkg[0]) {
 	case '?':
-		snprintf(gtp_rw_bufp, GTP_RW_BUFP_MAX, "S05");
-		gtp_rw_bufp += 3;
-		gtp_rw_size += 3;
+		if (gtp_current_pid == 0)
+			snprintf(gtp_rw_bufp, GTP_RW_BUFP_MAX, "S05");
+		else
+			snprintf(gtp_rw_bufp, GTP_RW_BUFP_MAX, "T05;thread:p%d.%d;",
+				 gtp_current_pid, gtp_current_pid);
+		gtp_rw_size += strlen(gtp_rw_bufp);
+		gtp_rw_bufp += strlen(gtp_rw_bufp);
 		break;
 	case 'g':
 		ret = gtp_gdbrsp_g();
@@ -11359,6 +11364,11 @@ gtp_write(struct file *file, const char __user *buf, size_t size,
 #endif
 		else if (strncmp("qRcmd,", rsppkg, 6) == 0)
 			ret = gtp_gdbrsp_qRcmd(rsppkg + 6);
+		else if (strncmp("qAttached", rsppkg, 9) == 0) {
+			snprintf(gtp_rw_bufp, GTP_RW_BUFP_MAX, "1");
+			gtp_rw_size += 1;
+			gtp_rw_bufp += 1;
+		}
 		break;
 	case 'S':
 	case 'C':
@@ -11378,6 +11388,16 @@ gtp_write(struct file *file, const char __user *buf, size_t size,
 				gtp_replay_reset();
 #endif
 			ret = gtp_gdbrsp_vAttach(rsppkg + 8);
+		} else if (strncmp("vKill;", rsppkg, 7) == 0) {
+#ifdef GTP_RB
+			if (gtp_replay_step_id)
+				gtp_replay_reset();
+#endif
+			/* XXX:  When we add more code to support trace
+			   user space program.  We need add more release
+			   code to this part.
+			   Release tracepoint for this tracepoint.  */
+			ret = 0;
 		}
 		break;
 	case 'D':
@@ -12910,7 +12930,6 @@ static int __init gtp_init(void)
 	gtp_pipe_trace = 0;
 	gtp_bt_size = 512;
 	gtp_noack_mode = 0;
-	gtp_current_pid = 0;
 #ifdef GTP_RB
 	gtp_traceframe_info = NULL;
 	gtp_traceframe_info_len = 0;
@@ -12939,6 +12958,26 @@ static int __init gtp_init(void)
 	gtp_wq = create_singlethread_workqueue("gtpd");
 	if (gtp_wq == NULL)
 		goto out;
+
+	{
+		struct task_struct	*p;
+
+		/* Get the task of "gtpd".  */
+		gtpd_task = NULL;
+		for_each_process (p) {
+			if (strcmp(p->comm, "gtpd") == 0) {
+				if (gtpd_task != NULL)
+					printk(KERN_WARNING "KGTP: system have more than one gtpd.\n");
+				gtpd_task = p;
+			}
+		}
+		if (gtpd_task == NULL) {
+			printk(KERN_WARNING "KGTP: cannot get gtpd task.\n");
+			goto out;
+		}
+		gtp_current_pid = gtpd_task->pid;
+	}
+
 #ifdef USE_PROC
 	if (proc_create("gtp", S_IFIFO | S_IRUSR | S_IWUSR, NULL,
 			&gtp_operations) == NULL)
