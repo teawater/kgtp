@@ -10,6 +10,10 @@
 * Fix https://github.com/teawater/kgtp/issues/1
   Thanks report from Tao Ma and Yanhai Zhu.
 
+* Add howto pdf files:
+  https://raw.github.com/teawater/kgtp/master/kgtp.pdf
+  https://raw.github.com/teawater/kgtp/master/kgtpcn.pdf
+
 *** 20130706
 
 * https://kgtp.googlecode.com/files/kgtp_20130706.tar.bz2
