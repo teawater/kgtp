@@ -5,10 +5,21 @@
 
 * Fix https://code.google.com/p/kgtp/issues/detail?id=149 that cannot
   get right value of x86_32 $ebp.
-  Thanks report from wangwangwar.、
+  Thanks report from wangwangwar.
 
 * Fix https://github.com/teawater/kgtp/issues/1
   Thanks report from Tao Ma and Yanhai Zhu.
+
+* Add howto pdf files:
+  https://raw.github.com/teawater/kgtp/master/kgtp.pdf
+  https://raw.github.com/teawater/kgtp/master/kgtpcn.pdf
+
+* Add "new way" to "Install the Linux kernel source".
+  https://code.google.com/p/kgtp/wiki/HOWTO#New_way
+  https://code.google.com/p/kgtp/wiki/HOWTOCN#新方法
+
+* Fix https://github.com/teawater/kgtp/issues/2
+  Thanks report from Brad Dixon.
 
 *** 20130706
 
