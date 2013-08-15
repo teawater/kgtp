@@ -18,6 +18,9 @@
   https://code.google.com/p/kgtp/wiki/HOWTO#New_way
   https://code.google.com/p/kgtp/wiki/HOWTOCN#新方法
 
+* Fix https://github.com/teawater/kgtp/issues/2
+  Thanks report from Brad Dixon.
+
 *** 20130706
 
 * https://kgtp.googlecode.com/files/kgtp_20130706.tar.bz2
