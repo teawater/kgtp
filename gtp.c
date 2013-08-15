@@ -3595,7 +3595,7 @@ gtp_task_read(pid_t pid, struct task_struct *tsk, unsigned long addr,
 				kunmap_atomic(maddr, KM_IRQ1);
 #endif
 			else
-				kunmap(maddr);
+				kunmap(page);
 			page_cache_release(page);
 		}
 		len -= bytes;
