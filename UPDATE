@@ -5,7 +5,7 @@
 
 * Fix https://code.google.com/p/kgtp/issues/detail?id=149 that cannot
   get right value of x86_32 $ebp.
-  Thanks report from wangwangwar.、
+  Thanks report from wangwangwar.
 
 * Fix https://github.com/teawater/kgtp/issues/1
   Thanks report from Tao Ma and Yanhai Zhu.
