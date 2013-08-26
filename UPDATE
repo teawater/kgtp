@@ -24,9 +24,8 @@
 * The .config inside UBUNTU linux-headers close CONFIG_DEBUG_INFO=y.
   It will make KGTP module will not build with "-g" in UBUNTU that
   will make KGTP module doesn't have debug info.
-  To handle this isssue, update Makefile when build KGTP with "D=1",
-  export CONFIG_DEBUG_INFO=y to make KGTP module can build with -g in
-  UBUNTU.
+  To handle this isssue, add "export CONFIG_DEBUG_INFO=y" to Makefile 
+  to make KGTP module can build with -g in UBUNTU.
 
 *** 20130706
 
