@@ -2297,7 +2297,7 @@ gtp_action_reg_read(struct gtp_trace_s *gts, int num)
 
 	switch (num) {
 #ifdef CONFIG_X86_32
-#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,24))
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,25))
 	case 0:
 		ret = gts->regs->ax;
 		break;
@@ -2405,7 +2405,7 @@ gtp_action_reg_read(struct gtp_trace_s *gts, int num)
 		break;
 #endif
 #else
-#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,24))
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,25))
 	case 0:
 		ret = gts->regs->ax;
 		break;
@@ -2553,7 +2553,7 @@ gtp_regs2ascii(struct pt_regs *regs, char *buf)
 	printk(GTP_DEBUG_V "gtp_regs2ascii: gs = 0x%x\n",
 		(unsigned int) regs->gs);
 #endif
-#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,24))
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,25))
 	sprintf(buf, "%08x", (unsigned int) swab32(regs->ax));
 	buf += 8;
 	sprintf(buf, "%08x", (unsigned int) swab32(regs->cx));
@@ -2645,7 +2645,7 @@ gtp_regs2ascii(struct pt_regs *regs, char *buf)
 	printk(GTP_DEBUG_V "gtp_regs2ascii: cs = 0x%lx\n", regs->cs);
 	printk(GTP_DEBUG_V "gtp_regs2ascii: ss = 0x%lx\n", regs->ss);
 #endif
-#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,24))
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,25))
 	sprintf(buf, "%016lx", (unsigned long) swab64(regs->ax));
 	buf += 16;
 	sprintf(buf, "%016lx", (unsigned long) swab64(regs->bx));
@@ -2696,7 +2696,7 @@ gtp_regs2ascii(struct pt_regs *regs, char *buf)
 	buf += 16;
 	sprintf(buf, "%016lx", (unsigned long) swab64(regs->r15));
 	buf += 16;
-#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,24))
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,25))
 	sprintf(buf, "%016lx", (unsigned long) swab64(regs->ip));
 	buf += 16;
 	sprintf(buf, "%08x",
@@ -2756,7 +2756,7 @@ gtp_regs2bin(struct pt_regs *regs, char *buf)
 	printk(GTP_DEBUG_V "gtp_regs2ascii: gs = 0x%x\n",
 		(unsigned int) regs->gs);
 #endif
-#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,24))
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,25))
 	memcpy(buf, &regs->ax, 4);
 	buf += 4;
 	memcpy(buf, &regs->cx, 4);
@@ -2848,7 +2848,7 @@ gtp_regs2bin(struct pt_regs *regs, char *buf)
 	printk(GTP_DEBUG_V "gtp_regs2ascii: cs = 0x%lx\n", regs->cs);
 	printk(GTP_DEBUG_V "gtp_regs2ascii: ss = 0x%lx\n", regs->ss);
 #endif
-#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,24))
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,25))
 	memcpy(buf, &regs->ax, 8);
 	buf += 8;
 	memcpy(buf, &regs->bx, 8);
@@ -2899,7 +2899,7 @@ gtp_regs2bin(struct pt_regs *regs, char *buf)
 	buf += 8;
 	memcpy(buf, &regs->r15, 8);
 	buf += 8;
-#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,24))
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,25))
 	memcpy(buf, &regs->ip, 8);
 	buf += 8;
 	memcpy(buf, &regs->flags, 4);
@@ -4125,7 +4125,7 @@ gtp_action_r(struct gtp_trace_s *gts, struct action *ae)
 
 	memcpy(regs, gts->regs, sizeof(struct pt_regs));
 #ifdef CONFIG_X86_32
-#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,24))
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,25))
 	regs->sp = (unsigned long)&gts->regs->sp;
 #else
 	regs->esp = (unsigned long)&gts->regs->esp;
@@ -4922,13 +4922,13 @@ gtp_handler_wakeup(void)
 static void
 gtp_step_stop(struct pt_regs *regs)
 {
-#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,24))
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,25))
 	regs->flags &= ~(X86_EFLAGS_TF);
 #else
 	regs->eflags &= ~(X86_EFLAGS_TF);
 #endif
 	if (__get_cpu_var(gtp_step).irq_need_open) {
-#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,24))
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,25))
 		regs->flags |= X86_EFLAGS_IF;
 #else
 		regs->eflags |= X86_EFLAGS_IF;
@@ -5186,7 +5186,7 @@ gtp_kp_post_handler_1(struct kprobe *p, struct pt_regs *regs,
 		/*XXX if there a another one, maybe we need add end frame to let reader know that this while step stop.  */
 		__get_cpu_var(gtp_step).step = tpe->step;
 		__get_cpu_var(gtp_step).tpe = tpe;
-		#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,24))
+		#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,25))
 		if (regs->flags & X86_EFLAGS_IF)
 		#else
 		if (regs->eflags & X86_EFLAGS_IF)
@@ -5194,7 +5194,7 @@ gtp_kp_post_handler_1(struct kprobe *p, struct pt_regs *regs,
 			__get_cpu_var(gtp_step).irq_need_open = 1;
 		else
 			__get_cpu_var(gtp_step).irq_need_open = 0;
-		#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,24))
+		#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,25))
 		regs->flags |= X86_EFLAGS_TF;
 		regs->flags &= ~(X86_EFLAGS_IF);
 		#else
@@ -5890,7 +5890,7 @@ gtp_notifier_call(struct notifier_block *self, unsigned long cmd,
 			if (__get_cpu_var(gtp_step).step > 1 && !need_stop) {
 				/* XXX: not sure need set eflags each step.  */
 #if 0
-				#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,24))
+				#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,25))
 				args->regs->flags |= X86_EFLAGS_TF;
 				args->regs->flags &= ~(X86_EFLAGS_IF);
 				#else
