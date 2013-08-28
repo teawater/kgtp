@@ -27,6 +27,12 @@
   To handle this isssue, add "export CONFIG_DEBUG_INFO=y" to Makefile 
   to make KGTP module can build with -g in UBUNTU.
 
+* Fix https://github.com/teawater/kgtp/issues/3
+  Thanks report from Brad Dixon.
+  Fix 2 bugs:
+  1. gtp_get_user_page doesn't check the return of find_vma.
+  2. The way that get x86_32's user space program sp is wrong.
+
 *** 20130706
 
 * https://kgtp.googlecode.com/files/kgtp_20130706.tar.bz2

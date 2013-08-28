@@ -72,6 +72,15 @@ struct gtp_var;
 struct gtp_trace_s {
 	struct gtp_entry		*tpe;
 	struct pt_regs			*regs;
+
+#ifdef CONFIG_X86_32
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,26))
+	unsigned long			x86_32_sp;
+#else
+	long				x86_32_sp;
+#endif
+#endif
+
 	long				(*read_memory)(void *dst,
 						       void *src,
 						       size_t size);
