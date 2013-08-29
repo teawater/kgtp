@@ -33,6 +33,18 @@
   1. gtp_get_user_page doesn't check the return of find_vma.
   2. The way that get x86_32's user space program sp is wrong.
 
+* Update doc add section "About this document".
+  https://code.google.com/p/kgtp/wiki/HOWTO#About_this_document
+  https://code.google.com/p/kgtp/wiki/HOWTOCN#关于本文
+
+* Update doc "Get KGTP".
+  https://code.google.com/p/kgtp/wiki/HOWTO#Get_KGTP
+  https://code.google.com/p/kgtp/wiki/HOWTOCN#取得KGTP
+
+* Update doc "Get help or report issues"
+  https://code.google.com/p/kgtp/wiki/HOWTO#Get_help_or_report_issues
+  https://code.google.com/p/kgtp/wiki/HOWTOCN#需要帮助或者汇报问题
+
 *** 20130706
 
 * https://kgtp.googlecode.com/files/kgtp_20130706.tar.bz2
