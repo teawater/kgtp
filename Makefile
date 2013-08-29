@@ -15,6 +15,8 @@ MODULEDIR := /lib/modules/$(KERNELVERSION)/lib/
 #ARCH := mips
 #ARCH := arm
 
+export CONFIG_DEBUG_INFO=y
+
 PWD  := $(shell pwd)
 ifeq ($(D),1)
 EXTRA_CFLAGS += -DGTPDEBUG
