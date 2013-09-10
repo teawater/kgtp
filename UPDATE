@@ -21,6 +21,8 @@
 * Fix https://github.com/teawater/kgtp/issues/2
   Thanks report from Brad Dixon.
 
+* Fix https://github.com/teawater/kgtp/issues/6
+
 * The .config inside UBUNTU linux-headers close CONFIG_DEBUG_INFO=y.
   It will make KGTP module will not build with "-g" in UBUNTU that
   will make KGTP module doesn't have debug info.
