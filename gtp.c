@@ -10362,12 +10362,42 @@ gtp_traceframe_info_get(void)
 	return 0;
 }
 
+#ifdef GTP_RB
+
+static uint64_t	gtp_replay_step_id = 0;
+static ULONGEST	gtp_replay_step_tpe = 0;
+/* Point to the first entry of step.  */
+static void	*gtp_replay_step_begin = NULL;
+/* Point to the address that after last entry.  */
+static void	*gtp_replay_step_end = NULL;
+
+static void
+gtp_replay_reset(void)
+{
+	gtp_replay_step_id = 0;
+	gtp_replay_step_tpe = 0;
+
+	gtp_rb_read_reset();
+}
+
+#endif
+
 static int
 gtp_gdbrsp_qxfer_traceframe_info_read(char *pkg)
 {
 	ULONGEST	offset, len;
 
+#ifdef GTP_FRAME_SIMPLE
+	if (gtp_start || !gtp_frame_current)
+#endif
+#ifdef GTP_FTRACE_RING_BUFFER
 	if (gtp_start || gtp_frame_current_num < 0)
+#endif
+#ifdef GTP_RB
+	/* For gtp_replay_step_tpe, the KGTP is in replay mode.  Send traceframe_info
+	   will make GDB got error with access the memory.  So return -EINVAL.  */
+	if (gtp_start || gtp_frame_current_num < 0 || gtp_replay_step_tpe)
+#endif
 		return -EINVAL;
 
 	pkg = hex2ulongest(pkg, &offset);
@@ -10523,7 +10553,7 @@ gtp_gdbrsp_m(char *pkg)
 				       (unsigned long) cur_end);
 #endif
 				if (cur_start < cur_end) {
-					memcpy(gtp_m_buffer,
+					memcpy(gtp_m_buffer + cur_start - addr,
 						buf + cur_start - mr->addr,
 						cur_end - cur_start);
 					ret = 0;
@@ -10571,7 +10601,7 @@ gtp_gdbrsp_m(char *pkg)
 				       (unsigned long) cur_end);
 #endif
 				if (cur_start < cur_end) {
-					memcpy(gtp_m_buffer,
+					memcpy(gtp_m_buffer + cur_start - addr,
 						buf + cur_start - mr->addr,
 						cur_end - cur_start);
 					ret = 0;
@@ -10623,7 +10653,7 @@ gtp_gdbrsp_m(char *pkg)
 				       (unsigned long) cur_end);
 #endif
 				if (cur_start < cur_end) {
-					memcpy(gtp_m_buffer,
+					memcpy(gtp_m_buffer + cur_start - addr,
 						buf + cur_start - mr->addr,
 						cur_end - cur_start);
 					ret = 0;
@@ -10798,26 +10828,6 @@ gtp_gdbrsp_D(char *pkg)
 	} else
 		gtp_current_pid = 0;
 }
-
-#ifdef GTP_RB
-
-static uint64_t	gtp_replay_step_id = 0;
-static ULONGEST	gtp_replay_step_tpe = 0;
-/* Point to the first entry of step.  */
-static void	*gtp_replay_step_begin = NULL;
-/* Point to the address that after last entry.  */
-static void	*gtp_replay_step_end = NULL;
-
-static void
-gtp_replay_reset(void)
-{
-	gtp_replay_step_id = 0;
-	gtp_replay_step_tpe = 0;
-
-	gtp_rb_read_reset();
-}
-
-#endif
 
 /* Handle H + OP + thread-id packet. */
 
