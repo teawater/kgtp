@@ -39,6 +39,9 @@
   1. Let gtp_gdbrsp_qxfer_traceframe_info_read return error if it in *no tfind* mode or in replay mode.
   2. Let gtp_gdbrsp_m copy memory value to right address.
 
+* Fix a bug that use KGTP from remote with normal way and offline debug together.
+  https://github.com/teawater/kgtp/commit/403f14dde39d5304b38b1c5014712aff8e2f1fc3
+
 * Update doc add section "About this document".
   https://code.google.com/p/kgtp/wiki/HOWTO#About_this_document
   https://code.google.com/p/kgtp/wiki/HOWTOCN#关于本文
