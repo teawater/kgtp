@@ -11183,6 +11183,8 @@ gtp_open(struct inode *inode, struct file *file)
 			ret = -ENOMEM;
 			goto out;
 		}
+		gtp_rw_bufp = gtp_rw_buf;
+		gtp_rw_size = 0;
 	}
 	gtp_rw_count++;
 
