@@ -4339,7 +4339,7 @@
  
 --- /dev/null
 +++ b/lib/gtp.c
-@@ -0,0 +1,13043 @@
+@@ -0,0 +1,13045 @@
 +/*
 + * Kernel GDB tracepoint module.
 + *
@@ -4362,7 +4362,7 @@
 + */
 +
 +/* If "* 10" means that this is not a release version.  */
-+#define GTP_VERSION			(201307060)
++#define GTP_VERSION			(20130915)
 +
 +#include <linux/version.h>
 +#ifndef RHEL_RELEASE_VERSION
@@ -15525,6 +15525,8 @@
 +			ret = -ENOMEM;
 +			goto out;
 +		}
++		gtp_rw_bufp = gtp_rw_buf;
++		gtp_rw_size = 0;
 +	}
 +	gtp_rw_count++;
 +

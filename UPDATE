@@ -1,4 +1,10 @@
-*** 20130706+
+*** 20130915
+
+* Get through https:
+  https://github.com/teawater/kgtp/archive/20130915.tar.gz
+  Get through git:
+  git clone https://github.com/teawater/kgtp.git
+  git checkout 20130915 -b 20130915
 
 * Remove gtp_taobao.patch because we can post pull request to ali_kernel
   in github directly.

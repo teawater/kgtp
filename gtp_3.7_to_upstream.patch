@@ -4308,7 +4308,7 @@
  /*
   * Holding the top-level event's child_mutex means that any
   * descendant process that has inherited this event will block
-@@ -7970,3 +7990,15 @@ struct cgroup_subsys perf_subsys = {
+@@ -7971,3 +7991,15 @@ struct cgroup_subsys perf_subsys = {
  	.attach		= perf_cgroup_attach,
  };
  #endif /* CONFIG_CGROUP_PERF */
@@ -4345,7 +4345,7 @@
  source "lib/Kconfig.kgdb"
 --- a/lib/Makefile
 +++ b/lib/Makefile
-@@ -160,6 +160,8 @@ obj-$(CONFIG_ASN1) += asn1_decoder.o
+@@ -161,6 +161,8 @@ obj-$(CONFIG_ASN1) += asn1_decoder.o
  
  obj-$(CONFIG_FONT_SUPPORT) += fonts/
  
@@ -4356,7 +4356,7 @@
  
 --- /dev/null
 +++ b/lib/gtp.c
-@@ -0,0 +1,13043 @@
+@@ -0,0 +1,13045 @@
 +/*
 + * Kernel GDB tracepoint module.
 + *
@@ -4379,7 +4379,7 @@
 + */
 +
 +/* If "* 10" means that this is not a release version.  */
-+#define GTP_VERSION			(201307060)
++#define GTP_VERSION			(20130915)
 +
 +#include <linux/version.h>
 +#ifndef RHEL_RELEASE_VERSION
@@ -15542,6 +15542,8 @@
 +			ret = -ENOMEM;
 +			goto out;
 +		}
++		gtp_rw_bufp = gtp_rw_buf;
++		gtp_rw_size = 0;
 +	}
 +	gtp_rw_count++;
 +
