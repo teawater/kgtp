@@ -20,7 +20,7 @@
  */
 
 /* If "* 10" means that this is not a release version.  */
-#define GTP_VERSION			(201307060)
+#define GTP_VERSION			(20130915)
 
 #include <linux/version.h>
 #ifndef RHEL_RELEASE_VERSION
@@ -11184,6 +11184,8 @@ gtp_open(struct inode *inode, struct file *file)
 			ret = -ENOMEM;
 			goto out;
 		}
+		gtp_rw_bufp = gtp_rw_buf;
+		gtp_rw_size = 0;
 	}
 	gtp_rw_count++;
 
