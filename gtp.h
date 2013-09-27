@@ -31,7 +31,7 @@
 #define GTP_PC_NUM		16
 #endif
 
-#define GTP_X86_NEED_ADJUST_PC(gts)	(!(gts)->step && !(gts)->hwb)
+#define GTP_X86_NEED_ADJUST_PC(gts)	(!(gts)->step && !(gts)->hwb && (gts)->tpe->type != gtp_entry_uprobe)
 #endif
 
 #ifdef CONFIG_MIPS

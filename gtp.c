@@ -152,7 +152,15 @@
 
 /* check ---------------------------------------------------------- */
 #ifndef CONFIG_KPROBES
-#error "Linux Kernel doesn't support KPROBES.  Please open it in 'General setup->Kprobes'."
+#warning "Cannot trace Linux kernel because Linux Kernel config doesn't open KPROBES.  Please open it in 'General setup->Kprobes' if you need it."
+#endif
+
+#ifndef CONFIG_UPROBES
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0))
+#warning "Cannot trace user program because Linux Kernel config doesn't open UPROBES.  Please open it in 'Kernel hacking->Tracers->Enable uprobes-based dynamic events' if you need it."
+#else
+#warning "Cannot trace user program because the Linux Kernel that older than 3.5 doesn't support UPROBES."
+#endif
 #endif
 
 #ifdef USE_PROC
@@ -315,13 +323,26 @@ enum gtp_stop_type {
 #define GTP_ENTRY_FLAGS_IS_KRETPROBE	32
 
 enum gtp_entry_type {
-	/* Normal tracepoint.  */
+	/* Kernel tracepoint that use kprobes.
+	   When the gtp_entry is alloced by function gtp_list_add, all
+	   of gtp_entry will set to this type.  */
 	gtp_entry_kprobe = 0,
 
-	/* Watch.  */
+	/* User space program tracepoint that use uprobes.
+	   When KGTP try to register the gtp_entry, when gtp_entry->pid
+	   is not same with gtpd_task->pid (the pid of Kernel), this
+	   gtp_entry will set to this type.  */
+	gtp_entry_uprobe,
+
+	/* Watch tracepoint.
+	   When tracepoint action is checked by function gtp_check_setv.
+	   gtp_entry will be set to there types.  */
 	gtp_entry_watch_static,
 	gtp_entry_watch_dynamic,
 };
+
+#define GTP_IS_WATCH(tpe)	((tpe)->type == gtp_entry_watch_static \
+				 || (tpe)->type == gtp_entry_watch_dynamic)
 
 enum gtp_watch_type {
 	gtp_watch_exec		= 0,
@@ -331,12 +352,23 @@ enum gtp_watch_type {
 
 struct gtp_entry {
 	union gtp_entry_u {
+#ifdef CONFIG_KPROBES
 		/* For gtp_entry_kprobe.  */
 		struct gtp_kp {
 			struct kretprobe	kpret;
 			struct tasklet_struct	stop_tasklet;
 			struct work_struct	stop_work;
 		} kp;
+#endif
+
+#ifdef CONFIG_UPROBES
+		/* For gtp_entry_uprobe.  */
+		struct gtp_up {
+			struct inode		*inode;
+			loff_t			offset;
+			struct uprobe_consumer	uc;
+		} up;
+#endif
 
 		/* For gtp_entry_watch_static and gtp_entry_watch_dynamic.  */
 		struct {
@@ -370,6 +402,12 @@ struct gtp_entry {
 	enum gtp_stop_type	reason;
 
 	struct gtp_entry	*next;
+
+	/* Pid for this tracepoint.
+	   KGTP will use this pid to select Kprobe or Uprobe.
+	   And use this pid to get the inode for Uprobe if need.
+	   In default, this pid will bet set to gtp_current_pid.  */
+	pid_t			pid;
 
 	int			disable;
 	ULONGEST		pass;
@@ -479,6 +517,9 @@ static int			gtp_bt_size;
 static int			gtp_noack_mode;
 
 static pid_t			gtp_current_pid;
+
+/* gtpd_task->pid is used as the pid of Linux kernel.  */
+static struct task_struct	*gtpd_task;
 
 #ifdef CONFIG_X86
 /* Following part is for while-stepping.  */
@@ -815,8 +856,10 @@ enum {
 	GTP_STEP_COUNT_ID			= 44,
 	GTP_STEP_ID_ID				= 45,
 
+	GTP_INFERIOR_PID_ID			= 47,
+
 	GTP_VAR_SPECIAL_MIN			= GTP_VAR_VERSION_ID,
-	GTP_VAR_SPECIAL_MAX			= GTP_WATCH_PREV_VAL_ID,
+	GTP_VAR_SPECIAL_MAX			= GTP_INFERIOR_PID_ID,
 };
 
 enum pe_tv_id {
@@ -1565,7 +1608,7 @@ static int
 gtp_watch_type_hooks_set_val(struct gtp_trace_s *gts,
 			     struct gtp_var *gtv, int64_t val)
 {
-	if (gts->tpe->type != gtp_entry_kprobe) {
+	if (GTP_IS_WATCH(gts->tpe)) {
 		printk(KERN_WARNING "Cannot set $watch_type in hardware breakpoint handler.\n");
 		return -1;
 	}
@@ -1584,7 +1627,7 @@ static int
 gtp_watch_type_hooks_get_val(struct gtp_trace_s *gts,
 			     struct gtp_var *gtv, int64_t *val)
 {
-	if (gts->tpe->type == gtp_entry_kprobe)
+	if (!GTP_IS_WATCH(gts->tpe))
 		*val = gts->watch_type;
 	else
 		*val = gts->hwb->type;
@@ -1601,7 +1644,7 @@ static int
 gtp_watch_size_hooks_set_val(struct gtp_trace_s *gts,
 			     struct gtp_var *gtv, int64_t val)
 {
-	if (gts->tpe->type != gtp_entry_kprobe) {
+	if (GTP_IS_WATCH(gts->tpe)) {
 		printk(KERN_WARNING "Cannot set $watch_size in hardware breakpoint handler.\n");
 		return -1;
 	}
@@ -1619,7 +1662,7 @@ static int
 gtp_watch_size_hooks_get_val(struct gtp_trace_s *gts,
 			     struct gtp_var *gtv, int64_t *val)
 {
-	if (gts->tpe->type == gtp_entry_kprobe)
+	if (!GTP_IS_WATCH(gts->tpe))
 		*val = gts->watch_size;
 	else
 		*val = gts->hwb->size;
@@ -1666,7 +1709,7 @@ gtp_watch_set_hooks_set_val(struct gtp_trace_s *gts,
 {
 	struct gtp_entry	*tpe;
 
-	if (gts->tpe->type != gtp_entry_kprobe) {
+	if (GTP_IS_WATCH(gts->tpe)) {
 		printk(KERN_WARNING "Cannot set $watch_id in hardware breakpoint handler.\n");
 		return -1;
 	}
@@ -1758,7 +1801,7 @@ static int
 gtp_watch_get_val(struct gtp_trace_s *gts, struct gtp_var *gtv,
 		  int64_t *val)
 {
-	if (gts->tpe->type == gtp_entry_kprobe)
+	if (!GTP_IS_WATCH(gts->tpe))
 		return -1;
 
 	switch (gtv->num) {
@@ -1794,7 +1837,7 @@ gtp_watch_val_get_val(struct gtp_trace_s *gts, struct gtp_var *gtv,
 {
 	int	ret;
 
-	if (gts->tpe->type == gtp_entry_kprobe)
+	if (!GTP_IS_WATCH(gts->tpe))
 		return -EINVAL;
 
 	if (gts->hwb_current_val_gotten) {
@@ -1819,7 +1862,7 @@ static int
 gtp_watch_prev_val_get_val(struct gtp_trace_s *gts, struct gtp_var *gtv,
 			   int64_t *val)
 {
-	if (gts->tpe->type == gtp_entry_kprobe)
+	if (!GTP_IS_WATCH(gts->tpe))
 		return -EINVAL;
 
 	*val = gts->hwb->prev_val;
@@ -1932,6 +1975,18 @@ static struct gtp_var_hooks	gtp_step_id_hooks = {
 	.agent_get_val = gtp_step_id_hooks_get_val,
 };
 #endif
+
+static int
+gtp_inferior_pid_get_val(struct gtp_trace_s *gts, struct gtp_var *gtv,
+			 int64_t *val)
+{
+	*val = gtp_current_pid;
+	return 0;
+}
+
+static struct gtp_var_hooks	gtp_inferior_pid_hooks = {
+	.agent_get_val = gtp_inferior_pid_get_val,
+};
 
 static int
 gtp_var_special_add_all(void)
@@ -2167,6 +2222,11 @@ gtp_var_special_add_all(void)
 	if (IS_ERR(var))
 		return PTR_ERR(var);
 #endif
+
+	var = gtp_var_special_add(GTP_INFERIOR_PID_ID, 0, 0,
+				  "inferior_pid", &gtp_inferior_pid_hooks);
+	if (IS_ERR(var))
+		return PTR_ERR(var);
 
 	return 0;
 }
@@ -3483,7 +3543,7 @@ gtp_task_read(pid_t pid, struct task_struct *tsk, unsigned long addr,
 
 	if (in_kprobe_handler) {
 		/* The tsk cannot be NULL.  */
-		/* get_task_mm */
+		/* Example: get_task_mm */
 		ret = -ENXIO;
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,27))
 		if (tsk->flags & PF_KTHREAD)
@@ -4955,26 +5015,38 @@ gtp_handler(struct gtp_trace_s *gts)
 		gtp_step_stop(gts->regs);
 #endif
 
-	gts->read_memory = (void *)probe_kernel_read;
-	if (gts->tpe->flags & GTP_ENTRY_FLAGS_CURRENT_TASK) {
-		/* Get regs.  */
-		if (gts->tpe->get_regs) {
-			if (gtp_action_x(gts, gts->tpe->get_regs)
-			    || gts->tmp_regs == NULL)
-				goto tpe_stop;
-			gts->regs = gts->tmp_regs;
-		} else
-			gts->regs = task_pt_regs(get_current());
+	/* For the gtp_entry_uprobe, gtp_up_handler will setup gts to OK
+	   right status. */
+	if (gts->tpe->type != gtp_entry_uprobe) {
+		gts->read_memory = (void *)probe_kernel_read;
+		if (gts->tpe->flags & GTP_ENTRY_FLAGS_CURRENT_TASK) {
+			/* Get regs.  */
+			if (gts->tpe->get_regs) {
+				if (gtp_action_x(gts, gts->tpe->get_regs)
+				|| gts->tmp_regs == NULL)
+					goto tpe_stop;
+				gts->regs = gts->tmp_regs;
+			} else
+				gts->regs = task_pt_regs(get_current());
 
-		if (user_mode(gts->regs)) {
-			gts->read_memory = gtp_task_handler_read;
+			if (user_mode(gts->regs)) {
+				gts->read_memory = gtp_task_handler_read;
 #ifdef CONFIG_X86_32
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,25))
-			gts->x86_32_sp = gts->regs->sp;
+				gts->x86_32_sp = gts->regs->sp;
 #else
-			gts->x86_32_sp = gts->regs->esp;
+				gts->x86_32_sp = gts->regs->esp;
 #endif
 #endif
+			} else {
+#ifdef CONFIG_X86_32
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,25))
+				gts->x86_32_sp = (unsigned long)&gts->regs->sp;
+#else
+				gts->x86_32_sp = (unsigned long)&gts->regs->esp;
+#endif
+#endif
+			}
 		} else {
 #ifdef CONFIG_X86_32
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,25))
@@ -4983,15 +5055,12 @@ gtp_handler(struct gtp_trace_s *gts)
 			gts->x86_32_sp = (unsigned long)&gts->regs->esp;
 #endif
 #endif
+
+#ifdef CONFIG_UPROBES
+			if (gts->tpe->type == gtp_entry_uprobe)
+				gts->read_memory = gtp_task_handler_read;
+#endif
 		}
-	} else {
-#ifdef CONFIG_X86_32
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,25))
-		gts->x86_32_sp = (unsigned long)&gts->regs->sp;
-#else
-		gts->x86_32_sp = (unsigned long)&gts->regs->esp;
-#endif
-#endif
 	}
 
 	if ((gts->tpe->flags & GTP_ENTRY_FLAGS_REG) == 0)
@@ -5079,15 +5148,15 @@ tpe_stop:
 
 	gts->tpe->flags &= ~GTP_ENTRY_FLAGS_REG;
 
+	/* XXX: need add stop code for other types of tracepoint.  */
 	if (gts->tpe->type == gtp_entry_kprobe) {
 		/* Following code can insert this task into tasklet without
 		   wake up softirqd.  */
 		add_preempt_count(HARDIRQ_OFFSET);
 		tasklet_schedule(&gts->tpe->u.kp.stop_tasklet);
 		sub_preempt_count(HARDIRQ_OFFSET);
-	} else {
-		//XXX teawater
 	}
+
 #ifdef GTP_DEBUG_V
 	printk(GTP_DEBUG_V "gtp_handler: tracepoint %d %p stop.\n",
 		(int)gts->tpe->num, (void *)(CORE_ADDR)gts->tpe->addr);
@@ -5186,7 +5255,7 @@ gtp_kp_post_handler_1(struct kprobe *p, struct pt_regs *regs,
 	struct kretprobe	*kpret;
 	struct gtp_kp		*gkp;
 	union gtp_entry_u	*u;
-	struct gtp_entry		*tpe;
+	struct gtp_entry	*tpe;
 	struct gtp_trace_s	gts;
 
 	kpret = container_of(p, struct kretprobe, kp);
@@ -5317,6 +5386,35 @@ gtp_kp_ret_handler(struct kretprobe_instance *ri, struct pt_regs *regs)
 	return 0;
 }
 
+#ifdef CONFIG_UPROBES
+static int
+gtp_up_handler(struct uprobe_consumer *self, struct pt_regs *regs)
+{
+	struct gtp_up		*gup;
+	union gtp_entry_u	*u;
+	struct gtp_trace_s	gts;
+
+	memset(&gts, 0, sizeof(struct gtp_trace_s));
+
+	gup = container_of(self, struct gtp_up, uc);
+	u = container_of(gup, union gtp_entry_u, up);
+	gts.tpe = container_of(u, struct gtp_entry, u);
+
+	gts.regs = regs;
+	gts.read_memory = gtp_task_handler_read;
+#ifdef CONFIG_X86_32
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,25))
+	gts.x86_32_sp = gts.regs->sp;
+#else
+	gts.x86_32_sp = gts.regs->esp;
+#endif
+#endif
+	gtp_handler(&gts);
+
+	return 0;
+}
+#endif
+
 static struct action *
 gtp_action_alloc(char type)
 {
@@ -5440,6 +5538,8 @@ gtp_tracepoint_disable(struct work_struct *work)
 }
 #endif
 
+/* Alloc a gtp_entry and add it to gtp_list.  */
+
 static struct gtp_entry *
 gtp_list_add(ULONGEST num, ULONGEST addr)
 {
@@ -5448,6 +5548,7 @@ gtp_list_add(ULONGEST num, ULONGEST addr)
 
 	if (!ret)
 		goto out;
+	ret->type = gtp_entry_kprobe;
 	ret->num = num;
 	ret->addr = addr;
 
@@ -5462,6 +5563,8 @@ gtp_list_add(ULONGEST num, ULONGEST addr)
 #endif
 	INIT_LIST_HEAD(&ret->action_list);
 	INIT_LIST_HEAD(&ret->step_action_list);
+
+	ret->pid = gtp_current_pid;
 
 	/* Add to gtp_list.  */
 	ret->next = gtp_list;
@@ -6279,18 +6382,25 @@ gtp_gdbrsp_qtstop(void)
 	flush_workqueue(gtp_wq);
 
 	for (tpe = gtp_list; tpe; tpe = tpe->next) {
-		if (tpe->type != gtp_entry_kprobe
+		if ((tpe->type != gtp_entry_kprobe
+		     && tpe->type != gtp_entry_uprobe)
 		    || (tpe->flags & GTP_ENTRY_FLAGS_REG) == 0)
 			continue;
 
-		if (tpe->flags & GTP_ENTRY_FLAGS_IS_KRETPROBE)
-			unregister_kretprobe(&tpe->u.kp.kpret);
-		else
-			unregister_kprobe(&tpe->u.kp.kpret.kp);
+		if (tpe->type == gtp_entry_kprobe) {
+			if (tpe->flags & GTP_ENTRY_FLAGS_IS_KRETPROBE)
+				unregister_kretprobe(&tpe->u.kp.kpret);
+			else
+				unregister_kprobe(&tpe->u.kp.kpret.kp);
+			tasklet_kill(&tpe->u.kp.stop_tasklet);
+		} else {
+#if CONFIG_UPROBES
+			uprobe_unregister(tpe->u.up.inode, tpe->u.up.offset,
+					  &tpe->u.up.uc);
+#endif
+		}
 
 		tpe->flags &= ~GTP_ENTRY_FLAGS_REG;
-
-		tasklet_kill(&tpe->u.kp.stop_tasklet);
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30))
 		tasklet_kill(&tpe->disable_tasklet);
@@ -6788,6 +6898,13 @@ gtp_check_setv(struct gtp_entry *tpe, struct action *ae, int step,
 			}
 			break;
 #endif
+		case GTP_INFERIOR_PID_ID:
+			if (stack) {
+				tpe->pid = (pid_t)top;
+				ret = 1;
+				goto out;
+			}
+			break;
 		}
 
 		if (!var->u.hooks || (var->u.hooks
@@ -7798,6 +7915,65 @@ gtp_wq_add_work(unsigned long data)
 	queue_work(gtp_wq, (struct work_struct *)data);
 }
 
+#ifdef CONFIG_UPROBES
+int
+gtp_uprobe_register(struct gtp_entry *tpe)
+{
+	int			ret = -EINVAL;
+	struct task_struct	*tsk;
+	struct mm_struct	*mm;
+	struct vm_area_struct	*vma;
+
+	if ((tpe->flags & GTP_ENTRY_FLAGS_CURRENT_TASK)
+	    || (tpe->flags & GTP_ENTRY_FLAGS_CURRENT_TASK)) {
+		printk(KERN_WARNING "KGTP: cannot use $current or $kret in actions of tracepoint %d %p.\n",
+		       (int)tpe->num, (void *)(CORE_ADDR)tpe->addr);
+		return -EINVAL;
+	}
+
+	if (tpe->disable)
+		return 0;
+
+	/* Get mm.  */
+	rcu_read_lock();
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,24))
+	tsk = pid_task(find_vpid(tpe->pid), PIDTYPE_PID);
+#else
+	tsk = find_task_by_pid(tpe->pid);
+#endif
+	if (!tsk) {
+		rcu_read_unlock();
+		return -ESRCH;
+	}
+	mm = get_task_mm(tsk);
+	rcu_read_unlock();
+	if (mm == NULL)
+		return -ESRCH;
+	down_read(&mm->mmap_sem);
+
+	/* Get inode "file_inode(vma->vm_file)" and
+	   offset "tpe->addr - vma->vm_start".  */
+	vma = find_vma(mm, tpe->addr);
+	if (vma == NULL)
+		goto out;
+	if (tpe->addr < vma->vm_start)
+		goto out;
+	tpe->u.up.inode = file_inode(vma->vm_file);
+	tpe->u.up.offset = tpe->addr - vma->vm_start;
+	tpe->u.up.uc.handler = gtp_up_handler;
+
+	ret = 0;
+out:
+	up_read(&mm->mmap_sem);
+	mmput(mm);
+
+	if (ret == 0)
+		ret = uprobe_register (tpe->u.up.inode, tpe->u.up.offset, &tpe->u.up.uc);
+
+	return ret;
+}
+#endif
+
 static int
 gtp_gdbrsp_qtstart(void)
 {
@@ -8355,79 +8531,100 @@ next_list:
 
 	/* Register kprobe.  */
 	for (tpe = gtp_list; tpe; tpe = tpe->next) {
-		if (tpe->type != gtp_entry_kprobe)
+		if (tpe->type != gtp_entry_kprobe
+		    && tpe->type != gtp_entry_uprobe)
 			continue;
 
 		tasklet_init(&tpe->u.kp.stop_tasklet, gtp_wq_add_work,
 			     (unsigned long)&tpe->u.kp.stop_work);
 
+		if (tpe->pid != gtpd_task->pid) {
+#ifdef CONFIG_UPROBES
+			tpe->type = gtp_entry_uprobe;
+			ret = gtp_uprobe_register(tpe);
+#else
+			printk(KERN_WARNING "Cannot trace user program because Linux Kernel config doesn't open UPROBES.  Please open it in 'Kernel hacking->Tracers->Enable uprobes-based dynamic events' if you need it.\n");
+			gtp_gdbrsp_qtstop();
+			return -ENOSYS;
+#endif
+		} else {
+#ifdef CONFIG_KPROBES
+			/* This part is for Kprobe.  */
+			tpe->type = gtp_entry_kprobe;
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30))
-		if (tpe->disable)
-			tpe->u.kp.kpret.kp.flags |= KPROBE_FLAG_DISABLED;
+			if (tpe->disable)
+				tpe->u.kp.kpret.kp.flags |= KPROBE_FLAG_DISABLED;
 #endif
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30))
-		if (tpe->addr != 0) {
+			if (tpe->addr != 0) {
 #else
-		if (tpe->disable == 0 && tpe->addr != 0) {
+			if (tpe->disable == 0 && tpe->addr != 0) {
 #endif
-			tpe->u.kp.kpret.kp.addr = (kprobe_opcode_t *) (CORE_ADDR)tpe->addr;
-			if (tpe->flags & GTP_ENTRY_FLAGS_IS_KRETPROBE) {
-				if (gtp_access_cooked_clock
+				tpe->u.kp.kpret.kp.addr = (kprobe_opcode_t *) (CORE_ADDR)tpe->addr;
+				if (tpe->flags & GTP_ENTRY_FLAGS_IS_KRETPROBE) {
+					if (gtp_access_cooked_clock
 #ifdef CONFIG_X86
-				    || gtp_access_cooked_rdtsc
+					|| gtp_access_cooked_rdtsc
 #endif
 #ifdef GTP_PERF_EVENTS
-				    || gtp_have_pc_pe
+					|| gtp_have_pc_pe
 #endif
-				)
-					tpe->u.kp.kpret.handler = gtp_kp_ret_handler_plus;
-				else
-					tpe->u.kp.kpret.handler = gtp_kp_ret_handler;
+					)
+						tpe->u.kp.kpret.handler = gtp_kp_ret_handler_plus;
+					else
+						tpe->u.kp.kpret.handler = gtp_kp_ret_handler;
 
-				ret = register_kretprobe(&tpe->u.kp.kpret);
-			} else {
-				if (gtp_access_cooked_clock
+					ret = register_kretprobe(&tpe->u.kp.kpret);
+				} else {
+					if (gtp_access_cooked_clock
 #ifdef CONFIG_X86
-				    || gtp_access_cooked_rdtsc
+					|| gtp_access_cooked_rdtsc
 #endif
 #ifdef GTP_PERF_EVENTS
-				    || gtp_have_pc_pe
+					|| gtp_have_pc_pe
 #endif
-				) {
+					) {
 #ifdef CONFIG_X86
-					if (tpe->step || gtp_have_step) {
+						if (tpe->step || gtp_have_step) {
 #else
-					if (tpe->step) {
+						if (tpe->step) {
 #endif
-						tpe->u.kp.kpret.kp.pre_handler = gtp_kp_pre_handler_plus_step;
-						tpe->u.kp.kpret.kp.post_handler = gtp_kp_post_handler_plus;
-					} else
-						tpe->u.kp.kpret.kp.pre_handler = gtp_kp_pre_handler_plus;
-				} else {
-					tpe->u.kp.kpret.kp.pre_handler = gtp_kp_pre_handler;
+							tpe->u.kp.kpret.kp.pre_handler = gtp_kp_pre_handler_plus_step;
+							tpe->u.kp.kpret.kp.post_handler = gtp_kp_post_handler_plus;
+						} else
+							tpe->u.kp.kpret.kp.pre_handler = gtp_kp_pre_handler_plus;
+					} else {
+						tpe->u.kp.kpret.kp.pre_handler = gtp_kp_pre_handler;
 #ifdef CONFIG_X86
-					if (tpe->step || gtp_have_step)
+						if (tpe->step || gtp_have_step)
 #else
-					if (tpe->step)
+						if (tpe->step)
 #endif
-						tpe->u.kp.kpret.kp.post_handler = gtp_kp_post_handler;
-				}
-				ret = register_kprobe(&tpe->u.kp.kpret.kp);
-			}
-			if (ret < 0) {
-				printk(KERN_WARNING "gtp_gdbrsp_qtstart: register tracepoint %d %p got error.\n",
-				(int)tpe->num, (void *)(CORE_ADDR)tpe->addr);
-				if (gtp_start_ignore_error) {
-					gtp_start_last_errno = (uint64_t)ret;
-					continue;
-				} else {
-					gtp_gdbrsp_qtstop();
-					return ret;
+							tpe->u.kp.kpret.kp.post_handler = gtp_kp_post_handler;
+					}
+					ret = register_kprobe(&tpe->u.kp.kpret.kp);
 				}
 			}
-			tpe->flags |= GTP_ENTRY_FLAGS_REG;
+#else
+			printk(KERN_WARNING "Cannot trace Linux kernel because Linux Kernel config doesn't open KPROBES.  Please open it in 'General setup->Kprobes' if you need it.\n");
+			gtp_gdbrsp_qtstop();
+			return -ENOSYS;
+#endif
 		}
+
+		if (ret < 0) {
+			printk(KERN_WARNING "KGTP: register tracepoint %d %p got error.\n",
+			(int)tpe->num, (void *)(CORE_ADDR)tpe->addr);
+			if (gtp_start_ignore_error) {
+				gtp_start_last_errno = (uint64_t)ret;
+				continue;
+			} else {
+				gtp_gdbrsp_qtstop();
+				return ret;
+			}
+		}
+		tpe->flags |= GTP_ENTRY_FLAGS_REG;
 	}
 	ret = 0;
 out:
@@ -10470,7 +10667,7 @@ gtp_gdbrsp_m(char *pkg)
 #elif defined(GTP_FTRACE_RING_BUFFER) || defined(GTP_RB)
 	if (gtp_start || gtp_frame_current_num < 0) {
 #endif
-		if (gtp_current_pid) {
+		if (gtp_current_pid != gtpd_task->pid) {
 			int ret = gtp_task_read(gtp_current_pid, NULL, addr,
 						gtp_m_buffer, (int)len, 0);
 			if (ret < 0)
@@ -10842,8 +11039,6 @@ gtp_gdbrsp_H(char *pkg)
 	if (gtp_replay_step_id)
 		gtp_replay_reset();
 #endif
-
-	gtp_current_pid = (pid_t)pid;
 
 	return 0;
 }
@@ -11220,7 +11415,7 @@ gtp_release(struct inode *inode, struct file *file)
 
 	gtp_gtp_pid_count--;
 	if (gtp_gtp_pid_count == 0) {
-		gtp_current_pid = 0;
+		gtp_current_pid = gtpd_task->pid;
 		gtp_gtp_pid = -1;
 	}
 
@@ -11326,9 +11521,13 @@ gtp_write(struct file *file, const char __user *buf, size_t size,
 	is_reverse = 0;
 	switch (rsppkg[0]) {
 	case '?':
-		snprintf(gtp_rw_bufp, GTP_RW_BUFP_MAX, "S05");
-		gtp_rw_bufp += 3;
-		gtp_rw_size += 3;
+		if (gtp_current_pid == 0)
+			snprintf(gtp_rw_bufp, GTP_RW_BUFP_MAX, "S05");
+		else
+			snprintf(gtp_rw_bufp, GTP_RW_BUFP_MAX, "T05;thread:p%d.%d;",
+				 gtp_current_pid, gtp_current_pid);
+		gtp_rw_size += strlen(gtp_rw_bufp);
+		gtp_rw_bufp += strlen(gtp_rw_bufp);
 		break;
 	case 'g':
 		ret = gtp_gdbrsp_g();
@@ -11395,6 +11594,11 @@ gtp_write(struct file *file, const char __user *buf, size_t size,
 #endif
 		else if (strncmp("qRcmd,", rsppkg, 6) == 0)
 			ret = gtp_gdbrsp_qRcmd(rsppkg + 6);
+		else if (strncmp("qAttached", rsppkg, 9) == 0) {
+			snprintf(gtp_rw_bufp, GTP_RW_BUFP_MAX, "1");
+			gtp_rw_size += 1;
+			gtp_rw_bufp += 1;
+		}
 		break;
 	case 'S':
 	case 'C':
@@ -11414,6 +11618,16 @@ gtp_write(struct file *file, const char __user *buf, size_t size,
 				gtp_replay_reset();
 #endif
 			ret = gtp_gdbrsp_vAttach(rsppkg + 8);
+		} else if (strncmp("vKill;", rsppkg, 7) == 0) {
+#ifdef GTP_RB
+			if (gtp_replay_step_id)
+				gtp_replay_reset();
+#endif
+			/* XXX:  When we add more code to support trace
+			   user space program.  We need add more release
+			   code to this part.
+			   Release tracepoint for this tracepoint.  */
+			ret = 0;
 		}
 		break;
 	case 'D':
@@ -12946,7 +13160,6 @@ static int __init gtp_init(void)
 	gtp_pipe_trace = 0;
 	gtp_bt_size = 512;
 	gtp_noack_mode = 0;
-	gtp_current_pid = 0;
 #ifdef GTP_RB
 	gtp_traceframe_info = NULL;
 	gtp_traceframe_info_len = 0;
@@ -12975,6 +13188,26 @@ static int __init gtp_init(void)
 	gtp_wq = create_singlethread_workqueue("gtpd");
 	if (gtp_wq == NULL)
 		goto out;
+
+	{
+		struct task_struct	*p;
+
+		/* Get the task of "gtpd".  */
+		gtpd_task = NULL;
+		for_each_process (p) {
+			if (strcmp(p->comm, "gtpd") == 0) {
+				if (gtpd_task != NULL)
+					printk(KERN_WARNING "KGTP: system have more than one gtpd.\n");
+				gtpd_task = p;
+			}
+		}
+		if (gtpd_task == NULL) {
+			printk(KERN_WARNING "KGTP: cannot get gtpd task.\n");
+			goto out;
+		}
+		gtp_current_pid = gtpd_task->pid;
+	}
+
 #ifdef USE_PROC
 	if (proc_create("gtp", S_IFIFO | S_IRUSR | S_IWUSR, NULL,
 			&gtp_operations) == NULL)
