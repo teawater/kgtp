@@ -1,3 +1,7 @@
+*** 20130915+
+
+* Add uprobe support.  Then KGTP can trace user space program.
+
 *** 20130915
 
 * https://lkml.org/lkml/2013/9/15/12
