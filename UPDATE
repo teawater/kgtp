@@ -2,6 +2,9 @@
 
 * Add uprobe support.  Then KGTP can trace user space program.
 
+* Fix https://github.com/teawater/kgtp/issues/9
+  A multiprocess bug around packets "?" and "Hg".
+
 *** 20130915
 
 * https://lkml.org/lkml/2013/9/15/12

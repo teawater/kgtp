@@ -11038,6 +11038,8 @@ gtp_gdbrsp_H(char *pkg)
 		return -EINVAL;
 	pkg++;
 	pkg = hex2ulongest(pkg, &pid);
+	if (pid)
+		gtp_current_pid = pid;
 
 #ifdef GTP_RB
 	if (gtp_replay_step_id)
@@ -11528,7 +11530,7 @@ gtp_write(struct file *file, const char __user *buf, size_t size,
 		if (gtp_current_pid == 0)
 			snprintf(gtp_rw_bufp, GTP_RW_BUFP_MAX, "S05");
 		else
-			snprintf(gtp_rw_bufp, GTP_RW_BUFP_MAX, "T05;thread:p%d.%d;",
+			snprintf(gtp_rw_bufp, GTP_RW_BUFP_MAX, "T05;thread:p%x.%x;",
 				 gtp_current_pid, gtp_current_pid);
 		gtp_rw_size += strlen(gtp_rw_bufp);
 		gtp_rw_bufp += strlen(gtp_rw_bufp);
