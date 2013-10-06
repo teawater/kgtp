@@ -6626,42 +6626,116 @@ out:
 	return ret;
 }
 
+struct gtp_check_s {
+	struct gtp_entry	*tpe;
+	struct action		*ae;
+	uint8_t			*ebuf;
+
+	struct list_head	var_rw_flags;
+	struct list_head	var_pc_checked;
+};
+
 /* This struct is used to check if a var is be read and wrotten in a actions.
    If so, to ensure its atomicity, need open NEED_VAR_LOCK to let this
    actions lock GTP_VAR_LOCK when it executes.   */
 
-struct gtp_x_var {
-	struct gtp_x_var	*next;
+struct gtp_var_rw_flags {
+	struct list_head	node;
 	unsigned int		num;
 	unsigned int		flags;
 };
 
-static int
-gtp_x_var_add(struct gtp_x_var **list, unsigned int num, unsigned int flag)
+/* This struct to mark a pc of a actions is checked by gtp_check_getv
+   or gtp_check_setv in before.  So it doesn't need be checked again
+   by these two functions.  */
+
+struct gtp_var_pc_checked {
+	struct list_head	node;
+	unsigned int		pc;
+};
+
+static void
+gtp_check_init(struct gtp_entry *tpe, struct action *ae, uint8_t *ebuf,
+	       struct gtp_check_s *check)
 {
-	struct gtp_x_var	*curv;
+	check->tpe = tpe;
+	check->ae = ae;
+	check->ebuf = ebuf;
+	INIT_LIST_HEAD(&check->var_rw_flags);
+	INIT_LIST_HEAD(&check->var_pc_checked);
+}
 
-	for (curv = *list; curv; curv = curv->next) {
-		if (curv->num == num)
-			break;
-	}
+static void
+gtp_check_release(struct gtp_check_s *check)
+{
+	struct list_head		*cur, *tmp;
 
-	if (!curv) {
-		curv = kmalloc(sizeof(struct gtp_x_var), GFP_KERNEL);
-		if (!curv)
-			return -ENOMEM;
-		curv->num = num;
-		curv->flags = 0;
-		if (*list) {
-			curv->next = *list;
-			*list = curv;
-		} else {
-			curv->next = NULL;
-			*list = curv;
+	list_for_each_safe(cur, tmp, &check->var_pc_checked)
+		kfree(list_entry(cur, struct gtp_var_pc_checked, node));
+
+	list_for_each_safe(cur, tmp, &check->var_rw_flags)
+		kfree(list_entry(cur, struct gtp_var_rw_flags, node));
+}
+
+static int
+gtp_check_var_add(struct gtp_check_s *check, unsigned int pc,
+		  unsigned int num, unsigned int flag)
+{
+	struct gtp_var_pc_checked	*pc_checked;
+
+	/* Get pc_checked.  */
+	pc_checked = kmalloc(sizeof(struct gtp_var_pc_checked), GFP_KERNEL);
+	if (pc_checked == NULL)
+		return -ENOMEM;
+	pc_checked->pc = pc;
+
+	if (check->ae->u.exp.need_var_lock == 0) {
+		struct list_head		*cur;
+		struct gtp_var_rw_flags		*rw_flags;
+
+		/* Get rw_flags.  */
+		list_for_each(cur, &check->var_rw_flags) {
+			rw_flags = list_entry(cur, struct gtp_var_rw_flags,
+					      node);
+			if (rw_flags->num == num)
+				break;
+			rw_flags = NULL;
 		}
+		if (rw_flags == NULL) {
+			/* TSV num is not available in check->var_rw_flags.
+			So alloc and add it.  */
+			rw_flags = kmalloc(sizeof(struct gtp_var_rw_flags),
+					   GFP_KERNEL);
+			if (rw_flags == NULL) {
+				kfree(rw_flags);
+				return -ENOMEM;
+			}
+			rw_flags->num = num;
+			rw_flags->flags = 0;
+			list_add_tail(&rw_flags->node, &check->var_rw_flags);
+		}
+		rw_flags->flags |= flag;
+		if ((rw_flags->flags & 1) && (rw_flags->flags & 2))
+			check->ae->u.exp.need_var_lock = 1;
 	}
 
-	curv->flags |= flag;
+	/* Add pc_checked to check.  */
+	list_add_tail(&pc_checked->node, &check->var_pc_checked);
+
+	return 0;
+}
+
+static int
+gtp_var_pc_checked_find(struct gtp_check_s *check, unsigned int pc)
+{
+	struct list_head		*cur;
+	struct gtp_var_pc_checked	*pc_checked;
+
+	list_for_each(cur, &check->var_pc_checked) {
+		pc_checked = list_entry(cur, struct gtp_var_pc_checked, node);
+		if (pc_checked->pc == pc)
+			return 1;
+	}
 
 	return 0;
 }
@@ -6707,18 +6781,20 @@ gtp_add_backtrace_actions(struct gtp_entry *tpe, int step)
 }
 
 static int
-gtp_check_getv(struct gtp_entry *tpe, struct action *ae, int step, 
-	       uint8_t *ebuf, unsigned int pc,
-	       struct gtp_x_var **list)
+gtp_check_getv(struct gtp_check_s *check, int step, unsigned int pc)
 {
 	int		ret = -EINVAL;
 	int		arg;
 	struct gtp_var	*var;
+	unsigned int	flags = 0;
 
-	if (pc + 1 >= ae->u.exp.size)
+	if (pc + 1 >= check->ae->u.exp.size)
 		goto out;
-	arg = ebuf[pc++];
-	arg = (arg << 8) + ebuf[pc++];
+	arg = check->ebuf[pc++];
+	arg = (arg << 8) + check->ebuf[pc++];
+
+	if (gtp_var_pc_checked_find(check, pc))
+		return 0;
 
 	var = gtp_var_find_num(arg);
 	if (var == NULL) {
@@ -6730,14 +6806,14 @@ gtp_check_getv(struct gtp_entry *tpe, struct action *ae, int step,
 	switch (var->type) {
 	case gtp_var_special:
 		if (arg == GTP_VAR_SELF_TRACE_ID) {
-			tpe->flags |= GTP_ENTRY_FLAGS_SELF_TRACE;
+			check->tpe->flags |= GTP_ENTRY_FLAGS_SELF_TRACE;
 			ret = 1;
 			goto out;
 		} else if (arg == GTP_VAR_BT_ID) {
-			ret = gtp_add_backtrace_actions (tpe, step);
+			ret = gtp_add_backtrace_actions (check->tpe, step);
 			goto out;
 		} else if (arg == GTP_VAR_CURRENT_ID) {
-			tpe->flags |= GTP_ENTRY_FLAGS_CURRENT_TASK;
+			check->tpe->flags |= GTP_ENTRY_FLAGS_CURRENT_TASK;
 			ret = 1;
 			goto out;
 		}
@@ -6769,22 +6845,21 @@ gtp_check_getv(struct gtp_entry *tpe, struct action *ae, int step,
 				arg);
 				goto out;
 			}
-			if (var->type == gtp_var_perf_event
-			    && gtp_x_var_add(list, arg, 1)) {
-				ret = -ENOMEM;
-				goto out;
-			}
+			if (var->type == gtp_var_perf_event)
+				flags = 1;
 		}
 		break;
 #endif
 
 	case gtp_var_normal:
-		if (gtp_x_var_add(list, arg, 1)) {
-			ret = -ENOMEM;
-			goto out;
-		}
+		flags = 1;
 		break;
 	}
+
+	ret = gtp_check_var_add(check, pc, arg, flags);
+	if (ret)
+		goto out;
+	ret = -EINVAL;
 
 	/* Change the num of var to the num of gtp_var_array.
 	   It will make this insn speed up. */
@@ -6794,8 +6869,8 @@ gtp_check_getv(struct gtp_entry *tpe, struct action *ae, int step,
 			var->num);
 		goto out;
 	}
-	ebuf[pc - 2] = (uint8_t)(arg >> 8);
-	ebuf[pc - 1] = (uint8_t)(arg & 0xff);
+	check->ebuf[pc - 2] = (uint8_t)(arg >> 8);
+	check->ebuf[pc - 1] = (uint8_t)(arg & 0xff);
 	ret = 0;
 
 out:
@@ -6803,19 +6878,22 @@ out:
 }
 
 static int
-gtp_check_setv(struct gtp_entry *tpe, struct action *ae, int step,
-	       uint8_t *ebuf, unsigned int pc,
-	       struct gtp_x_var **list, int loop,
-	       ULONGEST *stack, ULONGEST top)
+gtp_check_setv(struct gtp_check_s *check, int step, unsigned int pc,
+	       int loop, ULONGEST *stack, ULONGEST top)
 {
 	int		arg;
 	struct gtp_var	*var;
 	int		ret = -EINVAL;
+	unsigned int	flags = 0;
+	int		is_current = 0;
 
-	if (pc + 1 >= ae->u.exp.size)
+	if (pc + 1 >= check->ae->u.exp.size)
 		goto out;
-	arg = ebuf[pc++];
-	arg = (arg << 8) + ebuf[pc++];
+	arg = check->ebuf[pc++];
+	arg = (arg << 8) + check->ebuf[pc++];
+
+	if (gtp_var_pc_checked_find(check, pc))
+		return 0;
 
 	var = gtp_var_find_num(arg);
 	if (var == NULL) {
@@ -6828,30 +6906,30 @@ gtp_check_setv(struct gtp_entry *tpe, struct action *ae, int step,
 	case gtp_var_special:
 		switch (arg) {
 		case GTP_VAR_SELF_TRACE_ID:
-			tpe->flags |= GTP_ENTRY_FLAGS_SELF_TRACE;
+			check->tpe->flags |= GTP_ENTRY_FLAGS_SELF_TRACE;
 			ret = 1;
 			goto out;
 			break;
 		case GTP_VAR_KRET_ID:
 			/* XXX: still not set it value to maxactive.  */
-			tpe->flags |= GTP_ENTRY_FLAGS_IS_KRETPROBE;
+			check->tpe->flags |= GTP_ENTRY_FLAGS_IS_KRETPROBE;
 			ret = 1;
 			goto out;
 			break;
 		case GTP_VAR_BT_ID:
-			ret = gtp_add_backtrace_actions (tpe, step);
+			ret = gtp_add_backtrace_actions (check->tpe, step);
 			goto out;
 			break;
 		case GTP_VAR_CURRENT_ID:
-			tpe->flags |= GTP_ENTRY_FLAGS_CURRENT_TASK;
-			ret = 2;
+			check->tpe->flags |= GTP_ENTRY_FLAGS_CURRENT_TASK;
+			is_current = 1;
 			break;
 		case GTP_VAR_PRINTK_LEVEL_ID:
 			if (loop || step) {
 				printk(KERN_WARNING "Loop or step action doesn't support printk.\n");
 				goto out;
 			} else
-				tpe->flags |= GTP_ENTRY_FLAGS_HAVE_PRINTK;
+				check->tpe->flags |= GTP_ENTRY_FLAGS_HAVE_PRINTK;
 			break;
 #ifdef CONFIG_X86
 		case GTP_WATCH_STATIC_ID:
@@ -6860,43 +6938,43 @@ gtp_check_setv(struct gtp_entry *tpe, struct action *ae, int step,
 				goto out;
 			}
 			/* Init watch struct inside gtp_entry.  */
-			if (tpe->type != gtp_entry_watch_static
-			    && tpe->type != gtp_entry_watch_dynamic) {
-				tpe->type = gtp_entry_watch_dynamic;
-				tpe->u.watch.type = gtp_watch_write;
-				tpe->u.watch.size = 1;
+			if (check->tpe->type != gtp_entry_watch_static
+			    && check->tpe->type != gtp_entry_watch_dynamic) {
+				check->tpe->type = gtp_entry_watch_dynamic;
+				check->tpe->u.watch.type = gtp_watch_write;
+				check->tpe->u.watch.size = 1;
 			}
 			gtp_have_watch_tracepoint = 1;
 			if (top == 1)
-				tpe->type = gtp_entry_watch_static;
+				check->tpe->type = gtp_entry_watch_static;
 			else
-				tpe->type = gtp_entry_watch_dynamic;
+				check->tpe->type = gtp_entry_watch_dynamic;
 			ret = 1;
 			goto out;
 			break;
 		case GTP_WATCH_TYPE_ID:
-			if (stack && (tpe->type == gtp_entry_watch_static
-				      || tpe->type == gtp_entry_watch_dynamic)) {
+			if (stack && (check->tpe->type == gtp_entry_watch_static
+				      || check->tpe->type == gtp_entry_watch_dynamic)) {
 				if (top != gtp_watch_exec
 				    && top != gtp_watch_write
 				    && top != gtp_watch_read_write) {
 					printk(KERN_WARNING "$watch_type just support set to 0, 1 or 2.\n");
 					goto out;
 				}
-				tpe->u.watch.type = top;
+				check->tpe->u.watch.type = top;
 				ret = 1;
 				goto out;
 			}
 			break;
 		case GTP_WATCH_SIZE_ID:
-			if (stack && (tpe->type == gtp_entry_watch_static
-				      || tpe->type == gtp_entry_watch_dynamic)) {
+			if (stack && (check->tpe->type == gtp_entry_watch_static
+				      || check->tpe->type == gtp_entry_watch_dynamic)) {
 				if (top != 1 && top != 2 && top != 4
 				    && top != 8) {
 					printk(KERN_WARNING "$watch_size just support set to 1, 2, 4 or 8.\n");
 					goto out;
 				}
-				tpe->u.watch.size = top;
+				check->tpe->u.watch.size = top;
 				ret = 1;
 				goto out;
 			}
@@ -6904,7 +6982,7 @@ gtp_check_setv(struct gtp_entry *tpe, struct action *ae, int step,
 #endif
 		case GTP_INFERIOR_PID_ID:
 			if (stack) {
-				tpe->pid = (pid_t)top;
+				check->tpe->pid = (pid_t)top;
 				ret = 1;
 				goto out;
 			}
@@ -6930,22 +7008,22 @@ gtp_check_setv(struct gtp_entry *tpe, struct action *ae, int step,
 				arg);
 				goto out;
 			}
-			if (var->type == gtp_var_perf_event
-			    && gtp_x_var_add(list, arg, 2)) {
-				ret = -ENOMEM;
-				goto out;
+			if (var->type == gtp_var_perf_event) {
+				flags = 2;
 			}
 		}
 		break;
 #endif
 
 	case gtp_var_normal:
-		if (gtp_x_var_add(list, arg, 2)) {
-			ret = -ENOMEM;
-			goto out;
-		}
+		flags = 2;
 		break;
 	}
+
+	ret = gtp_check_var_add(check, pc, arg, flags);
+	if (ret)
+		goto out;
+	ret = -EINVAL;
 
 	/* Change the num of var to the num of gtp_var_array.
 	   It will make this insn speed up. */
@@ -6955,10 +7033,12 @@ gtp_check_setv(struct gtp_entry *tpe, struct action *ae, int step,
 		       var->num);
 		goto out;
 	}
-	ebuf[pc - 2] = (uint8_t)(arg >> 8);
-	ebuf[pc - 1] = (uint8_t)(arg & 0xff);
+	check->ebuf[pc - 2] = (uint8_t)(arg >> 8);
+	check->ebuf[pc - 1] = (uint8_t)(arg & 0xff);
 	/* Handle GTP_VAR_CURRENT_ID, it need return 2.  */
-	if (ret != 2)
+	if (is_current)
+		ret = 2;
+	else
 		ret = 0;
 
 out:
@@ -6980,7 +7060,6 @@ gtp_check_x_simple(struct gtp_entry *tpe, struct action *ae, int step)
 	int			ret = -EINVAL;
 	unsigned int		pc = 0, sp = 0;
 	struct gtp_x_if_goto	*glist = NULL, *gtmp;
-	struct gtp_x_var	*vlist = NULL, *vtmp;
 	uint8_t			*ebuf = ae->u.exp.buf;
 	int			last_trace_pc = -1;
 	unsigned int		sp_max = 0;
@@ -6989,7 +7068,9 @@ gtp_check_x_simple(struct gtp_entry *tpe, struct action *ae, int step)
 	ULONGEST		*stack = stack_space;
 	/* If true, the actions set $current.  */
 	int			is_set_current = 0;
+	struct gtp_check_s	check;
 
+	gtp_check_init(tpe, ae, ebuf, &check);
 reswitch:
 	while (pc < ae->u.exp.size) {
 #ifdef GTP_DEBUG
@@ -7429,8 +7510,7 @@ reswitch:
 
 		/* getv */
 		case 0x2c: {
-				int lret = gtp_check_getv(tpe, ae, step,
-							  ebuf, pc, &vlist);
+				int lret = gtp_check_getv(&check, step, pc);
 				if (lret != 0) {
 					ret = lret;
 					goto release_out;
@@ -7445,8 +7525,7 @@ reswitch:
 
 		/* setv */
 		case 0x2d: {
-				int lret = gtp_check_setv(tpe, ae, step,
-							  ebuf, pc, &vlist,
+				int lret = gtp_check_setv(&check, step, pc,
 							  0, stack, top);
 				if (lret == 1 || lret < 0) {
 					ret = lret;
@@ -7465,8 +7544,7 @@ reswitch:
 				if (tpe->flags & GTP_ENTRY_FLAGS_HAVE_PRINTK)
 					last_trace_pc = pc - 1;
 
-				lret = gtp_check_getv(tpe, ae, step, ebuf,
-						      pc, &vlist);
+				lret = gtp_check_getv(&check, step, pc);
 				if (lret != 0) {
 					ret = lret;
 					goto release_out;
@@ -7550,14 +7628,7 @@ release_out:
 		glist = glist->next;
 		kfree(gtmp);
 	}
-	while (vlist) {
-		vtmp = vlist;
-		vlist = vlist->next;
-
-		if ((vtmp->flags & 1) && (vtmp->flags & 2))
-			ae->u.exp.need_var_lock = 1;
-		kfree(vtmp);
-	}
+	gtp_check_release(&check);
 
 	if (!is_set_current && (tpe->flags & GTP_ENTRY_FLAGS_HAVE_PRINTK)
 	    && last_trace_pc > -1) {
@@ -7591,14 +7662,14 @@ gtp_check_x_loop(struct gtp_entry *tpe, struct action *ae, int step)
 	int			ret = -EINVAL;
 	unsigned int		pc = 0;
 	struct gtp_x_loop	*glist = NULL, *gtmp;
-	struct gtp_x_var	*vlist = NULL, *vtmp;
 	uint8_t			*ebuf = ae->u.exp.buf;
+	struct gtp_check_s	check;
 
 	printk(KERN_WARNING "Action of tracepoint %d have loop.\n",
 	       (int)tpe->num);
 
+	gtp_check_init(tpe, ae, ebuf, &check);
 	tpe->flags &= ~GTP_ENTRY_FLAGS_HAVE_PRINTK;
-
 reswitch:
 	while (pc < ae->u.exp.size) {
 #ifdef GTP_DEBUG
@@ -7771,8 +7842,7 @@ reswitch:
 		case 0x2c:
 		/* tracev */
 		case 0x2e: {
-				int lret = gtp_check_getv(tpe, ae, step,
-							  ebuf, pc, &vlist);
+				int lret = gtp_check_getv(&check, step, pc);
 				if (lret != 0) {
 					ret = lret;
 					goto release_out;
@@ -7783,8 +7853,7 @@ reswitch:
 
 		/* setv */
 		case 0x2d: {
-				int lret = gtp_check_setv(tpe, ae, step,
-							  ebuf, pc, &vlist,
+				int lret = gtp_check_setv(&check, step, pc,
 							  1, NULL, 0);
 				if (lret == 1 || lret < 0) {
 					ret = lret;
@@ -7873,15 +7942,7 @@ release_out:
 		glist = glist->next;
 		kfree(gtmp);
 	}
-	while (vlist) {
-		vtmp = vlist;
-		vlist = vlist->next;
-
-		if ((vtmp->flags & 2)
-		    && ((vtmp->flags & 1) || (vtmp->flags & 4)))
-			ae->u.exp.need_var_lock = 1;
-		kfree(vtmp);
-	}
+	gtp_check_release(&check);
 
 	return ret;
 }

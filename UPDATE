@@ -5,6 +5,9 @@
 * Fix https://github.com/teawater/kgtp/issues/9
   A multiprocess bug around packets "?" and "Hg".
 
+* Fix https://github.com/teawater/kgtp/issues/8
+  A TSV check bug.
+
 *** 20130915
 
 * https://lkml.org/lkml/2013/9/15/12
