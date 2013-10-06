@@ -6626,6 +6626,10 @@ out:
 	return ret;
 }
 
+/* This struct is used to check if a var is be read and wrotten in a actions.
+   If so, to ensure its atomicity, need open NEED_VAR_LOCK to let this
+   actions lock GTP_VAR_LOCK when it executes.   */
+
 struct gtp_x_var {
 	struct gtp_x_var	*next;
 	unsigned int		num;
