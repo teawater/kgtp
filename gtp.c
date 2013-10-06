@@ -6394,7 +6394,7 @@ gtp_gdbrsp_qtstop(void)
 				unregister_kprobe(&tpe->u.kp.kpret.kp);
 			tasklet_kill(&tpe->u.kp.stop_tasklet);
 		} else {
-#if CONFIG_UPROBES
+#ifdef CONFIG_UPROBES
 			uprobe_unregister(tpe->u.up.inode, tpe->u.up.offset,
 					  &tpe->u.up.uc);
 #endif
