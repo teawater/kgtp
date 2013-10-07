@@ -1986,6 +1986,7 @@ gtp_inferior_pid_get_val(struct gtp_trace_s *gts, struct gtp_var *gtv,
 
 static struct gtp_var_hooks	gtp_inferior_pid_hooks = {
 	.agent_get_val = gtp_inferior_pid_get_val,
+	.gdb_get_val = gtp_inferior_pid_get_val,
 };
 
 static int
