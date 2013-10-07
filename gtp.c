@@ -8027,7 +8027,11 @@ gtp_uprobe_register(struct gtp_entry *tpe)
 		goto out;
 	if (tpe->addr < vma->vm_start)
 		goto out;
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,9,0))
 	tpe->u.up.inode = file_inode(vma->vm_file);
+#else
+	tpe->u.up.inode = vma->vm_file->f_path.dentry->d_inode;
+#endif
 	tpe->u.up.offset = tpe->addr - vma->vm_start;
 	tpe->u.up.uc.handler = gtp_up_handler;
 
