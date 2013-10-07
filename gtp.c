@@ -11163,21 +11163,27 @@ gtp_gdbrsp_qRcmd(char *pkg)
 #ifdef GTP_RB
  	if (strcmp(buf, "replay") == 0) {
 		if (gtp_replay_step_id) {
-			printk(KERN_WARNING "KGTP: already in step replay mode.\n");
-			return -EBUSY;
+			string2hex ("KGTP: already in step replay mode.\n", gtp_rw_bufp);
+			gtp_rw_size += strlen(gtp_rw_bufp);
+			gtp_rw_bufp += strlen(gtp_rw_bufp);
+			return 1;
 		}
 
 		if (gtp_start || gtp_frame_current_num < 0) {
-			printk(KERN_WARNING "KGTP: cannot goto step replay mode because doesn't select any frame.\n");
-			return -EBUSY;
+			string2hex ("KGTP: cannot goto step replay mode because doesn't select any frame.\n", gtp_rw_bufp);
+			gtp_rw_size += strlen(gtp_rw_bufp);
+			gtp_rw_bufp += strlen(gtp_rw_bufp);
+			return 1;
 		}
 
 		if (gtp_rb_traceframe_get_tv(gtp_frame_current_rb->rp,
 					     gtp_frame_current_id,
 					     GTP_STEP_ID_ID,
 					     &gtp_replay_step_id)) {
-			printk(KERN_WARNING "KGTP: cannot goto step replay mode because current frame doesn't have $step_id.\n");
-			return -EBUSY;
+			string2hex ("KGTP: cannot goto step replay mode because current frame doesn't have $step_id.\n", gtp_rw_bufp);
+			gtp_rw_size += strlen(gtp_rw_bufp);
+			gtp_rw_bufp += strlen(gtp_rw_bufp);
+			return 1;
 		}
 
 		gtp_replay_step_tpe = gtp_frame_current_tpe;
@@ -11187,8 +11193,10 @@ gtp_gdbrsp_qRcmd(char *pkg)
 		return 0;
 	} else if (strcmp(buf, "replay stop") == 0) {
 		if (gtp_replay_step_id == 0) {
-			printk(KERN_WARNING "KGTP: not in step replay mode.\n");
-			return -EBUSY;
+			string2hex ("KGTP: not in step replay mode.\n", gtp_rw_bufp);
+			gtp_rw_size += strlen(gtp_rw_bufp);
+			gtp_rw_bufp += strlen(gtp_rw_bufp);
+			return 1;
 		}
 
 		gtp_replay_reset();
