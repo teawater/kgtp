@@ -6670,12 +6670,20 @@ static void
 gtp_check_release(struct gtp_check_s *check)
 {
 	struct list_head		*cur, *tmp;
+	struct gtp_var_pc_checked	*pc_checked;
+	struct gtp_var_rw_flags		*rw_flags;
 
-	list_for_each_safe(cur, tmp, &check->var_pc_checked)
-		kfree(list_entry(cur, struct gtp_var_pc_checked, node));
+	list_for_each_safe(cur, tmp, &check->var_pc_checked) {
+		pc_checked = list_entry(cur, struct gtp_var_pc_checked, node);
+		list_del(&pc_checked->node);
+		kfree(pc_checked);
+	}
 
-	list_for_each_safe(cur, tmp, &check->var_rw_flags)
-		kfree(list_entry(cur, struct gtp_var_rw_flags, node));
+	list_for_each_safe(cur, tmp, &check->var_rw_flags) {
+		rw_flags = list_entry(cur, struct gtp_var_rw_flags, node);
+		list_del(&rw_flags->node);
+		kfree(rw_flags);
+	}
 }
 
 static int
