@@ -6669,12 +6669,15 @@ gtp_check_init(struct gtp_entry *tpe, struct action *ae, uint8_t *ebuf,
 static void
 gtp_check_release(struct gtp_check_s *check)
 {
-	struct list_head		*cur, *tmp;
+	struct list_head		*cur;
 
-	list_for_each_safe(cur, tmp, &check->var_pc_checked)
+	/* Don't need list_del the entry because KGTP will not use this
+	   list after release.  */
+
+	list_for_each(cur, &check->var_pc_checked)
 		kfree(list_entry(cur, struct gtp_var_pc_checked, node));
 
-	list_for_each_safe(cur, tmp, &check->var_rw_flags)
+	list_for_each(cur, &check->var_rw_flags)
 		kfree(list_entry(cur, struct gtp_var_rw_flags, node));
 }
 
