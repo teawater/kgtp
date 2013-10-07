@@ -8701,6 +8701,43 @@ out:
 	return ret;
 }
 
+/* This part is for the "monitor disable".  */
+
+struct gtp_disable_s {
+	struct list_head	node;
+	CORE_ADDR		addr;
+};
+
+static LIST_HEAD(gtp_disable_list);
+
+static void
+gtp_disable_release(void)
+{
+	struct gtp_disable_s	*d;
+	struct list_head	*cur, *tmp;
+
+	list_for_each_safe(cur, tmp, &gtp_disable_list) {
+		d = list_entry(cur, struct gtp_disable_s, node);
+		list_del(&d->node);
+		kfree(d);
+	}
+}
+
+static int
+gtp_disable_find(CORE_ADDR addr)
+{
+	struct gtp_disable_s	*d;
+	struct list_head	*cur;
+
+	list_for_each(cur, &gtp_disable_list) {
+		d = list_entry(cur, struct gtp_disable_s, node);
+		if (d->addr == addr)
+			return 1;
+	}
+
+	return 0;
+}
+
 static int
 gtp_parse_x(struct gtp_entry *tpe, struct action *ae, char **pkgp)
 {
@@ -8792,6 +8829,8 @@ gtp_gdbrsp_qtdp(char *pkg)
 		if (pkg[0] == '\0')
 			return -EINVAL;
 		if (pkg[0] == 'D')
+			tpe->disable = 1;
+		else if (gtp_disable_find((CORE_ADDR)addr))
 			tpe->disable = 1;
 		pkg++;
 
@@ -11157,6 +11196,72 @@ gtp_gdbrsp_qRcmd(char *pkg)
 		return 0;
 	}
 #endif
+	else if (strncmp(buf, "disable", 7) == 0) {
+		char			*bufp;
+		ULONGEST		addr;
+		struct gtp_disable_s	*d;
+
+		if (buf_size == 7) {
+			/* monitor disable */
+			/* List all disable address.  */
+			struct list_head	*cur;
+
+			string2hex ("KGTP address disable list:\n", gtp_rw_bufp); 
+			gtp_rw_size += strlen(gtp_rw_bufp);
+			gtp_rw_bufp += strlen(gtp_rw_bufp);
+			list_for_each(cur, &gtp_disable_list) {
+				char	addr_buf[30];
+
+				d = list_entry(cur, struct gtp_disable_s, node);
+				snprintf(addr_buf, 30,"0x%lx\n", (unsigned long)d->addr);
+				string2hex (addr_buf, gtp_rw_bufp);
+				gtp_rw_size += strlen(gtp_rw_bufp);
+				gtp_rw_bufp += strlen(gtp_rw_bufp);
+			}
+			string2hex ("Type \"monitor disable address\" to add this address to this list.\n", gtp_rw_bufp);
+			gtp_rw_size += strlen(gtp_rw_bufp);
+			gtp_rw_bufp += strlen(gtp_rw_bufp);
+			string2hex ("Type \"monitor disable clear\" to clear this list.\n", gtp_rw_bufp);
+			gtp_rw_size += strlen(gtp_rw_bufp);
+			gtp_rw_bufp += strlen(gtp_rw_bufp);
+			return 1;
+		}
+
+		bufp = buf + 7;
+		if (bufp[0] != ' ')
+			return -EBUSY;
+		bufp += 1;
+		if (strcmp(bufp, "clear") == 0) {
+			/* monitor disable clear */
+			gtp_disable_release();
+			string2hex ("KGTP: address disable list is cleared.\n", gtp_rw_bufp);
+			gtp_rw_size += strlen(gtp_rw_bufp);
+			gtp_rw_bufp += strlen(gtp_rw_bufp);
+			return 1;
+		}
+
+		/* monitor disable address */
+		if (strncasecmp(bufp, "0x", 2) != 0) {
+			string2hex ("KGTP: please use address in hex format.\n", gtp_rw_bufp);
+			gtp_rw_size += strlen(gtp_rw_bufp);
+			gtp_rw_bufp += strlen(gtp_rw_bufp);
+			return 1;
+		}
+		bufp += 2;
+		hex2ulongest(bufp, &addr);
+		d = kmalloc(sizeof(*d), GFP_KERNEL);
+		if (d == NULL) {
+			string2hex ("KGTP: Out of memory.\n", gtp_rw_bufp);
+			gtp_rw_size += strlen(gtp_rw_bufp);
+			gtp_rw_bufp += strlen(gtp_rw_bufp);
+			return 1;
+		}
+		d->addr = (CORE_ADDR)addr;
+		list_add_tail(&d->node, &gtp_disable_list);
+		string2hex ("KGTP: this address has been added to address disable list.\n", gtp_rw_bufp);
+		gtp_rw_size += strlen(gtp_rw_bufp);
+		gtp_rw_bufp += strlen(gtp_rw_bufp);
+	}
 
 	return 1;
 }
@@ -13141,6 +13246,8 @@ gtp_release_all_mod(void)
 	if (gtp_modules_traceframe_info)
 		vfree(gtp_modules_traceframe_info);
 #endif
+
+	gtp_disable_release();
 }
 
 static int __init gtp_init(void)

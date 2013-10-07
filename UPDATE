@@ -8,6 +8,10 @@
 * Fix https://github.com/teawater/kgtp/issues/8
   A TSV check bug.
 
+* Add "monitor disable" and KGTP address disable list to handle the
+  issue that GDB cannot disable one tracepoint of a same number tracepoints
+  list.
+
 *** 20130915
 
 * https://lkml.org/lkml/2013/9/15/12
