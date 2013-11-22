@@ -8622,6 +8622,7 @@ next_list:
 			ret = gtp_uprobe_register(tpe);
 #else
 			printk(KERN_WARNING "Cannot trace user program because Linux Kernel config doesn't open UPROBES.  Please open it in 'Kernel hacking->Tracers->Enable uprobes-based dynamic events' if you need it.\n");
+			tasklet_kill(&tpe->u.kp.stop_tasklet);
 			gtp_gdbrsp_qtstop();
 			return -ENOSYS;
 #endif
@@ -8686,6 +8687,7 @@ next_list:
 			}
 #else
 			printk(KERN_WARNING "Cannot trace Linux kernel because Linux Kernel config doesn't open KPROBES.  Please open it in 'General setup->Kprobes' if you need it.\n");
+			tasklet_kill(&tpe->u.kp.stop_tasklet);
 			gtp_gdbrsp_qtstop();
 			return -ENOSYS;
 #endif
@@ -8698,6 +8700,7 @@ next_list:
 				gtp_start_last_errno = (uint64_t)ret;
 				continue;
 			} else {
+				tasklet_kill(&tpe->u.kp.stop_tasklet);
 				gtp_gdbrsp_qtstop();
 				return ret;
 			}
