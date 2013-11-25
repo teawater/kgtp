@@ -12,6 +12,14 @@
   issue that GDB cannot disable one tracepoint of a same number tracepoints
   list.
 
+* Update doc "Where is the current Linux kernel debug image" to make it more clear.
+  https://code.google.com/p/kgtp/wiki/HOWTO#Where_is_the_current_Linux_kernel_debug_image
+  https://code.google.com/p/kgtp/wiki/HOWTOCN#当前Linux内核调试镜像在哪
+
+* Update doc add section "Load Linux kernel debug image to GDB".
+  https://code.google.com/p/kgtp/wiki/HOWTO#Load_Linux_kernel_debug_image_to_GDB
+  https://code.google.com/p/kgtp/wiki/HOWTOCN#装载Linux内核调试镜像到GDB
+
 *** 20130915
 
 * https://lkml.org/lkml/2013/9/15/12
