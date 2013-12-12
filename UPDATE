@@ -20,6 +20,11 @@
   https://code.google.com/p/kgtp/wiki/HOWTO#Load_Linux_kernel_debug_image_to_GDB
   https://code.google.com/p/kgtp/wiki/HOWTOCN#装载Linux内核调试镜像到GDB
 
+* Add support for preempt_count_add and preempt_count_sub to make KGTP
+  can build with Linux Kernel 3.13.
+  Thanks report from Chen Gang.
+  
+
 *** 20130915
 
 * https://lkml.org/lkml/2013/9/15/12

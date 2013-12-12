@@ -4220,12 +4220,20 @@ gtp_handler_enable_disable(struct gtp_trace_s *gts, ULONGEST val, int enable)
 		if (val == 0 || tpe->num == val || gts->tpe != tpe)  {
 			/* Following code can insert this task
 				into tasklet without wake up softirqd.  */
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,13,0))
+			preempt_count_add(HARDIRQ_OFFSET);
+#else
 			add_preempt_count(HARDIRQ_OFFSET);
+#endif
 			if (enable && tpe->disable)
 				tasklet_schedule(&gts->tpe->enable_tasklet);
 			else if (!enable && !tpe->disable)
 				tasklet_schedule(&gts->tpe->disable_tasklet);
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,13,0))
+			preempt_count_sub(HARDIRQ_OFFSET);
+#else
 			sub_preempt_count(HARDIRQ_OFFSET);
+#endif
 			tpe->disable = !tpe->disable;
 		}
 	}
@@ -4970,9 +4978,17 @@ gtp_handler_wakeup(void)
 
 	if (atomic_read(&gtpframe_pipe_wq_v) > 0) {
 		atomic_dec(&gtpframe_pipe_wq_v);
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,13,0))
+		preempt_count_add(HARDIRQ_OFFSET);
+#else
 		add_preempt_count(HARDIRQ_OFFSET);
+#endif
 		tasklet_schedule(&gtpframe_pipe_wq_tasklet);
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,13,0))
+		preempt_count_sub(HARDIRQ_OFFSET);
+#else
 		sub_preempt_count(HARDIRQ_OFFSET);
+#endif
 	}
 }
 #endif
@@ -5153,9 +5169,17 @@ tpe_stop:
 	if (gts->tpe->type == gtp_entry_kprobe) {
 		/* Following code can insert this task into tasklet without
 		   wake up softirqd.  */
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,13,0))
+		preempt_count_add(HARDIRQ_OFFSET);
+#else
 		add_preempt_count(HARDIRQ_OFFSET);
+#endif
 		tasklet_schedule(&gts->tpe->u.kp.stop_tasklet);
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,13,0))
+		preempt_count_sub(HARDIRQ_OFFSET);
+#else
 		sub_preempt_count(HARDIRQ_OFFSET);
+#endif
 	}
 
 #ifdef GTP_DEBUG_V
@@ -7976,7 +8000,7 @@ gtpframe_pipe_wq_wake_up(unsigned long data)
 	   call wake up inside its handler, the kernel maybe will deadlock.
 	   "tasklet_schedule" is a small function and it can be
 	   very easy controlled to wake up softirqd or not
-	   (add_preempt_count(HARDIRQ_OFFSET) can control it). 
+	   (preempt_count_add(HARDIRQ_OFFSET) can control it). 
 	   So KGTP just use it to wake up a task.  */
 	wake_up_interruptible_nr(&gtpframe_pipe_wq, 1);
 }
