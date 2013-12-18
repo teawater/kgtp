@@ -1,8 +1,8 @@
 *** 20130915+
 
-* Add uprobe support.  Then KGTP can trace user space program.
-  https://code.google.com/p/kgtp/wiki/HOWTO#Trace_user_space_program
-  https://code.google.com/p/kgtp/wiki/HOWTOCN#Trace用户层程序
+* Add uprobe support.  Then KGTP can trace user applications.
+  https://code.google.com/p/kgtp/wiki/HOWTO#Trace_user_applications
+  https://code.google.com/p/kgtp/wiki/HOWTOCN#Trace用户程序
 
 * Fix https://github.com/teawater/kgtp/issues/9
   A multiprocess bug about packets "?" and "Hg".
@@ -24,11 +24,16 @@
 
 * Add support for preempt_count_add and preempt_count_sub to make KGTP
   can build with Linux Kernel 3.13.
-  Thanks report from Chen Gang.
+  Thanks help from Chen Gang.
 
-* Update doc "Use KGTP with user space program".
-  https://code.google.com/p/kgtp/wiki/HOWTO#Use_KGTP_with_user_space_program
-  https://code.google.com/p/kgtp/wiki/HOWTOCN#和用户层程序一起使用KGTP
+* Update doc "Use KGTP with user applications".
+  https://code.google.com/p/kgtp/wiki/HOWTO#Use_KGTP_with_user_applications
+  https://code.google.com/p/kgtp/wiki/HOWTOCN#和用户程序一起使用KGTP
+
+* Update doc "What is KGTP".
+  Thanks help from Xi Yang.
+  https://code.google.com/p/kgtp/wiki/HOWTO#What_is_KGTP
+  https://code.google.com/p/kgtp/wiki/HOWTOCN#什么是KGTP
 
 *** 20130915
 
