@@ -4245,7 +4245,7 @@
 +
 --- a/include/linux/perf_event.h
 +++ b/include/linux/perf_event.h
-@@ -843,4 +843,12 @@ _name##_show(struct device *dev,					\
+@@ -870,4 +870,12 @@ _name##_show(struct device *dev,					\
  									\
  static struct device_attribute format_attr_##_name = __ATTR_RO(_name)
  
@@ -4273,7 +4273,7 @@
  struct remote_function_call {
  	struct task_struct	*p;
  	int			(*func)(void *info);
-@@ -1633,6 +1639,9 @@ static void perf_set_shadow_time(struct
+@@ -1641,6 +1647,9 @@ static void perf_set_shadow_time(struct
  	else
  		event->shadow_ctx_time = tstamp - ctx->timestamp;
  }
@@ -4283,7 +4283,7 @@
  
  #define MAX_INTERRUPTS (~0ULL)
  
-@@ -2144,6 +2153,9 @@ static void ctx_sched_out(struct perf_ev
+@@ -2152,6 +2161,9 @@ static void ctx_sched_out(struct perf_ev
  	}
  	perf_pmu_enable(ctx->pmu);
  }
@@ -4292,8 +4292,8 @@
 +#endif
  
  /*
-  * Test whether two contexts are equivalent, i.e. whether they
-@@ -3459,6 +3471,14 @@ static void perf_event_reset(struct perf
+  * Test whether two contexts are equivalent, i.e. whether they have both been
+@@ -3489,6 +3501,14 @@ static void perf_event_reset(struct perf
  	perf_event_update_userpage(event);
  }
  
@@ -4308,7 +4308,7 @@
  /*
   * Holding the top-level event's child_mutex means that any
   * descendant process that has inherited this event will block
-@@ -7992,3 +8012,15 @@ struct cgroup_subsys perf_subsys = {
+@@ -8026,3 +8046,15 @@ struct cgroup_subsys perf_subsys = {
  	.attach		= perf_cgroup_attach,
  };
  #endif /* CONFIG_CGROUP_PERF */
@@ -4326,7 +4326,7 @@
 +EXPORT_SYMBOL_GPL(local_perf_event_disable);
 --- a/lib/Kconfig.debug
 +++ b/lib/Kconfig.debug
-@@ -1560,6 +1560,16 @@ config DMA_API_DEBUG
+@@ -1578,6 +1578,16 @@ config DMA_API_DEBUG
  	  This option causes a performance degredation.  Use only if you want
  	  to debug device drivers. If unsure, say N.
  
@@ -4345,7 +4345,7 @@
  source "lib/Kconfig.kgdb"
 --- a/lib/Makefile
 +++ b/lib/Makefile
-@@ -161,6 +161,8 @@ obj-$(CONFIG_ASN1) += asn1_decoder.o
+@@ -160,6 +160,8 @@ obj-$(CONFIG_ASN1) += asn1_decoder.o
  
  obj-$(CONFIG_FONT_SUPPORT) += fonts/
  
@@ -4356,7 +4356,7 @@
  
 --- /dev/null
 +++ b/lib/gtp.c
-@@ -0,0 +1,13468 @@
+@@ -0,0 +1,13500 @@
 +/*
 + * Kernel GDB tracepoint module.
 + *
@@ -4379,7 +4379,7 @@
 + */
 +
 +/* If "* 10" means that this is not a release version.  */
-+#define GTP_VERSION			(201309150)
++#define GTP_VERSION			(20131218)
 +
 +#include <linux/version.h>
 +#ifndef RHEL_RELEASE_VERSION
@@ -8579,12 +8579,20 @@
 +		if (val == 0 || tpe->num == val || gts->tpe != tpe)  {
 +			/* Following code can insert this task
 +				into tasklet without wake up softirqd.  */
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,13,0))
++			preempt_count_add(HARDIRQ_OFFSET);
++#else
 +			add_preempt_count(HARDIRQ_OFFSET);
++#endif
 +			if (enable && tpe->disable)
 +				tasklet_schedule(&gts->tpe->enable_tasklet);
 +			else if (!enable && !tpe->disable)
 +				tasklet_schedule(&gts->tpe->disable_tasklet);
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,13,0))
++			preempt_count_sub(HARDIRQ_OFFSET);
++#else
 +			sub_preempt_count(HARDIRQ_OFFSET);
++#endif
 +			tpe->disable = !tpe->disable;
 +		}
 +	}
@@ -9329,9 +9337,17 @@
 +
 +	if (atomic_read(&gtpframe_pipe_wq_v) > 0) {
 +		atomic_dec(&gtpframe_pipe_wq_v);
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,13,0))
++		preempt_count_add(HARDIRQ_OFFSET);
++#else
 +		add_preempt_count(HARDIRQ_OFFSET);
++#endif
 +		tasklet_schedule(&gtpframe_pipe_wq_tasklet);
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,13,0))
++		preempt_count_sub(HARDIRQ_OFFSET);
++#else
 +		sub_preempt_count(HARDIRQ_OFFSET);
++#endif
 +	}
 +}
 +#endif
@@ -9512,9 +9528,17 @@
 +	if (gts->tpe->type == gtp_entry_kprobe) {
 +		/* Following code can insert this task into tasklet without
 +		   wake up softirqd.  */
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,13,0))
++		preempt_count_add(HARDIRQ_OFFSET);
++#else
 +		add_preempt_count(HARDIRQ_OFFSET);
++#endif
 +		tasklet_schedule(&gts->tpe->u.kp.stop_tasklet);
++#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,13,0))
++		preempt_count_sub(HARDIRQ_OFFSET);
++#else
 +		sub_preempt_count(HARDIRQ_OFFSET);
++#endif
 +	}
 +
 +#ifdef GTP_DEBUG_V
@@ -11028,16 +11052,21 @@
 +static void
 +gtp_check_release(struct gtp_check_s *check)
 +{
-+	struct list_head		*cur;
++	struct list_head		*cur, *tmp;
++	struct gtp_var_pc_checked	*pc_checked;
++	struct gtp_var_rw_flags		*rw_flags;
 +
-+	/* Don't need list_del the entry because KGTP will not use this
-+	   list after release.  */
++	list_for_each_safe(cur, tmp, &check->var_pc_checked) {
++		pc_checked = list_entry(cur, struct gtp_var_pc_checked, node);
++		list_del(&pc_checked->node);
++		kfree(pc_checked);
++	}
 +
-+	list_for_each(cur, &check->var_pc_checked)
-+		kfree(list_entry(cur, struct gtp_var_pc_checked, node));
-+
-+	list_for_each(cur, &check->var_rw_flags)
-+		kfree(list_entry(cur, struct gtp_var_rw_flags, node));
++	list_for_each_safe(cur, tmp, &check->var_rw_flags) {
++		rw_flags = list_entry(cur, struct gtp_var_rw_flags, node);
++		list_del(&rw_flags->node);
++		kfree(rw_flags);
++	}
 +}
 +
 +static int
@@ -12330,7 +12359,7 @@
 +	   call wake up inside its handler, the kernel maybe will deadlock.
 +	   "tasklet_schedule" is a small function and it can be
 +	   very easy controlled to wake up softirqd or not
-+	   (add_preempt_count(HARDIRQ_OFFSET) can control it). 
++	   (preempt_count_add(HARDIRQ_OFFSET) can control it). 
 +	   So KGTP just use it to wake up a task.  */
 +	wake_up_interruptible_nr(&gtpframe_pipe_wq, 1);
 +}
@@ -12976,6 +13005,7 @@
 +			ret = gtp_uprobe_register(tpe);
 +#else
 +			printk(KERN_WARNING "Cannot trace user program because Linux Kernel config doesn't open UPROBES.  Please open it in 'Kernel hacking->Tracers->Enable uprobes-based dynamic events' if you need it.\n");
++			tasklet_kill(&tpe->u.kp.stop_tasklet);
 +			gtp_gdbrsp_qtstop();
 +			return -ENOSYS;
 +#endif
@@ -13040,6 +13070,7 @@
 +			}
 +#else
 +			printk(KERN_WARNING "Cannot trace Linux kernel because Linux Kernel config doesn't open KPROBES.  Please open it in 'General setup->Kprobes' if you need it.\n");
++			tasklet_kill(&tpe->u.kp.stop_tasklet);
 +			gtp_gdbrsp_qtstop();
 +			return -ENOSYS;
 +#endif
@@ -13052,6 +13083,7 @@
 +				gtp_start_last_errno = (uint64_t)ret;
 +				continue;
 +			} else {
++				tasklet_kill(&tpe->u.kp.stop_tasklet);
 +				gtp_gdbrsp_qtstop();
 +				return ret;
 +			}
