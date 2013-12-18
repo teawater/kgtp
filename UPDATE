@@ -1,4 +1,18 @@
-*** 20130915+
+*** 20131218
+
+* In github:
+  Get through https:
+  https://github.com/teawater/kgtp/archive/20131218.tar.gz
+  Get through git:
+  git clone https://github.com/teawater/kgtp.git
+  git checkout 20131218 -b 20131218
+
+  In CSDN:
+  Get through https:
+  https://code.csdn.net/teawater/kgtp/repository/archive?ref=20131218
+  Get through git:
+  git clone git://code.csdn.net/teawater/kgtp.git
+  git checkout 20131218 -b 20131218
 
 * Add uprobe support.  Then KGTP can trace user applications.
   https://code.google.com/p/kgtp/wiki/HOWTO#Trace_user_applications
