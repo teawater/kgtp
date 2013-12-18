@@ -1,13 +1,13 @@
 *** 20131218
 
-* In github:
+* Get in github:
   Get through https:
   https://github.com/teawater/kgtp/archive/20131218.tar.gz
   Get through git:
   git clone https://github.com/teawater/kgtp.git
   git checkout 20131218 -b 20131218
 
-  In CSDN:
+* Get in CSDN:
   Get through https:
   https://code.csdn.net/teawater/kgtp/repository/archive?ref=20131218
   Get through git:
@@ -114,6 +114,8 @@
   https://code.google.com/p/kgtp/wiki/HOWTOCN#需要帮助或者汇报问题
 
 *** 20130706
+
+* https://lkml.org/lkml/2013/7/6/34
 
 * https://kgtp.googlecode.com/files/kgtp_20130706.tar.bz2
   svn checkout https://kgtp.googlecode.com/svn/tags/20130706
