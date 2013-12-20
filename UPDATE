@@ -4,6 +4,9 @@
   https://code.google.com/p/kgtp/wiki/HOWTO#What_is_KGTP
   https://code.google.com/p/kgtp/wiki/HOWTOCN#什么是KGTP
 
+* Fix build error from Linux kernel 3.5 to Linux kernel 3.9.
+  Thanks report from 钱凯
+
 *** 20131218
 
 * https://lkml.org/lkml/2013/12/18/931

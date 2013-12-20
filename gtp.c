@@ -155,12 +155,12 @@
 #warning "Cannot trace Linux kernel because Linux Kernel config doesn't open KPROBES.  Please open it in 'General setup->Kprobes' if you need it."
 #endif
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,9,0))
 #ifndef CONFIG_UPROBES
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0))
 #warning "Cannot trace user program because Linux Kernel config doesn't open UPROBES.  Please open it in 'Kernel hacking->Tracers->Enable uprobes-based dynamic events' if you need it."
-#else
-#warning "Cannot trace user program because the Linux Kernel that older than 3.5 doesn't support UPROBES."
 #endif
+#else
+#warning "Cannot trace user program because the Linux Kernel that older than 3.9 doesn't support UPROBES."
 #endif
 
 #ifdef USE_PROC
@@ -361,7 +361,7 @@ struct gtp_entry {
 		} kp;
 #endif
 
-#ifdef CONFIG_UPROBES
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,9,0)) && defined CONFIG_UPROBES
 		/* For gtp_entry_uprobe.  */
 		struct gtp_up {
 			struct inode		*inode;
@@ -5073,7 +5073,7 @@ gtp_handler(struct gtp_trace_s *gts)
 #endif
 #endif
 
-#ifdef CONFIG_UPROBES
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,9,0)) && defined CONFIG_UPROBES
 			if (gts->tpe->type == gtp_entry_uprobe)
 				gts->read_memory = gtp_task_handler_read;
 #endif
@@ -5411,7 +5411,7 @@ gtp_kp_ret_handler(struct kretprobe_instance *ri, struct pt_regs *regs)
 	return 0;
 }
 
-#ifdef CONFIG_UPROBES
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,9,0)) && defined CONFIG_UPROBES
 static int
 gtp_up_handler(struct uprobe_consumer *self, struct pt_regs *regs)
 {
@@ -6419,7 +6419,7 @@ gtp_gdbrsp_qtstop(void)
 				unregister_kprobe(&tpe->u.kp.kpret.kp);
 			tasklet_kill(&tpe->u.kp.stop_tasklet);
 		} else {
-#ifdef CONFIG_UPROBES
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,9,0)) && defined CONFIG_UPROBES
 			uprobe_unregister(tpe->u.up.inode, tpe->u.up.offset,
 					  &tpe->u.up.uc);
 #endif
@@ -8013,7 +8013,7 @@ gtp_wq_add_work(unsigned long data)
 	queue_work(gtp_wq, (struct work_struct *)data);
 }
 
-#ifdef CONFIG_UPROBES
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,9,0)) && defined CONFIG_UPROBES
 int
 gtp_uprobe_register(struct gtp_entry *tpe)
 {
@@ -8641,7 +8641,7 @@ next_list:
 			     (unsigned long)&tpe->u.kp.stop_work);
 
 		if (tpe->pid != gtpd_task->pid) {
-#ifdef CONFIG_UPROBES
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,9,0)) && defined CONFIG_UPROBES
 			tpe->type = gtp_entry_uprobe;
 			ret = gtp_uprobe_register(tpe);
 #else
