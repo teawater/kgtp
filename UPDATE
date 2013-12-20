@@ -1,16 +1,15 @@
-*** 20131218+
+*** 20131220
 
 * Update doc "What is KGTP".
   https://code.google.com/p/kgtp/wiki/HOWTO#What_is_KGTP
   https://code.google.com/p/kgtp/wiki/HOWTOCN#什么是KGTP
 
-* Update doc "Trace user applications".
-  https://code.google.com/p/kgtp/wiki/HOWTO#Trace_user_applications
-  https://code.google.com/p/kgtp/wiki/HOWTOCN#Trace用户程序
-
 * Fix build error from Linux kernel 3.5 to Linux kernel 3.9.
   Thanks report from 钱凯
 
+* Update doc "Trace user applications".
+  https://code.google.com/p/kgtp/wiki/HOWTO#Trace_user_applications
+  https://code.google.com/p/kgtp/wiki/HOWTOCN#Trace用户程序
 
 *** 20131218
 
