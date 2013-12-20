@@ -1,5 +1,19 @@
 *** 20131220
 
+* Get in github:
+  Get through https:
+  https://github.com/teawater/kgtp/archive/20131220.tar.gz
+  Get through git:
+  git clone https://github.com/teawater/kgtp.git
+  git checkout 20131220 -b 20131220
+
+* Get in CSDN:
+  Get through https:
+  https://code.csdn.net/teawater/kgtp/repository/archive?ref=20131220
+  Get through git:
+  git clone git://code.csdn.net/teawater/kgtp.git
+  git checkout 20131220 -b 20131220
+
 * Update doc "What is KGTP".
   https://code.google.com/p/kgtp/wiki/HOWTO#What_is_KGTP
   https://code.google.com/p/kgtp/wiki/HOWTOCN#什么是KGTP
