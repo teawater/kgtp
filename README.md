@@ -8,7 +8,7 @@ http://www.youtube.com/watch?v=7nfGAbNsEZY or http://www.tudou.com/programs/view
 http://www.infoq.com/cn/presentations/gdb-sharp-knife-kgtp-linux-kernel is the video that introduced KGTP in Chinese.<br>
 
 KGTP supports X86-32, X86-64, MIPS and ARM.<br>
-KGTP supports most versions of the kernel (from 2.6.18 to upstream).<br>
+KGTP supports most versions of Linux kernel (from 2.6.18 to upstream).<br>
 
 Please goto [HOWTO](https://code.google.com/p/kgtp/wiki/HOWTO)(English) or [HOWTOCN](https://code.google.com/p/kgtp/wiki/HOWTOCN)(Chinese) to get howto use KGTP.<br>
 Or download the pdf version in https://raw.github.com/teawater/kgtp/master/kgtp.pdf (English) or https://raw.github.com/teawater/kgtp/master/kgtpcn.pdf (Chinese).
