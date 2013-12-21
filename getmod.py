@@ -1,8 +1,8 @@
 #!/usr/bin/python
 
 # This script is used by GDB to load the symbols from Linux kernel modules
-# GPL
-# Copyright(C) KGTP team (https://code.google.com/p/kgtp/), 2011, 2012
+# Copyright(C) KGTP team (https://kgtp.googlecode.com), 2011-2013
+# Licensed under the GNU General Public License, version 2.0 (GPLv2)
 
 #Set special mod_search_dir
 #set $mod_search_dir="dir"

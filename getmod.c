@@ -1,21 +1,8 @@
 /*
  * Output Linux Kernel modules info in GDB add-symbol-file format.
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
- *
- * Copyright(C) KGTP team (https://code.google.com/p/kgtp/), 2011
+ * Copyright(C) KGTP team (https://kgtp.googlecode.com), 2011-2013
+ * Licensed under the GNU General Public License, version 2.0 (GPLv2)
  */
 
 #include <sys/types.h>
@@ -61,7 +48,7 @@ search_mod_1(char *dir, char *file)
 		ret = -1;
 		goto out;
 	}
-	while((ptr = readdir(dp)) != NULL) {
+	while ((ptr = readdir(dp)) != NULL) {
 		char	cdir[512];
 
 		if (ptr->d_type == DT_DIR) {
@@ -74,8 +61,7 @@ search_mod_1(char *dir, char *file)
 				ret = 1;
 				break;
 			}
-		}
-		else {
+		} else {
 			int	i;
 
 			snprintf(cdir, 512, "%s", ptr->d_name);
@@ -158,11 +144,11 @@ print_mod(char *name, char *addr)
 			}
 			if (i >= sdir_number) {
 				no_search_mod = 1;
-				fprintf(stderr, "#Cannot open any module search "
-					        "directories.  Auto open -n.\n");
+				fprintf(stderr,
+					"#Cannot open any module search directories.  Auto open -n.\n");
 			} else
-				fprintf(stderr, "#Cannot find file %s in the module search "
-					        "directories.  Just output the command with filename.\n",
+				fprintf(stderr,
+					"#Cannot find file %s in the module search directories.  Just output the command with filename.\n",
 					file);
 			printf("#add-symbol-file %s %s", file, addr);
 		} else
@@ -182,7 +168,7 @@ print_mod(char *name, char *addr)
 			strerror(errno));
 		exit(-errno);
 	}
-	while((ptr = readdir(dp)) != NULL) {
+	while ((ptr = readdir(dp)) != NULL) {
 		if (ptr->d_type == DT_REG) {
 			char	section_file_name[512];
 			FILE	*fp;
@@ -219,7 +205,7 @@ print_mod(char *name, char *addr)
 	}
 	closedir(dp);
 
-	printf ("\n");
+	printf("\n");
 }
 
 int
@@ -228,7 +214,9 @@ check_sdir(char *dir)
 	struct stat	sbuf;
 
 	if (stat(dir, &sbuf) || !S_ISDIR(sbuf.st_mode)) {
-		fprintf(stderr, "#%s is not a right directory.  Ignore it.\n", dir);
+		fprintf(stderr,
+			"#%s is not a right directory.  Ignore it.\n",
+			dir);
 		return 0;
 	}
 
@@ -243,8 +231,7 @@ add_sdir(char *dir)
 			sdir[sdir_number] = dir;
 			sdir_number++;
 		}
-	}
-	else {
+	} else {
 		fprintf(stderr, "Set too much module search directory.");
 		exit(-1);
 	}
@@ -256,8 +243,7 @@ add_rdir(char *dir)
 	if (rdir_number < SDIR_MAX) {
 		rdir[rdir_number] = dir;
 		rdir_number++;
-	}
-	else {
+	} else {
 		fprintf(stderr, "Set too much module search directory.");
 		exit(-1);
 	}
@@ -306,7 +292,7 @@ print_usage(char *arg)
 }
 
 int
-main(int argc,char *argv[],char *envp[])
+main(int argc, char *argv[], char *envp[])
 {
 	struct stat	sbuf;
 	FILE		*fp;
@@ -346,8 +332,8 @@ main(int argc,char *argv[],char *envp[])
 		add_sdir(get_default_sdir());
 	if (!no_search_mod && sdir_number == 0) {
 		no_search_mod = 1;
-		fprintf(stderr, "#Cannot open any module search "
-				"directories.  Auto open -n.\n");
+		fprintf(stderr,
+			"#Cannot open any module search directories.  Auto open -n.\n");
 	}
 
 	/* Check PROC_MOD.  */
@@ -362,13 +348,15 @@ main(int argc,char *argv[],char *envp[])
 		perror(PROC_MOD);
 		exit(-errno);
 	}
-	while(fgets(line, 4096, fp)) {
+	while (fgets(line, 4096, fp)) {
 		int	i;
 		size_t	size = strlen(line);
 		int	is_not_digit = 0;
 
 		if (line[size - 1] != '\n') {
-			fprintf(stderr, "line:%s is too big to parse by getmod.\n", line);
+			fprintf(stderr,
+				"line:%s is too big to parse by getmod.\n",
+				line);
 			exit(-1);
 		}
 
