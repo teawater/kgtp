@@ -1,3 +1,19 @@
+*** 20131220+
+
+* Remove txt documents because KGTP has pdf version documents now.
+
+* Update doc "Get help or report issues".
+  https://code.google.com/p/kgtp/wiki/HOWTO#Get_help_or_report_issues
+  https://code.google.com/p/kgtp/wiki/HOWTOCN#需要帮助或者汇报问题
+
+* Update doc "Get KGTP through git".
+  https://code.google.com/p/kgtp/wiki/HOWTO#Get_KGTP_through_git
+  https://code.google.com/p/kgtp/wiki/HOWTOCN#通过git下载KGTP
+
+* Update doc "Get KGTP through http".
+  https://code.google.com/p/kgtp/wiki/HOWTO#Get_KGTP_through_http
+  https://code.google.com/p/kgtp/wiki/HOWTOCN#通过http下载KGTP
+
 *** 20131220
 
 * Get in github:
