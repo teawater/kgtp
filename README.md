@@ -19,4 +19,5 @@ Please goto [Table of different between GDB debug normal program and KGTP](https
 
 Please go to https://github.com/teawater/kgtp/blob/master/UPDATE to get more info about KGTP update.<br>
 http://www.freelists.org/list/kgtp is the maillist of KGTP.<br>
+*317654748* is the QQ group of KGTP.<br>
 If KGTP works for you, please [donate](https://me.alipay.com/teawater) to support its development. Thanks!<br>
