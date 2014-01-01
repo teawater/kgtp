@@ -1,6 +1,8 @@
 KGTP http://kgtp.googlecode.com/
 ====
 
+*[中文介绍](https://code.google.com/p/kgtp/wiki/CN_Description)*<br>
+
 KGTP is a comprehensive dynamic tracer for analysing Linux kernel and application (including Android) problems on production systems in real time.<br>
 To use it, you don't need patch or rebuild the Linux kernel. Just build KGTP module and insmod it is OK.<br>
 
