@@ -543,7 +543,7 @@ if no_task:
 	cond_str = " (($p_cs & 3) == 0)"
 	tempfile.write("condition $bpnum "+cond_str+ignore_str+"\n")
 	tempfile.write("commands\n")
-	tempfile.write("collect $no_self_trace\n")
+	#tempfile.write("collect $no_self_trace\n")
 	tempfile.write("collect $p_ip\n")
 	tempfile.write("end\n")
 	tempfile.write("trace smp_apic_timer_interrupt\n")
@@ -556,7 +556,7 @@ if no_task:
 	cond_str = " (($p_cs & 3) == 0)"
 	tempfile.write("condition $bpnum "+cond_str+ignore_str+"\n")
 	tempfile.write("commands\n")
-	tempfile.write("collect $no_self_trace\n")
+	#tempfile.write("collect $no_self_trace\n")
 	tempfile.write("collect $p_ip\n")
 	tempfile.write("end\n")
 else:

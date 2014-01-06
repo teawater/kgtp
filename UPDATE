@@ -14,6 +14,8 @@
   https://code.google.com/p/kgtp/wiki/HOWTO#Get_KGTP_through_http
   https://code.google.com/p/kgtp/wiki/HOWTOCN#通过http下载KGTP
 
+* Remove line that access $no_self_trace in hotcode.py.
+
 *** 20131220
 
 * Get in github:
