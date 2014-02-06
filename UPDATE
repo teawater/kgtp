@@ -16,6 +16,9 @@
 
 * Remove line that access $no_self_trace in hotcode.py.
 
+* Remove "doc_install" and "doc_uninstall" in Makefile to handle error
+  of "make install".
+
 *** 20131220
 
 * Get in github:
