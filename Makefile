@@ -70,9 +70,9 @@ module_uninstall:
 	rm -rf $(MODULEDIR)gtp.ko
 	depmod -a
 
-others_install: program_install doc_install
+others_install: program_install
 
-others_uninstall: program_uninstall doc_uninstall
+others_uninstall: program_uninstall
 
 program_install: getmod getframe putgtprsp
 	cp getmod /sbin/
@@ -91,14 +91,6 @@ program_uninstall:
 	rm -rf /sbin/getframe
 	rm -rf /sbin/putgtprsp
 	rm -rf /bin/getgtprsp.pl
-
-doc_install:
-	mkdir -p /usr/share/kgtp/
-	cp howto.txt /usr/share/kgtp/
-	cp quickstart.txt /usr/share/kgtp/
-
-doc_uninstall:
-	rm -rf /usr/share/kgtp/
 
 gtp.ko: gtp.c gtp_rb.c ring_buffer.c ring_buffer.h perf_event.c
 ifneq ($(ARCH),)
