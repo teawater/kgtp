@@ -1,7 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import sys, getopt
+import sys, getopt, os
+
+kgtp_config = "/etc/kgtp"
+
+class Config:
+	pass
 
 class Lang:
 	def __init__(self, language = "en"):
@@ -23,6 +28,14 @@ def usage(name):
 	print "  -h, --help			Display this information."
 
 def main(argv):
+	#Check if we have root permission
+	if os.geteuid() != 0:
+		print "You need run this script as the root."
+		return -1
+
+	#Open config file
+
+	#Handle argv
 	lang = False
 	try:
 		opts, args = getopt.getopt(argv[1:], "hl:", ["help", "language="])
@@ -34,7 +47,21 @@ def main(argv):
 			usage(argv[0])
 			return -1
 		elif opt in ("-l", "--language"):
-			lang = Lang(arg)
+			lang = arg
+
+	#Open config file
+	try:
+		config = cPickle.load(file(kgtp_config))
+	except:
+		config = Config()
+		try:
+			f = file(kgtp_config, 'w+')
+			cPickle.dump(config, f)
+			f.close()
+		except:
+			print "Cannot save config to \"" + kgtp_config + "\"."
+			return -1
+
 	if not lang:
 		loop = True
 		while loop:
