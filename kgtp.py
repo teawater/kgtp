@@ -24,8 +24,9 @@ class Lang:
 def usage(name):
 	print "Usage: " + name + " [option]"
 	print "Options:"
-	print "  -l, --language=LANGUAGE	Set the language (en/cn) of output."
-	print "  -q, --quiet			"
+	print "  -l, --language=LANGUAGE	Set the language (English/Chinese) of output."
+	print "  -c, --config-file=CONFIG_FILE	Set dir of config file.  The default is \"" + kgtp_config + "\"."
+	print "  -r, --reconfig		Reconfig the KGTP."
 	print "  -h, --help			Display this information."
 
 def main(argv):
@@ -37,7 +38,7 @@ def main(argv):
 	#Handle argv
 	lang = False
 	try:
-		opts, args = getopt.getopt(argv[1:], "hl:", ["help", "language="])
+		opts, args = getopt.getopt(argv[1:], "hl:c:r", ["help", "language=", "config-file", "reconfig"])
 	except getopt.GetoptError:
 		usage(argv[0])
 		return -1
@@ -47,6 +48,7 @@ def main(argv):
 			return -1
 		elif opt in ("-l", "--language"):
 			lang = arg
+		elif opt in ("-l", "--language"):
 
 	#Open config file
 	try:
