@@ -11,6 +11,15 @@ class Lang:
 	self.data = {}
 	self.language = language
 	self.is_set = False
+	self.add(self,
+		 'Get following error when write config file "%s":',
+		 '写配置文件"%s"时有下面的错误:')
+	self.add(self,
+		 'Get following error when read config file "%s":',
+		 '读配置文件"%s"时有下面的错误:')
+	self.add(self,
+		 "Begin to setup KGTP...",
+		 '开始设置KGTP...')
 
     def set_language(self, language):
 	self.language = language
@@ -20,7 +29,7 @@ class Lang:
 	self.data[en] = cn
 
     def string(self, s):
-	if self.language == "en":
+	if self.language == "en" or (not self.data.has_key(s)):
 	    return s
 	return self.data[s]
 
@@ -31,10 +40,10 @@ class Config(ConfigParser):
 
     def add_miss(self):
 	'''Check if the config file misses some sections or options.
-	Add the missing sections and options and record them in list miss.
+	Add the missing sections and options and record them in dict miss.
 	Return miss.'''
-	#XXX add something maybe unknown
-	miss = []
+	#XXX 作检查增加缺失项目 根据需要增加未知项目
+	miss = {}
 	return miss
 
     def read(self, filename):
@@ -51,13 +60,13 @@ class Config(ConfigParser):
 	try:
 	    self.write(self)
 	except Exception, x:
-	    print lang.string("Get following error, when wrote config file"),'"',self.filename,'":'
+	    print lang.string('Get following error when write config file "%s":') %self.filename
 	    print x
 	    exit(-1)
 
 	if not err_msg:
 	    if len(miss) > 0:
-		#用miss 生成出错信息
+		#XXX 用miss 生成出错信息
 		err_msg = "xxx"
 
 	if err_msg:
@@ -118,11 +127,15 @@ def init(argv):
     try:
 	config.read(kgtp_config)
     except Exception,x:
-	print lang.string("Get following error, when read config file"),'"',config.filename,'":'
+	print lang.string('Get following error when read config file "%s":') %config.filename
 	print x
 	print lang.string("Begin to setup KGTP...")
+	return 1
 
     #Set lang from config.lang
+    
+
+    #Check if need auto check
 
     #Check if KGTP need check
 
@@ -132,9 +145,7 @@ def init(argv):
 
     #Check KGTP
 
-    #insmod
-
-    #start GDB
+    
 
     return 0
 
@@ -142,6 +153,9 @@ def config(auto = False):
     return 0
 
 def run():
+    #insmod
+
+    #start GDB
     return 0
 
 if __name__ == "__main__":
