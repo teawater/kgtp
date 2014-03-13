@@ -33,17 +33,53 @@ class Lang:
 	    return s
 	return self.data[s]
 
+def get_distro():
+    if os.path.exists("/etc/redhat-release"):
+	return "Redhat"
+
+    try:
+	fp = open("/etc/issue", "r")
+	version = fp.readline()[0,6].lower()
+	fp.close()
+	if cmp("ubuntu", version) == 0:
+	    return "Ubuntu"
+    finally:
+	return "other"
+
 class Config(ConfigParser):
     def __init__(self):
 	ConfigParser.__init__(self)
 	ConfigParser.ConfigParser()
 
+    def add_miss_section(self, miss, section):
+	if not self.has_section(self, section):
+	    self.add_section(self, section)
+	    miss[section] = []
+
+    def add_miss_option(self, miss, section, option, val, first)
+	if not self.has_option(self, section, option)：
+	    self.set(self, section, option, val)
+	    if first:
+		if not miss.has_key(section):
+		    miss[section] = [option]
+	    else:
+		if miss.has_key(section) and len(miss[section]) > 0:
+		    miss[section].append(option)
+
     def add_miss(self):
 	'''Check if the config file misses some sections or options.
 	Add the missing sections and options and record them in dict miss.
 	Return miss.'''
-	#XXX 作检查增加缺失项目 根据需要增加未知项目
 	miss = {}
+
+	add_miss_section(self, miss, "misc")
+	add_miss_option(self, misc, "misc", "language", "", True)
+	add_miss_option(self, misc, "misc", "distro", "")
+	#This option is the status of confg:
+	#"" means setup is not complete.
+	#"done" means setup is complete.
+	add_miss_option(self, misc, "misc", "setup", "")
+
 	return miss
 
     def read(self, filename):
@@ -66,8 +102,21 @@ class Config(ConfigParser):
 
 	if not err_msg:
 	    if len(miss) > 0:
-		#XXX 用miss 生成出错信息
-		err_msg = "xxx"
+		# Get err_msg according to miss.
+		err_msg = ""
+		for name in miss:
+		    if len(miss[name]) > 0:
+			err_msg += 'Section "' + name + '" miss'
+			first = True
+			for val in miss[name]:
+			    if first:
+				first = False
+			    else:
+				err_msg += ','
+			    err_msg = ' option "' + val + "\""
+			err_msg += ".\n"
+		    else:
+			err_msg += 'Miss section "' + name + "\".\n"
 
 	if err_msg:
 	    raise Exception(err_msg)
@@ -81,6 +130,35 @@ class Config(ConfigParser):
     def check(self):
 	if lang in self:
 	    print 1
+
+    def setup(self, auto = False):
+	#Add a flag to mark config file as doesn't complete.
+	self.set(self, "misc", "setup", "")
+	self.write(self)
+
+	#misc language
+	if ((not auto) or len(self.get(self, "misc", "language")) == 0) and (not lang.is_set):
+	    loop = True
+	    while loop:
+		s = raw_input("Which language do you want use?(English/Chinese)")
+		if s[0] == "e" or s[0] == "E":
+		    lang.set_langue("en")
+		    loop = False
+		elif s[0] == "c" or s[0] == "C":
+		    lang.set_langue("cn")
+		    loop = False
+	self.set(self, "misc", "language", lang.language)
+
+	#misc distro
+	distro = get_distro()
+	self.set(self, "misc", "distro", distro)
+	print ""
+
+	
+
+	#Add a flag to mark config file as doesn't complete.
+	self.set(self, "misc", "setup", "done")
+	self.write(self)
 
 def usage(name):
     print "Usage: " + name + " [option]"
@@ -133,7 +211,8 @@ def init(argv):
 	return 1
 
     #Set lang from config.lang
-    
+
+    #Check if config is done.
 
     #Check if need auto check
 
