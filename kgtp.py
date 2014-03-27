@@ -1,10 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import sys, getopt, os, ConfigParser
+import sys, getopt, os, ConfigParser, re
 
 #This is config file name
 kgtp_config = "/etc/kgtp"
+
+kgtp_need_gdb_version = 7.6
 
 class Lang:
     def __init__(self, language = "en"):
@@ -46,6 +48,68 @@ def get_distro():
     finally:
 	return "other"
 
+def get_gdb_version(gdb):
+    try:
+	f = os.popen(gdb + " -v")
+	v = f.readline()
+	f.close()
+    except:
+	return 0
+    if not re.match('^GNU gdb (.+) \d+\.\d+\S+$', v):
+	return 0
+
+    return float(re.search('\d+\.\d+', v).group())
+
+def get_source_version(distro, name):
+    if distro == "Redhat":
+	try:
+	    f = os.popen("yum list " + name)
+	    v = f.readlines()
+	    f.close()
+	except:
+	    return 0
+	if len(v) <= 0:
+            return 0
+	v = v[-1]
+    elif distro == "Ubuntu":
+	try:
+            f = os.popen("apt-get -qq changelog " + name)
+            v = f.readline()
+            f.close()
+	except:
+	    return 0
+    else:
+	return 0
+
+    if not re.match('^'+name, v):
+	return 0
+
+    return float(re.search('\d+\.\d+', v).group())
+
+def install_packages(distro, packages):
+    while True:
+	ret = 0
+	if distro == "Redhat":
+	    ret = os.system("sudo yum -y install " + packages)
+	elif distro == "Ubuntu":
+	    ret = os.system("apt-get -y install " + packages)
+	else:
+	    while True:
+		print lang.string("Please install " + packages + " before go to next step.\n")
+		s = raw_input(lang.string('Input "y" and press "Enter" to continue'))
+		if len(s) > 0 and (s[0] = 'y' or s[0] == "Y"):
+		    return
+
+	if ret == 0:
+	    break
+	else:
+	    while True:
+		s = raw_input(lang.string("Install packages failed.[Retry]/Exit"))
+		if len(s) == 0 or s[0] == 'r' or s[0] == 'R':
+		    break
+		if s[0] == "E" or s[0] == "e":
+		    exit(ret)
+
 class Config(ConfigParser):
     def __init__(self):
 	ConfigParser.__init__(self)
@@ -75,6 +139,10 @@ class Config(ConfigParser):
 	add_miss_section(self, miss, "misc")
 	add_miss_option(self, misc, "misc", "language", "", True)
 	add_miss_option(self, misc, "misc", "distro", "")
+
+	add_miss_section(self, miss, "gdb")
+	add_miss_option(self, misc, "gdb", "dir", "gdb", True)
+
 	#This option is the status of confg:
 	#"" means setup is not complete.
 	#"done" means setup is complete.
@@ -138,25 +206,79 @@ class Config(ConfigParser):
 
 	#misc language
 	if ((not auto) or len(self.get(self, "misc", "language")) == 0) and (not lang.is_set):
-	    loop = True
-	    while loop:
+	    while 1:
 		s = raw_input("Which language do you want use?(English/Chinese)")
+		if len(s) == 0:
+		    continue
 		if s[0] == "e" or s[0] == "E":
 		    lang.set_langue("en")
-		    loop = False
+		    break
 		elif s[0] == "c" or s[0] == "C":
 		    lang.set_langue("cn")
-		    loop = False
+		    break
 	self.set(self, "misc", "language", lang.language)
+
+	print lang.string("KGTP setup begin, please make sure current machine can access Internet first.\n")
+	raw_input(lang.string('Press "Enter" to continue'))
 
 	#misc distro
 	distro = get_distro()
 	self.set(self, "misc", "distro", distro)
-	print ""
+	if distro == "Redhat" or distro == "Ubuntu":
+	    print lang.string('Current system is "%s".') %distro
+	else:
+	    print lang.string("Current system is not complete support.  Need execute some commands with yourself.\nIf you want KGTP support your system, please report to https://github.com/teawater/kgtp/issues")
 
-	
+	#GDB
+	if distro == "Other" and not auto:
+	    install_packages(distro, "gdb")
+	version = get_gdb_version(self.get(self, "gdb", "dir"))
+	if version < kgtp_need_gdb_version and distro != "Other":
+	    #Try to install GDB from software source
+	    print lang.string("Current GDB is not available or too old for KGTP.\n")
+	    print lang.string("Check the software source...\n")
+	    version = get_source_version(distro, "gdb")
+	    if version >= kgtp_need_gdb_version:
+		print lang.string("Install GDB...\n")
+		install_packages(distro, "gdb")
+	    else:
+		 print lang.string("GDB in software source is too old for KGTP.\n")
+	if version < kgtp_need_gdb_version:
+	    #Install GDB from source code
+	    
 
-	#Add a flag to mark config file as doesn't complete.
+	#Make sure current linux kernel
+	#rpm -q kernel-$(uname -r)
+
+	#Install the software that build KGTP need.
+	while 1:
+	    ret = 0
+	    if distro == "Redhat":
+		ret = os.system("sudo yum -y install gcc makefile git")
+	    elif distro == "Ubuntu":
+		ret = os.system("apt-get -y install gcc texinfo m4 flex bison libncurses5-dev libexpat1-dev python-dev git-core")
+	    else if not auto:
+		print lang.string("Please install gcc texinfo m4 flex bison libncurses5-dev libexpat1-dev python-dev git before go to next step.\n")
+		raw_input(lang.string('Press "Enter" to continue'))
+	    if ret == 0:
+		break
+	    else:
+		while 1:
+		    s = raw_input(lang.string("Install packages failed.[Retry]/Exit"))
+		    if len(s) == 0 or s[0] == 'r' or s[0] == 'R':
+			break
+		    if s[0] == "E" or s[0] == "e":
+			exit(ret)
+
+	#Install Kernel debug image.
+
+	#Install source of Kernel.
+
+	#Install GDB that KGTP need.
+
+	#Get and build KGTP
+
+	#Add a flag to mark setup complete.
 	self.set(self, "misc", "setup", "done")
 	self.write(self)
 
@@ -216,19 +338,13 @@ def init(argv):
 
     #Check if need auto check
 
-    #Check if KGTP need check
-
     #Check GDB
 
+    #Check KGTP and insmod
+
     #Check Linux kernel
-
-    #Check KGTP
-
     
 
-    return 0
-
-def config(auto = False):
     return 0
 
 def run():
@@ -240,12 +356,12 @@ def run():
 if __name__ == "__main__":
     ret = init(sys.argv)
     if ret > 0:
-	#KGTP need reconfig.
+	#KGTP need setup.
 	auto = False
 	if ret == 2:
 	    auto = True
-	ret = config(auto)
+	ret = config.setup(auto)
     if ret < 0:
-	exit (ret)
+	exit(ret)
 
     run()
