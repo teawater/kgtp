@@ -1,12 +1,13 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-import sys, getopt, os, ConfigParser, re
+import sys, getopt, os, ConfigParser, re, shutil
 
 #This is config file name
-kgtp_config = "/etc/kgtp"
+kgtp_dir = os.environ.get("HOME") + "/kgtp/"
 
 kgtp_need_gdb_version = 7.6
+kgtp_install_gdb = "gdb-7.6"
 
 class Lang:
     def __init__(self, language = "en"):
@@ -35,6 +36,14 @@ class Lang:
 	    return s
 	return self.data[s]
 
+def retry(string = "", ret = -1):
+    while True:
+	s = raw_input(string + lang.string("[Retry]/Exit:"))
+	if len(s) == 0 or s[0] == 'r' or s[0] == 'R':
+	    break
+	if s[0] == "E" or s[0] == "e":
+	    exit(ret)
+
 def get_distro():
     if os.path.exists("/etc/redhat-release"):
 	return "Redhat"
@@ -54,7 +63,7 @@ def get_gdb_version(gdb):
 	v = f.readline()
 	f.close()
     except:
-	return 0
+	return -1
     if not re.match('^GNU gdb (.+) \d+\.\d+\S+$', v):
 	return 0
 
@@ -86,7 +95,7 @@ def get_source_version(distro, name):
 
     return float(re.search('\d+\.\d+', v).group())
 
-def install_packages(distro, packages):
+def install_packages(distro, packages, auto):
     while True:
 	ret = 0
 	if distro == "Redhat":
@@ -94,6 +103,8 @@ def install_packages(distro, packages):
 	elif distro == "Ubuntu":
 	    ret = os.system("apt-get -y install " + packages)
 	else:
+	    if auto:
+		return
 	    while True:
 		print lang.string("Please install " + packages + " before go to next step.\n")
 		s = raw_input(lang.string('Input "y" and press "Enter" to continue'))
@@ -103,12 +114,7 @@ def install_packages(distro, packages):
 	if ret == 0:
 	    break
 	else:
-	    while True:
-		s = raw_input(lang.string("Install packages failed.[Retry]/Exit"))
-		if len(s) == 0 or s[0] == 'r' or s[0] == 'R':
-		    break
-		if s[0] == "E" or s[0] == "e":
-		    exit(ret)
+	    retry(lang.string("Install packages failed."), ret)
 
 class Config(ConfigParser):
     def __init__(self):
@@ -142,6 +148,8 @@ class Config(ConfigParser):
 
 	add_miss_section(self, miss, "gdb")
 	add_miss_option(self, misc, "gdb", "dir", "gdb", True)
+	add_miss_option(self, misc, "gdb", "source", "")
+	
 
 	#This option is the status of confg:
 	#"" means setup is not complete.
@@ -206,7 +214,7 @@ class Config(ConfigParser):
 
 	#misc language
 	if ((not auto) or len(self.get(self, "misc", "language")) == 0) and (not lang.is_set):
-	    while 1:
+	    while True:
 		s = raw_input("Which language do you want use?(English/Chinese)")
 		if len(s) == 0:
 		    continue
@@ -218,7 +226,7 @@ class Config(ConfigParser):
 		    break
 	self.set(self, "misc", "language", lang.language)
 
-	print lang.string("KGTP setup begin, please make sure current machine can access Internet first.\n")
+	print lang.string("KGTP setup begin, please make sure current machine can access Internet first.")
 	raw_input(lang.string('Press "Enter" to continue'))
 
 	#misc distro
@@ -230,25 +238,80 @@ class Config(ConfigParser):
 	    print lang.string("Current system is not complete support.  Need execute some commands with yourself.\nIf you want KGTP support your system, please report to https://github.com/teawater/kgtp/issues")
 
 	#GDB
-	if distro == "Other" and not auto:
-	    install_packages(distro, "gdb")
-	version = get_gdb_version(self.get(self, "gdb", "dir"))
+	if distro == "Other":
+	    install_packages(distro, "gdb", auto)
+	tmp_gdb_dir = False
+	version = False
+	while true:
+	    if not tmp_gdb_dir:
+	        tmp_gdb_dir = self.get(self, "gdb", "dir")
+	    version = get_gdb_version(tmp_gdb_dir)
+	    if version > 0:
+	        self.set(self, "gdb", "dir", tmp_gdb_dir)
+	        break
+	    else:
+	        print lang.string('Cannot execute the GDB in "%s".') %tmp_gdb_dir
+	        tmp_gdb_dir = raw_input(lang.string('Please input the directory of GDB or just "Enter" to install it now:'))
+	        if len(tmp_gdb_dir) == 0:
+		    break
+	if version < kgtp_need_gdb_version and self.get(self, "gdb", "source") != "":
+	    #GDB was built from source that is too old.  Remove it.
+	    while true:
+		try:
+		    shutil.rmtree(self.get(self, "gdb", "source"))
+		except Exception, x:
+		    print lang.string('Get following error when remove directory "%s":') %self.get(self, "gdb", "source")
+		    print x
+		    retry()
+
 	if version < kgtp_need_gdb_version and distro != "Other":
 	    #Try to install GDB from software source
-	    print lang.string("Current GDB is not available or too old for KGTP.\n")
-	    print lang.string("Check the software source...\n")
+	    print lang.string("Current GDB is not available or too old for KGTP.")
+	    print lang.string("Check the software source...")
 	    version = get_source_version(distro, "gdb")
 	    if version >= kgtp_need_gdb_version:
-		print lang.string("Install GDB...\n")
-		install_packages(distro, "gdb")
+		print lang.string("Install GDB...")
+		install_packages(distro, "gdb", auto)
+		self.set(self, "gdb", "dir", "gdb")
+		self.set(self, "gdb", "source", "")
 	    else:
-		 print lang.string("GDB in software source is too old for KGTP.\n")
+		print lang.string("GDB in software source is too old for KGTP.")
 	if version < kgtp_need_gdb_version:
 	    #Install GDB from source code
-	    
+	    print lang.string("Get and build a GDB that works OK with KGTP...")
+	    if distro == "Ubuntu":
+		install_packages(distro, "gcc texinfo m4 flex bison libncurses5-dev libexpat1-dev python-dev wget", auto)
+	    else:
+		install_packages(distro, "gcc texinfo m4 flex bison ncurses-devel expat-devel python-devel wget", auto)
+	    while true:
+		ret = os.system("wget http://ftp.gnu.org/gnu/gdb/" + kgtp_install_gdb + ".tar.bz2")
+		if ret != 0:
+		    retry("Download source of GDB failed.")
+		    continue
+		ret = os.system("tar vxjf " + kgtp_install_gdb + " -C ./")
+		if ret != 0:
+		    shutil.rmtree(kgtp_dir + kgtp_install_gdb + ".tar.bz2", True)
+		    shutil.rmtree(kgtp_dir + kgtp_install_gdb, True)
+		    retry("Uncompress source package failed.")
+		    continue
+	    #XXX os.chdir
+	    #XXX config
+	    #XXX makefile
+	    shutil.rmtree(kgtp_dir + kgtp_install_gdb + ".tar.bz2", True)
+	    self.set(self, "gdb", "source", kgtp_dir + kgtp_install_gdb)
+	    self.set(self, "gdb", "dir", kgtp_dir + kgtp_install_gdb + "/gdb/gdb")
 
-	#Make sure current linux kernel
+	#Get Linux kernel status
+	#XXX Make sure current linux kernel
 	#rpm -q kernel-$(uname -r)
+
+	#KGTP
+	#XXX install kernel dev
+	if distro == "Ubuntu":#XXX
+	    install_packages(distro, "git-core", auto)
+	else:
+	    install_packages(distro, "git", auto)
+	
 
 	#Install the software that build KGTP need.
 	while 1:
@@ -263,7 +326,7 @@ class Config(ConfigParser):
 	    if ret == 0:
 		break
 	    else:
-		while 1:
+		while True:
 		    s = raw_input(lang.string("Install packages failed.[Retry]/Exit"))
 		    if len(s) == 0 or s[0] == 'r' or s[0] == 'R':
 			break
@@ -286,9 +349,9 @@ def usage(name):
     print "Usage: " + name + " [option]"
     print "Options:"
     print "  -l, --language=LANGUAGE	  Set the language (English/Chinese) of output."
-    print "  -c, --config-file=CONFIG_FILE    Set dir of config file.  The default is \"" + kgtp_config + "\"."
-    print "  -r, --reconfig		   Reconfig the KGTP."
-    print "  -h, --help		       Display this information."
+    print "  -d, --dir=KGTP_DIR    	  Set dir of kgtp.  The default is \"" + kgtp_dir + "\"."
+    print "  -r, --reconfig		  Reconfig the KGTP."
+    print "  -h, --help		          Display this information."
 
 def init(argv):
     '''Return 0 if init OK.
@@ -307,7 +370,7 @@ def init(argv):
 
     #Handle argv
     try:
-	opts, args = getopt.getopt(argv[1:], "hl:c:r", ["help", "language=", "config-file", "reconfig"])
+	opts, args = getopt.getopt(argv[1:], "hl:d:r", ["help", "language=", "dir", "reconfig"])
     except getopt.GetoptError:
 	usage(argv[0])
 	return -1
@@ -317,15 +380,19 @@ def init(argv):
 	    return -1
 	elif opt in ("-l", "--language"):
 	    lang.set_langue(arg)
-	elif opt in ("-c", "--config-file"):
-	    kgtp_config = arg
+	elif opt in ("-d", "--dir"):
+	    kgtp_dir = arg
 	elif opt in ("-r", "--reconfig"):
 	    return 1
+
+    #Dir
+    #XXX mkdir
+    os.chdir
 
     #Config
     config = Config()
     try:
-	config.read(kgtp_config)
+	config.read(kgtp_dir + "config")
     except Exception,x:
 	print lang.string('Get following error when read config file "%s":') %config.filename
 	print x
