@@ -149,7 +149,9 @@ class Config(ConfigParser):
 	add_miss_section(self, miss, "gdb")
 	add_miss_option(self, misc, "gdb", "dir", "gdb", True)
 	add_miss_option(self, misc, "gdb", "source", "")
-	
+
+	add_miss_section(self, miss, "kernel")
+	add_miss_option(self, misc, "kernel", "version", "", True)
 
 	#This option is the status of confg:
 	#"" means setup is not complete.
@@ -294,14 +296,21 @@ class Config(ConfigParser):
 		    shutil.rmtree(kgtp_dir + kgtp_install_gdb, True)
 		    retry("Uncompress source package failed.")
 		    continue
-	    #XXX os.chdir
-	    #XXX config
-	    #XXX makefile
-	    shutil.rmtree(kgtp_dir + kgtp_install_gdb + ".tar.bz2", True)
+		shutil.rmtree(kgtp_dir + kgtp_install_gdb + ".tar.bz2", True)
+		os.chdir(kgtp_dir + kgtp_install_gdb)
+		ret = os.system("./configure --disable-sid --disable-rda --disable-gdbtk --disable-tk --disable-itcl --disable-tcl --disable-libgui --disable-ld --disable-gas --disable-binutils --disable-gprof --with-gdb-datadir=" + kgtp_dir + kgtp_install_gdb + "gdb/data-directory/")
+		if ret == 0:
+		    ret = os.system("make all")
+		if ret != 0:
+		    shutil.rmtree(kgtp_dir + kgtp_install_gdb, True)
+		    retry("Build GDB failed.")
+		    continue
+		break
 	    self.set(self, "gdb", "source", kgtp_dir + kgtp_install_gdb)
 	    self.set(self, "gdb", "dir", kgtp_dir + kgtp_install_gdb + "/gdb/gdb")
 
 	#Get Linux kernel status
+	#XXX get version string
 	#XXX Make sure current linux kernel
 	#rpm -q kernel-$(uname -r)
 
@@ -386,8 +395,13 @@ def init(argv):
 	    return 1
 
     #Dir
-    #XXX mkdir
-    os.chdir
+    if os.path.exists(kgtp_dir):
+	if not os.path.isdir(kgtp_dir):
+	    print lang.string('"%s" is not a directory.') %kgtp_dir
+	    exit(-1)
+    else:
+	os.mkdir(kgtp_dir)
+    os.chdir(kgtp_dir)
 
     #Config
     config = Config()
