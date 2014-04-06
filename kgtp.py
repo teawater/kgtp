@@ -6,8 +6,23 @@ import sys, getopt, os, ConfigParser, re, shutil
 #This is config file name
 kgtp_dir = os.environ.get("HOME") + "/kgtp/"
 
+kgtp_repository_dict = {
+	"https://github.com/teawater/kgtp.git"     :"",
+	"git://code.csdn.net/teawater/kgtp.git"    :"",
+	"http://git.oschina.net/teawater/kgtp.git" :"",
+	"git://gitshell.com/teawater/kgtp.git"     :"",
+	"git://gitcafe.com/teawater/kgtp.git"      :""}
+
+kgtp_branch_dict = {
+	"release" : "Last release of KGTP",
+	"master"  : "Tested but does not released",
+	"dev"     : "Untested and unreleased"}
+
 kgtp_need_gdb_version = 7.6
 kgtp_install_gdb = "gdb-7.6"
+
+kgtp_py_dir_name = ""
+kgtp_py_last_time = 0
 
 class Lang:
     def __init__(self, language = "en"):
@@ -38,7 +53,7 @@ class Lang:
 
 def retry(string = "", ret = -1):
     while True:
-	s = raw_input(string + lang.string("[Retry]/Exit:"))
+	s = raw_input(string + lang.string(" [Retry]/Exit:"))
 	if len(s) == 0 or s[0] == 'r' or s[0] == 'R':
 	    break
 	if s[0] == "E" or s[0] == "e":
@@ -57,11 +72,18 @@ def get_distro():
     finally:
 	return "other"
 
+def get_cmd(cmd, first=True):
+    f = os.popen(cmd)
+    if first:
+        v = f.readline()
+    else
+	v = f.readlines()
+    f.close()
+    return v
+
 def get_gdb_version(gdb):
     try:
-	f = os.popen(gdb + " -v")
-	v = f.readline()
-	f.close()
+	v = get_cmd(gdb + " -v")
     except:
 	return -1
     if not re.match('^GNU gdb (.+) \d+\.\d+\S+$', v):
@@ -72,9 +94,7 @@ def get_gdb_version(gdb):
 def get_source_version(distro, name):
     if distro == "Redhat":
 	try:
-	    f = os.popen("yum list " + name)
-	    v = f.readlines()
-	    f.close()
+	    v = get_cmd("yum list " + name, False)
 	except:
 	    return 0
 	if len(v) <= 0:
@@ -82,9 +102,7 @@ def get_source_version(distro, name):
 	v = v[-1]
     elif distro == "Ubuntu":
 	try:
-            f = os.popen("apt-get -qq changelog " + name)
-            v = f.readline()
-            f.close()
+	    v = get_cmd("apt-get -qq changelog " + name)
 	except:
 	    return 0
     else:
@@ -96,12 +114,26 @@ def get_source_version(distro, name):
     return float(re.search('\d+\.\d+', v).group())
 
 def install_packages(distro, packages, auto):
+    #Remove the package that doesn't need install from packages
+    if distro != "Other":
+	for i in range(0, len(packages)):
+	    ret = 1
+	    if distro == "Redhat":
+		ret = os.system("rpm -q " + packages[i])
+	    elif distro == "Ubuntu":
+		ret = os.system("dpkg -s " + packages[i])
+	    if ret == 0:
+		del packages[i]
+    if len(packages) == 0:
+	return
+
+    print " ".join(packages)
     while True:
 	ret = 0
 	if distro == "Redhat":
 	    ret = os.system("sudo yum -y install " + packages)
 	elif distro == "Ubuntu":
-	    ret = os.system("apt-get -y install " + packages)
+	    ret = os.system("apt-get -y --force-yes install " + packages)
 	else:
 	    if auto:
 		return
@@ -115,6 +147,42 @@ def install_packages(distro, packages, auto):
 	    break
 	else:
 	    retry(lang.string("Install packages failed."), ret)
+
+def select_from_dict(k_dict, k_str, introduce):
+    k_list = k_dict.items()
+    while true:
+	default = -1
+	default_str = ""
+	for i in range(0, len(k_list)):
+	    print "[%d] %s %s" %i, k_list[i][0], k_list[i][1]
+	    if k_list[i][0] == k_str:
+		default = i
+		default_str = "[%d]" %i
+	try:
+	    select = input(introduce + default_str)
+	except SyntaxError:
+	    select = default
+	except Exception:
+	    select = -1
+	if select >= 0 or select < len(kgtp_repository_list):
+	    break
+    return k_list[select][0]
+
+def call_cmd(cmd, fail_str, chdir = "", outside_retry = False):
+    '''
+    Return True if call cmd success.
+    '''
+    if chdir != ""
+	os.chdir(chdir)
+    while true:
+	ret = os.system(cmd)
+	if ret == 0:
+	    break
+	retry(lang.string(fail_str, ret))
+	if outside_retry:
+	    return False
+
+    return True
 
 class Config(ConfigParser):
     def __init__(self):
@@ -146,12 +214,18 @@ class Config(ConfigParser):
 	add_miss_option(self, misc, "misc", "language", "", True)
 	add_miss_option(self, misc, "misc", "distro", "")
 
+	add_miss_section(self, miss, "kgtp")
+	add_miss_option(self, miss, "kgtp", "repository", "", True)
+	add_miss_option(self, miss, "kgtp", "branch", "")
+
 	add_miss_section(self, miss, "gdb")
-	add_miss_option(self, misc, "gdb", "dir", "gdb", True)
-	add_miss_option(self, misc, "gdb", "source", "")
+	add_miss_option(self, miss, "gdb", "dir", "gdb", True)
 
 	add_miss_section(self, miss, "kernel")
-	add_miss_option(self, misc, "kernel", "version", "", True)
+	add_miss_option(self, miss, "kernel", "version", "", True)
+	add_miss_option(self, miss, "kernel", "source", "")
+	add_miss_option(self, miss, "kernel", "image", "")
+	
 
 	#This option is the status of confg:
 	#"" means setup is not complete.
@@ -228,8 +302,50 @@ class Config(ConfigParser):
 		    break
 	self.set(self, "misc", "language", lang.language)
 
-	print lang.string("KGTP setup begin, please make sure current machine can access Internet first.")
+	print lang.string("KGTP setup begin, please make sure current machine can access internet first.")
 	raw_input(lang.string('Press "Enter" to continue'))
+
+	#Get the KGTP source code
+	if distro == "Ubuntu":
+	    install_packages(distro, ["git-core"], auto)
+	else:
+	    install_packages(distro, ["git"], auto)
+	if !auto
+	   or not self.get(self, "kgtp", "repository") in kgtp_repository_list
+	   or not self.get(self, "kgtp", "branch") in kgtp_branch_dict
+	   or not os.path.isdir(kgtp_dir + "kgtp/.git/"):
+	    shutil.rmtree(kgtp_dir + "kgtp/", True)
+	    while True:
+		r = select_dict(kgtp_repository_dict,
+				self.get(self, "kgtp", "repository"),
+				lang.string('Please select git repository of KGTP:'))
+		self.set(self, "kgtp", "repository", r)
+		b = select_dict(kgtp_branch_dict,
+				self.get(self, "kgtp", "branch"),
+				lang.string('Please select git branch of KGTP:'))
+		self.set(self, "kgtp", "branch", b)
+		if call_cmd("git clone " + r + " -b " + b,
+		            lang.string('Clone KGTP source failed.'),
+			    kgtp_dir,
+			    True):
+		    break
+	else
+	    call_cmd("git pull",
+		     lang.string('Update KGTP source in "%s" failed.') %(kgtp_dir + "kgtp/"),
+		     kgtp_dir + "kgtp/")
+
+	#Check if kgtp.py is updated.  Restart it if need.
+	kgtp_py_updated = False
+	if kgtp_py_dir_name == os.path.realpath(kgtp_dir + "kgtp/kgtp.py"):
+	   if os.path.getmtime(kgtp_py_dir_name) != kgtp_py_last_time:
+		kgtp_py_updated = True
+	else:
+	    if os.system("diff " + kgtp_dir + "kgtp/kgtp.py " + kgtp_py_dir_name) != 0:
+		kgtp_py_updated = True
+	if kgtp_py_updated:
+	    print lang.string("kgtp.py was updated, restarting...")
+	    self.write(self)
+	    os.execl("/usr/bin/python", "python", kgtp_dir + "kgtp/kgtp.py")
 
 	#misc distro
 	distro = get_distro()
@@ -237,11 +353,11 @@ class Config(ConfigParser):
 	if distro == "Redhat" or distro == "Ubuntu":
 	    print lang.string('Current system is "%s".') %distro
 	else:
-	    print lang.string("Current system is not complete support.  Need execute some commands with yourself.\nIf you want KGTP support your system, please report to https://github.com/teawater/kgtp/issues")
+	    print lang.string("Current system is not complete support.  Need execute some commands with yourself.\nIf you want KGTP support your system, please report to https://github.com/teawater/kgtp/issues or teawater@gmail.com.")
 
 	#GDB
 	if distro == "Other":
-	    install_packages(distro, "gdb", auto)
+	    install_packages(distro, ["gdb"], auto)
 	tmp_gdb_dir = False
 	version = False
 	while true:
@@ -273,7 +389,7 @@ class Config(ConfigParser):
 	    version = get_source_version(distro, "gdb")
 	    if version >= kgtp_need_gdb_version:
 		print lang.string("Install GDB...")
-		install_packages(distro, "gdb", auto)
+		install_packages(distro, ["gdb"], auto)
 		self.set(self, "gdb", "dir", "gdb")
 		self.set(self, "gdb", "source", "")
 	    else:
@@ -282,9 +398,9 @@ class Config(ConfigParser):
 	    #Install GDB from source code
 	    print lang.string("Get and build a GDB that works OK with KGTP...")
 	    if distro == "Ubuntu":
-		install_packages(distro, "gcc texinfo m4 flex bison libncurses5-dev libexpat1-dev python-dev wget", auto)
+		install_packages(distro, ["gcc", "texinfo", "m4", "flex", "bison", "libncurses5-dev", "libexpat1-dev", "python-dev", "wget"], auto)
 	    else:
-		install_packages(distro, "gcc texinfo m4 flex bison ncurses-devel expat-devel python-devel wget", auto)
+		install_packages(distro, "gcc", "texinfo", "m4", "flex", "bison", "ncurses-devel", "expat-devel", "python-devel", "wget", auto)
 	    while true:
 		ret = os.system("wget http://ftp.gnu.org/gnu/gdb/" + kgtp_install_gdb + ".tar.bz2")
 		if ret != 0:
@@ -309,46 +425,77 @@ class Config(ConfigParser):
 	    self.set(self, "gdb", "source", kgtp_dir + kgtp_install_gdb)
 	    self.set(self, "gdb", "dir", kgtp_dir + kgtp_install_gdb + "/gdb/gdb")
 
-	#Get Linux kernel status
-	#XXX get version string
-	#XXX Make sure current linux kernel
-	#rpm -q kernel-$(uname -r)
-
-	#KGTP
-	#XXX install kernel dev
-	if distro == "Ubuntu":#XXX
-	    install_packages(distro, "git-core", auto)
+	#Kernel dev
+	kernel_version = get_cmd("uname -r")
+	kernel_own_build = True
+	if distro == "Ubuntu" and os.system("dpkg -s linux-image-" + kernel_version) == 0:
+	    #source
+	    install_packages(distro, ["linux-headers-generic", "dpkg-dev", "wget"], auto)
+	    call_cmd("apt-get source linux-image-" + kernel_version, lang.string("Install Linux kernel source failed. ", kgtp_dir)
+	    short_version = re.search('^\d+\.\d+\.\d+', kernel_version).group()
+	    source = ""
+	    for f in os.listdir(kgtp_dir):
+		if os.path.isdir(kgtp_dir + f) and if re.match('^linux.*'+ short_version + "$", f):
+		    source = f
+	    if source == "":
+		print lang.string('Cannot find Linux kernel source in "%s".') %kgtp_dir
+		print lang.string('Please report to https://github.com/teawater/kgtp/issues or teawater@gmail.com.')
+		exit(-1)
+	    try:
+	        os.makedirs("/build/buildd/", 0700)
+	    except:
+		pass
+	    if self.get(self, "kernel", "source") != "":
+		shutil.rmtree(self.get(self, "kernel", "source"), True)
+	    shutil.move(kgtp_dir + source, "/build/buildd/" + source)
+	    self.set(self, "kernel", "source", "/build/buildd/" + source)
+	    #image
+	    if os.system("dpkg -s linux-image-" + kernel_version + "-dbgsym") != 0:
+		name = get_cmd("lsb_release -cs")
+		f = open("/etc/apt/sources.list.d/ddebs.list", "w")
+		f.write("deb http://ddebs.ubuntu.com/ " + name + " main restricted universe multiverse\n")
+		f.write("deb http://ddebs.ubuntu.com/ " + name + "-security main restricted universe multiverse\n")
+		f.write("deb http://ddebs.ubuntu.com/ " + name + "-updates main restricted universe multiverse\n")
+		f.write("deb http://ddebs.ubuntu.com/ " + name + "-proposed main restricted universe multiverse\n")
+		f.close()
+		os.system("apt-get update")
+		install_packages(distro, ["linux-image-" + kernel_version + "-dbgsym"], auto)
+	    self.set(self, "kernel", "image", "/usr/lib/debug/boot/vmlinux-" + kernel_version)
+	elif distro == "Redhat" and os.system("rpm -q kernel-" + kernel_version) == 0:
+	    install_packages(distro, ["kernel-devel-" + kernel_version], auto)
+	    if os.system("rpm -q kernel-debuginfo-" + kernel_version) != 0:
+		call_cmd("debuginfo-install kernel", lang.string("Install Linux kernel debug image failed. ")
+	    self.set(self, "kernel", "source", "")
+	    self.set(self, "kernel", "image", "/usr/lib/debug/lib/modules/" + kernel_version + "/vmlinux")
 	else:
-	    install_packages(distro, "git", auto)
-	
-
-	#Install the software that build KGTP need.
-	while 1:
-	    ret = 0
-	    if distro == "Redhat":
-		ret = os.system("sudo yum -y install gcc makefile git")
-	    elif distro == "Ubuntu":
-		ret = os.system("apt-get -y install gcc texinfo m4 flex bison libncurses5-dev libexpat1-dev python-dev git-core")
-	    else if not auto:
-		print lang.string("Please install gcc texinfo m4 flex bison libncurses5-dev libexpat1-dev python-dev git before go to next step.\n")
-		raw_input(lang.string('Press "Enter" to continue'))
-	    if ret == 0:
-		break
+	    self.set(self, "kernel", "source", "")
+	    if distro == "Other":
+		install_packages(distro, ["kernel-header", "kernel-debug-image", "kernel-source"], auto)
+	    if os.path.exists("/lib/modules/" + kernel_version + "/build/vmlinux"):
+		default_dir = os.path.realpath("/lib/modules/" + kernel_version + "/build/vmlinux")
+		show_dir = "[" + default_dir + "]"
 	    else:
-		while True:
-		    s = raw_input(lang.string("Install packages failed.[Retry]/Exit"))
-		    if len(s) == 0 or s[0] == 'r' or s[0] == 'R':
-			break
-		    if s[0] == "E" or s[0] == "e":
-			exit(ret)
+		default_dir = ""
+		show_dir = ""
+	    while True:
+		image_dir = raw_input(lang.string("Please input the directory name of kernel debug image:") + show_dir)
+		if len(image_dir) == 0:
+		    image_dir = default_dir
+		image_dir = os.path.realpath(image_dir)
+		if os.path.isfile(image_dir):
+		    break
+	    self.set(self, "kernel", "image", image_dir)
 
-	#Install Kernel debug image.
+	#Build KGTP
+	os.chdir
 
-	#Install source of Kernel.
+	#Insmod
 
-	#Install GDB that KGTP need.
+	#Check if debug image is right
 
-	#Get and build KGTP
+	#Ask how long do a auto reconfig to update KGTP
+
+	#Ask if copy kgtp.py to /usr/sbin/
 
 	#Add a flag to mark setup complete.
 	self.set(self, "misc", "setup", "done")
@@ -402,6 +549,11 @@ def init(argv):
     else:
 	os.mkdir(kgtp_dir)
     os.chdir(kgtp_dir)
+    kgtp_dir = os.path.realpath(kgtp_dir) + "/"
+
+    #Get kgtp_py_dir_name
+    kgtp_py_dir_name = os.path.realpath(argv[0])
+    kgtp_py_last_time = os.path.getmtime(kgtp_py_dir_name)
 
     #Config
     config = Config()
