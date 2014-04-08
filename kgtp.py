@@ -106,7 +106,7 @@ def get_gdb_version(gdb):
     except:
 	return -1
     if not re.match('^GNU gdb (.+) \d+\.\d+\S+$', v):
-	return 0
+	return -1
 
     return float(re.search('\d+\.\d+', v).group())
 
@@ -403,6 +403,7 @@ class Config(ConfigParser):
 	if distro == "Other":
 	    install_packages(distro, ["gdb"], auto)
 	while true:
+	    #Get gdb_dir
 	    gdb_dir = self.get(self, "gdb", "dir")
 	    if gdb_dir == "":
 		#Find GDB from PATH
@@ -412,59 +413,50 @@ class Config(ConfigParser):
 			break
 	    if not auto:
 		if gdb_dir != "":
-		    default_str = "["+ gdb_dir +"]"
+		    s = lang.string('Please input the directory of GDB:') + "["+ gdb_dir +"]"
 		else:
-		    default_str = ""
-	        s = raw_input(lang.string('Please input the directory of GDB:') + default_str)
+		    s = lang.string('Please input the directory of GDB or just "Enter" to get it now:')
+	        s = raw_input(s)
 	        if len(s) == 0:
-		    if gdb_dir != "":
-			s = gdb_dir
-		    else
+		    s = gdb_dir
+		if len(s) != 0 and get_gdb_version(s) < 0:
+		    print lang.string('"%s" is not right.') %s
+		    continue
+	        gdb_dir = os.path.realpath(s)
+	    #Check version
+	    if gdb_dir != ""
+		if get_gdb_version(gdb_dir) >= kgtp_need_gdb_version:
+		    if gdb_dir != self.get(self, "gdb", "dir")
+		       and self.get(self, "gdb", "source") != "":
+			#Get a new GDB from input.
+			#So the source of GDB is not need.  Remove it.
+			shutil.rmtree(self.get(self, "gdb", "source"), True)
+			self.set(self, "gdb", "source", "")
+		    self.set(self, "gdb", "dir", gdb_dir)
+		else:
+		    if not yes_no((lang.string('Version of "%s" is older than %s, do you want to get a new version GDB:') %gdb_dir,str(kgtp_need_gdb_version)), True, True):
 			continue
-		
-
-	tmp_gdb_dir = False
-	version = False
-	
-	
-	#Find GDB from PATH
-	for p in os.environ.get("PATH").split(':'):
-	    if os.path.isfile(p + "/gdb")
-	while true:
-	    if not tmp_gdb_dir:
-	        tmp_gdb_dir = self.get(self, "gdb", "dir")
-	    version = get_gdb_version(tmp_gdb_dir)
-	    if version > 0:
-	        self.set(self, "gdb", "dir", tmp_gdb_dir)
-	        break
-	    else:
-	        print lang.string('Cannot execute the GDB in "%s".') %tmp_gdb_dir
-	        tmp_gdb_dir = raw_input(lang.string('Please input the directory of GDB or just "Enter" to install it now:'))
-	        if len(tmp_gdb_dir) == 0:
-		    break
-	if version < kgtp_need_gdb_version and self.get(self, "gdb", "source") != "":
 	    #GDB was built from source that is too old.  Remove it.
-	    while true:
-		try:
-		    shutil.rmtree(self.get(self, "gdb", "source"))
-		except Exception, x:
-		    print lang.string('Get following error when remove directory "%s":') %self.get(self, "gdb", "source")
-		    print x
-		    retry()
-
-	if version < kgtp_need_gdb_version and distro != "Other":
-	    #Try to install GDB from software source
-	    print lang.string("Current GDB is not available or too old for KGTP.")
-	    print lang.string("Check the software source...")
-	    version = get_source_version(distro, "gdb")
-	    if version >= kgtp_need_gdb_version:
-		print lang.string("Install GDB...")
-		install_packages(distro, ["gdb"], auto)
-		self.set(self, "gdb", "dir", "gdb")
+	    if self.get(self, "gdb", "source") != "":
+		while true:
+		    try:
+			shutil.rmtree(self.get(self, "gdb", "source"))
+		    except Exception, x:
+			print lang.string('Get following error when remove directory "%s":') %self.get(self, "gdb", "source")
+			print x
+			retry()
 		self.set(self, "gdb", "source", "")
-	    else:
-		print lang.string("GDB in software source is too old for KGTP.")
-	if version < kgtp_need_gdb_version:
+	    #Try to install GDB from software source
+	    if distro != "Other":
+		print lang.string("Check the software source...")
+		version = get_source_version(distro, "gdb")
+		if version >= kgtp_need_gdb_version:
+		    print lang.string("Install GDB...")
+		    install_packages(distro, ["gdb"], auto)
+		    self.set(self, "gdb", "dir", "gdb")
+		    continue
+		else:
+		    print lang.string("GDB in software source is too old for KGTP.")
 	    #Install GDB from source code
 	    print lang.string("Get and build a GDB that works OK with KGTP...")
 	    if distro == "Ubuntu":
@@ -750,13 +742,14 @@ def init(argv):
     if update_days * 24 * 3600 + setup_time < int(time.time()):
 	if update_days > 0:
 	    print lang.string("KGTP source has not been updated more than %d days.") %update_days
-	if yes_not("Update source of KGTP?", True, update_days > 0):
+	if yes_no("Update source of KGTP?", True, update_days > 0):
 	    return 2
 
     return 0
 
 def run():
-    
+    gdb_dir = config.get("gdb", "dir")
+    os.execl(gdb_dir, gdb_dir, config.get("kernel", "image"))
 
 if __name__ == "__main__":
     ret = init(sys.argv)
