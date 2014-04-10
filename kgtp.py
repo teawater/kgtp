@@ -13,10 +13,12 @@ kgtp_repository_dict = {
 	"git://gitshell.com/teawater/kgtp.git"     :"",
 	"git://gitcafe.com/teawater/kgtp.git"      :""}
 
+#kgtp_branch_dict = {
+	#"release" : "Last release of KGTP",
+	#"master"  : "Tested but does not released",
+	#"dev"     : "Untested and unreleased"}
 kgtp_branch_dict = {
-	"release" : "Last release of KGTP",
-	"master"  : "Tested but does not released",
-	"dev"     : "Untested and unreleased"}
+	"script" : "Just for test"}
 
 kgtp_need_gdb_version = 7.6
 kgtp_install_gdb = "gdb-7.6"
@@ -29,14 +31,11 @@ class Lang:
 	self.data = {}
 	self.language = language
 	self.is_set = False
-	self.add(self,
-		 'Get following error when write config file "%s":',
+	self.add('Get following error when write config file "%s":',
 		 '写配置文件"%s"时有下面的错误:')
-	self.add(self,
-		 'Get following error when read config file "%s":',
+	self.add('Get following error when read config file "%s":',
 		 '读配置文件"%s"时有下面的错误:')
-	self.add(self,
-		 "Begin to setup KGTP...",
+	self.add("Begin to setup KGTP...",
 		 '开始设置KGTP...')
 
     def set_language(self, language):
@@ -95,7 +94,7 @@ def get_cmd(cmd, first=True):
     f = os.popen(cmd)
     if first:
         v = f.readline()
-    else
+    else:
 	v = f.readlines()
     f.close()
     return v
@@ -146,7 +145,7 @@ def install_packages(distro, packages, auto):
     if len(packages) == 0:
 	return
 
-    print " ".join(packages)
+    packages = " ".join(packages)
     while True:
 	ret = 0
 	if distro == "Redhat":
@@ -157,9 +156,9 @@ def install_packages(distro, packages, auto):
 	    if auto:
 		return
 	    while True:
-		print lang.string("Please install " + packages + " before go to next step.\n")
+		print(lang.string("Please install " + packages + " before go to next step.\n"))
 		s = raw_input(lang.string('Input "y" and press "Enter" to continue'))
-		if len(s) > 0 and (s[0] = 'y' or s[0] == "Y"):
+		if len(s) > 0 and (s[0] == 'y' or s[0] == "Y"):
 		    return
 
 	if ret == 0:
@@ -169,11 +168,11 @@ def install_packages(distro, packages, auto):
 
 def select_from_dict(k_dict, k_str, introduce):
     k_list = k_dict.items()
-    while true:
+    while True:
 	default = -1
 	default_str = ""
 	for i in range(0, len(k_list)):
-	    print "[%d] %s %s" %i, k_list[i][0], k_list[i][1]
+	    print("[%d] %s %s" %(i, k_list[i][0], k_list[i][1]))
 	    if k_list[i][0] == k_str:
 		default = i
 		default_str = "[%d]" %i
@@ -191,9 +190,9 @@ def call_cmd(cmd, fail_str, chdir = "", outside_retry = False):
     '''
     Return True if call cmd success.
     '''
-    if chdir != ""
+    if chdir != "":
 	os.chdir(chdir)
-    while true:
+    while True:
 	ret = os.system(cmd)
 	if ret == 0:
 	    break
@@ -204,13 +203,15 @@ def call_cmd(cmd, fail_str, chdir = "", outside_retry = False):
     return True
 
 def kgtp_insmod(gdb, kernel_image):
+    global kgtp_dir
+
     #Insmod
     if not os.path.isdir("/sys/kernel/debug/"):
 	os.system("mount -t sysfs none /sys/")
 	os.system("mount -t debugfs none /sys/kernel/debug/")
     os.system("rmmod gtp")
     if os.system("insmod " + kgtp_dir + "kgtp/gtp.ko"):
-	print lang.string('Insmod KGTP module "%s" failed.') %kgtp_dir + "kgtp/gtp.ko"
+	print(lang.string('Insmod KGTP module "%s" failed.') %(kgtp_dir + "kgtp/gtp.ko"))
 	return False
 
     #Check if debug image is right
@@ -225,74 +226,32 @@ def kgtp_insmod(gdb, kernel_image):
     ##With linux_banner
     return True
 
-class Config(ConfigParser):
+class Config():
     def __init__(self):
-	ConfigParser.__init__(self)
-	ConfigParser.ConfigParser()
+	self.c = ConfigParser.ConfigParser()
 
-    def add_miss_section(self, miss, section):
-	if not self.has_section(self, section):
-	    self.add_section(self, section)
-	    miss[section] = []
+    def set(self, section, option, value = ""):
+	self.c.set(section, option, value)
 
-    def add_miss_option(self, miss, section, option, val, first)
-	if not self.has_option(self, section, option)：
-	    self.set(self, section, option, val)
-	    if first:
-		if not miss.has_key(section):
-		    miss[section] = [option]
-	    else:
-		if miss.has_key(section) and len(miss[section]) > 0:
-		    miss[section].append(option)
-
-    def add_miss(self):
-	'''Check if the config file misses some sections or options.
-	Add the missing sections and options and record them in dict miss.
-	Return miss.'''
-	miss = {}
-
-	add_miss_section(self, miss, "misc")
-	add_miss_option(self, misc, "misc", "language", "", True)
-	add_miss_option(self, misc, "misc", "distro", "")
-	add_miss_option(self, misc, "misc", "update_days", "")
-	add_miss_option(self, misc, "misc", "setup_time", "")
-	add_miss_option(self, misc, "misc", "install_dir", "/usr/sbin/")
-
-	add_miss_section(self, miss, "kgtp")
-	add_miss_option(self, miss, "kgtp", "repository", "", True)
-	add_miss_option(self, miss, "kgtp", "branch", "")
-
-	add_miss_section(self, miss, "gdb")
-	add_miss_option(self, miss, "gdb", "dir", "gdb", True)
-
-	add_miss_section(self, miss, "kernel")
-	add_miss_option(self, miss, "kernel", "version", "", True)
-	add_miss_option(self, miss, "kernel", "source", "")
-	add_miss_option(self, miss, "kernel", "image", "")
-
-	#This option is the status of confg:
-	#"" means setup is not complete.
-	#"done" means setup is complete.
-	add_miss_option(self, misc, "misc", "setup", "")
-
-	return miss
+    def get(self, section, option):
+	return self.c.get(section, option)
 
     def read(self, filename):
 	self.filename = filename
 
 	err_msg = False
 	try:
-	    ConfigParser.read(self, filename)
+	    self.c.read(filename)
 	except Exception,x:
 	    err_msg = x
 
-	miss = self.add_miss(self)
+	miss = self.add_miss()
 
 	try:
-	    self.write(self)
+	    self.write()
 	except Exception, x:
-	    print lang.string('Get following error when write config file "%s":') %self.filename
-	    print x
+	    print(lang.string('Get following error when write config file "%s":')) %self.filename
+	    print(x)
 	    exit(-1)
 
 	if not err_msg:
@@ -320,20 +279,65 @@ class Config(ConfigParser):
 	fp = open(self.filename,"w+")
 	fp.write("# This file is generated by kgtp.py\n")
 	fp.write("# DO NOT EDIT THIS FILE\n")
-	ConfigParser.write(fp)
+	self.c.write(fp)
 	fp.close()
-	
-    def check(self):
-	if lang in self:
-	    print 1
+
+    def add_miss_section(self, miss, section):
+	if not self.c.has_section(section):
+	    self.c.add_section(section)
+	    miss[section] = []
+
+    def add_miss_option(self, miss, section, option, val, first = False):
+	if not self.c.has_option(section, option):
+	    self.set(section, option, val)
+	    if first:
+		if not miss.has_key(section):
+		    miss[section] = [option]
+	    else:
+		if miss.has_key(section) and len(miss[section]) > 0:
+		    miss[section].append(option)
+
+    def add_miss(self):
+	'''Check if the config file misses some sections or options.
+	Add the missing sections and options and record them in dict miss.
+	Return miss.'''
+	miss = {}
+
+	self.add_miss_section(miss, "misc")
+	self.add_miss_option(miss, "misc", "language", "", True)
+	self.add_miss_option(miss, "misc", "distro", "")
+	self.add_miss_option(miss, "misc", "update_days", "")
+	self.add_miss_option(miss, "misc", "setup_time", "")
+	self.add_miss_option(miss, "misc", "install_dir", "/usr/sbin/")
+
+	self.add_miss_section(miss, "kgtp")
+	self.add_miss_option(miss, "kgtp", "repository", "", True)
+	self.add_miss_option(miss, "kgtp", "branch", "")
+
+	self.add_miss_section(miss, "gdb")
+	self.add_miss_option(miss, "gdb", "dir", "gdb", True)
+
+	self.add_miss_section(miss, "kernel")
+	self.add_miss_option(miss, "kernel", "version", "", True)
+	self.add_miss_option(miss, "kernel", "source", "")
+	self.add_miss_option(miss, "kernel", "image", "")
+
+	#This option is the status of confg:
+	#"" means setup is not complete.
+	#"done" means setup is complete.
+	self.add_miss_option(miss, "misc", "setup", "")
+
+	return miss
 
     def setup(self, auto = False):
+	global kgtp_dir, kgtp_repository_dict, kgtp_branch_dict, kgtp_need_gdb_version, kgtp_install_gdb, kgtp_py_dir_name, kgtp_py_last_time
+
 	#Add a flag to mark config file as doesn't complete.
-	self.set(self, "misc", "setup", "")
-	self.write(self)
+	self.set("misc", "setup",)
+	self.write()
 
 	#misc language
-	if ((not auto) or len(self.get(self, "misc", "language")) == 0) and (not lang.is_set):
+	if ((not auto) or len(self.get("misc", "language")) == 0) and (not lang.is_set):
 	    while True:
 		s = raw_input("Which language do you want use?(English/Chinese)")
 		if len(s) == 0:
@@ -344,36 +348,44 @@ class Config(ConfigParser):
 		elif s[0] == "c" or s[0] == "C":
 		    lang.set_langue("cn")
 		    break
-	self.set(self, "misc", "language", lang.language)
+	self.set("misc", "language", lang.language)
 
-	print lang.string("KGTP config begin, please make sure current machine can access internet first.")
+	print(lang.string("KGTP config begin, please make sure current machine can access internet first."))
 	raw_input(lang.string('Press "Enter" to continue'))
+
+	#misc distro
+	distro = get_distro()
+	self.set("misc", "distro", distro)
+	if distro == "Redhat" or distro == "Ubuntu":
+	    print(lang.string('Current system is "%s".') %distro)
+	else:
+	    print(lang.string("Current system is not complete support.  Need execute some commands with yourself.\nIf you want KGTP support your system, please report to https://github.com/teawater/kgtp/issues or teawater@gmail.com."))
 
 	#Get the KGTP source code
 	if distro == "Ubuntu":
 	    install_packages(distro, ["git-core"], auto)
 	else:
 	    install_packages(distro, ["git"], auto)
-	if !auto
-	   or not self.get(self, "kgtp", "repository") in kgtp_repository_list
-	   or not self.get(self, "kgtp", "branch") in kgtp_branch_dict
+	if not auto \
+	   or not self.get("kgtp", "repository") in kgtp_repository_list \
+	   or not self.get("kgtp", "branch") in kgtp_branch_dict \
 	   or not os.path.isdir(kgtp_dir + "kgtp/.git/"):
 	    shutil.rmtree(kgtp_dir + "kgtp/", True)
 	    while True:
-		r = select_dict(kgtp_repository_dict,
-				self.get(self, "kgtp", "repository"),
+		r = select_from_dict(kgtp_repository_dict,
+				self.get("kgtp", "repository"),
 				lang.string('Please select git repository of KGTP:'))
-		self.set(self, "kgtp", "repository", r)
-		b = select_dict(kgtp_branch_dict,
-				self.get(self, "kgtp", "branch"),
+		self.set("kgtp", "repository", r)
+		b = select_from_dict(kgtp_branch_dict,
+				self.get("kgtp", "branch"),
 				lang.string('Please select git branch of KGTP:'))
-		self.set(self, "kgtp", "branch", b)
+		self.set("kgtp", "branch", b)
 		if call_cmd("git clone " + r + " -b " + b,
 		            lang.string('Clone KGTP source failed.'),
 			    kgtp_dir,
 			    True):
 		    break
-	else
+	else:
 	    call_cmd("git pull",
 		     lang.string('Update KGTP source in "%s" failed.') %(kgtp_dir + "kgtp/"),
 		     kgtp_dir + "kgtp/")
@@ -387,24 +399,16 @@ class Config(ConfigParser):
 	    if os.system("diff " + kgtp_dir + "kgtp/kgtp.py " + kgtp_py_dir_name) != 0:
 		kgtp_py_updated = True
 	if kgtp_py_updated:
-	    print lang.string("kgtp.py was updated, restarting...")
-	    self.write(self)
+	    print(lang.string("kgtp.py was updated, restarting..."))
+	    self.write()
 	    os.execl("/usr/bin/python", "python", kgtp_dir + "kgtp/kgtp.py")
-
-	#misc distro
-	distro = get_distro()
-	self.set(self, "misc", "distro", distro)
-	if distro == "Redhat" or distro == "Ubuntu":
-	    print lang.string('Current system is "%s".') %distro
-	else:
-	    print lang.string("Current system is not complete support.  Need execute some commands with yourself.\nIf you want KGTP support your system, please report to https://github.com/teawater/kgtp/issues or teawater@gmail.com.")
 
 	#GDB
 	if distro == "Other":
 	    install_packages(distro, ["gdb"], auto)
-	while true:
+	while True:
 	    #Get gdb_dir
-	    gdb_dir = self.get(self, "gdb", "dir")
+	    gdb_dir = self.get("gdb", "dir")
 	    if gdb_dir == "":
 		#Find GDB from PATH
 		for p in os.environ.get("PATH").split(':'):
@@ -420,40 +424,40 @@ class Config(ConfigParser):
 	        if len(s) == 0:
 		    s = gdb_dir
 		if len(s) != 0 and get_gdb_version(s) < 0:
-		    print lang.string('"%s" is not right.') %s
+		    print(lang.string('"%s" is not right.') %s)
 		    continue
 	        gdb_dir = os.path.realpath(s)
 	    #Check version
-	    if gdb_dir != ""
+	    if gdb_dir != "":
 		if get_gdb_version(gdb_dir) >= kgtp_need_gdb_version:
-		    if gdb_dir != self.get(self, "gdb", "dir")
-		       and self.get(self, "gdb", "source") != "":
+		    if gdb_dir != self.get("gdb", "dir") \
+		       and self.get("gdb", "source") != "":
 			#Get a new GDB from input.
 			#So the source of GDB is not need.  Remove it.
-			shutil.rmtree(self.get(self, "gdb", "source"), True)
-			self.set(self, "gdb", "source", "")
-		    self.set(self, "gdb", "dir", gdb_dir)
+			shutil.rmtree(self.get("gdb", "source"), True)
+			self.set("gdb", "source",)
+		    self.set("gdb", "dir", gdb_dir)
 		else:
 		    if not yes_no((lang.string('Version of "%s" is older than %s, do you want to get a new version GDB:') %gdb_dir,str(kgtp_need_gdb_version)), True, True):
 			continue
 	    #GDB was built from source that is too old.  Remove it.
-	    if self.get(self, "gdb", "source") != "":
-		while true:
+	    if self.get("gdb", "source") != "":
+		while True:
 		    try:
-			shutil.rmtree(self.get(self, "gdb", "source"))
+			shutil.rmtree(self.get("gdb", "source"))
 		    except Exception, x:
-			print lang.string('Get following error when remove directory "%s":') %self.get(self, "gdb", "source")
-			print x
+			print(lang.string('Get following error when remove directory "%s":') %self.get("gdb", "source"))
+			print(x)
 			retry()
-		self.set(self, "gdb", "source", "")
+		self.set("gdb", "source",)
 	    #Try to install GDB from software source
 	    if distro != "Other":
-		print lang.string("Check the software source...")
+		print(lang.string("Check the software source..."))
 		version = get_source_version(distro, "gdb")
 		if version >= kgtp_need_gdb_version:
 		    print lang.string("Install GDB...")
 		    install_packages(distro, ["gdb"], auto)
-		    self.set(self, "gdb", "dir", "gdb")
+		    self.set("gdb", "dir", "gdb")
 		    continue
 		else:
 		    print lang.string("GDB in software source is too old for KGTP.")
@@ -463,7 +467,7 @@ class Config(ConfigParser):
 		install_packages(distro, ["gcc", "texinfo", "m4", "flex", "bison", "libncurses5-dev", "libexpat1-dev", "python-dev", "wget"], auto)
 	    else:
 		install_packages(distro, "gcc", "texinfo", "m4", "flex", "bison", "ncurses-devel", "expat-devel", "python-devel", "wget", auto)
-	    while true:
+	    while True:
 		ret = os.system("wget http://ftp.gnu.org/gnu/gdb/" + kgtp_install_gdb + ".tar.bz2")
 		if ret != 0:
 		    retry("Download source of GDB failed.")
@@ -484,17 +488,17 @@ class Config(ConfigParser):
 		    retry("Build GDB failed.")
 		    continue
 		break
-	    self.set(self, "gdb", "source", kgtp_dir + kgtp_install_gdb)
-	    self.set(self, "gdb", "dir", kgtp_dir + kgtp_install_gdb + "/gdb/gdb")
+	    self.set("gdb", "source", kgtp_dir + kgtp_install_gdb)
+	    self.set("gdb", "dir", kgtp_dir + kgtp_install_gdb + "/gdb/gdb")
 
 	#Kernel
 	kernel_version = get_cmd("uname -r")
-	if auto
-	   and kernel_version == self.set(self, "kernel", "version"):
-	    kernel_source = os.path.realpath(self.get(self, "kernel", "source"))
+	if auto \
+	   and kernel_version == self.set("kernel", "version"):
+	    kernel_source = os.path.realpath(self.get("kernel", "source"))
 	    if kernel_source == "" or not os.path.isdir(kernel_source):
 		kernel_source = ""
-	    kernel_image = os.path.realpath(self.get(self, "kernel", "image"))
+	    kernel_image = os.path.realpath(self.get("kernel", "image"))
 	    if kernel_image == "" or not os.path.isfile(kernel_image):
 		kernel_image = ""
 	else:
@@ -506,11 +510,14 @@ class Config(ConfigParser):
 	    #source
 	    if kernel_source == "":
 		install_packages(distro, ["dpkg-dev", "wget"], auto)
-		call_cmd("apt-get source linux-image-" + kernel_version, lang.string("Install Linux kernel source failed. ", kgtp_dir)
+		call_cmd("apt-get source linux-image-" + kernel_version,
+			 lang.string("Install Linux kernel source failed. "),
+			 kgtp_dir)
 		short_version = re.search('^\d+\.\d+\.\d+', kernel_version).group()
 		source = ""
 		for f in os.listdir(kgtp_dir):
-		    if os.path.isdir(kgtp_dir + f) and if re.match('^linux.*'+ short_version + "$", f):
+		    if os.path.isdir(kgtp_dir + f) \
+		       and re.match('^linux.*'+ short_version + "$", f):
 			source = f
 		if source == "":
 		    print lang.string('Cannot find Linux kernel source in "%s".') %kgtp_dir
@@ -538,7 +545,8 @@ class Config(ConfigParser):
 	elif distro == "Redhat" and os.system("rpm -q kernel-" + kernel_version) == 0:
 	    install_packages(distro, ["kernel-devel-" + kernel_version], auto)
 	    if os.system("rpm -q kernel-debuginfo-" + kernel_version) != 0:
-		call_cmd("debuginfo-install kernel", lang.string("Install Linux kernel debug image failed. ")
+		call_cmd("debuginfo-install kernel",
+			 lang.string("Install Linux kernel debug image failed. "))
 	    kernel_source = ""
 	    kernel_image = "/usr/lib/debug/lib/modules/" + kernel_version + "/vmlinux"
 	elif not auto or kernel_image == "":
@@ -562,29 +570,29 @@ class Config(ConfigParser):
 		if os.path.isfile(image_dir):
 		    break
 	    kernel_image = image_dir
-	self.set(self, "kernel", "version", kernel_version)
-	self.set(self, "kernel", "source", kernel_source)
-	self.set(self, "kernel", "image", kernel_image)
+	self.set("kernel", "version", kernel_version)
+	self.set("kernel", "source", kernel_source)
+	self.set("kernel", "image", kernel_image)
 
 	#Build KGTP
 	if distro == "Redhat":
 	    install_packages(distro, ["glibc-static"], auto)
-	call_cmd("make", lang.string("Build KGTP failed. ", kgtp_dir + "kgtp/")
+	call_cmd("make", lang.string("Build KGTP failed. "), kgtp_dir + "kgtp/")
 
 	#Insmod
-	if kgtp_insmod(self.get(self, "gdb", "dir"),
-		       self.get(self, "kernel", "image")):
+	if kgtp_insmod(self.get("gdb", "dir"),
+		       self.get("kernel", "image")):
 	    exit(-1)
 
 	#Ask how long do a auto reconfig to update KGTP
 	try:
-	    update_days = int(self.get(self, "misc", "update_days"))
+	    update_days = int(self.get("misc", "update_days"))
 	except:
 	    update_days = -1
 	if not auto or update_days < 0:
 	    if update_days < 0:
 		default_str = ""
-	    else
+	    else:
 		default_str = "[" + str(update_days) + "]"
 	    while True:
 		try:
@@ -596,44 +604,46 @@ class Config(ConfigParser):
 		if days >= 0:
 		    update_days = days
 		    break
-	    self.set(self, "misc", "update_days", str(update_days))
+	    self.set("misc", "update_days", str(update_days))
 
 	#Install kgtp.py
 	if not auto:
 	    while True:
 		answer = yes_no(lang.string("Do you want install kgtp.py to your system?"))
 	        if not answer:
-		    self.set(self, "misc", "install_dir", "")
+		    self.set("misc", "install_dir")
 		    break
 	        else:
-		    if self.get(self, "misc", "install_dir") == "":
+		    if self.get("misc", "install_dir") == "":
 			default_str = ""
 		    else:
-			default_str = "[" + self.get(self, "misc", "install_dir") + "]"
-		    answer = raw_input(lang.string("Please input the directory that you want to install kgtp.py:") + default_str):
+			default_str = "[" + self.get("misc", "install_dir") + "]"
+		    answer = raw_input(lang.string("Please input the directory that you want to install kgtp.py:") + default_str)
 		    if len(answer) == 0:
-			answer = self.get(self, "misc", "install_dir")
+			answer = self.get("misc", "install_dir")
 		    if os.path.exists(answer) and not os.path.isdir(answer):
 			print lang.string('"%s" exists but it is not a directory.') %answer
 			continue
 		    if len(answer) != 0:
-			self.set(self, "misc", "install_dir", os.path.realpath(answer) + "/")
+			self.set("misc", "install_dir", os.path.realpath(answer) + "/")
 			break
-	if self.get(self, "misc", "install_dir") != "":
+	if self.get("misc", "install_dir") != "":
 	    try:
-		os.makedirs(self.get(self, "misc", "install_dir"), 0700)
+		os.makedirs(self.get("misc", "install_dir"), 0700)
 	    except:
 		pass
-	    call_cmd("cp " + kgtp_dir + "/kgtp/kgtp.py " + self.get(self, "misc", "install_dir") + "/")
+	    call_cmd("cp " + kgtp_dir + "/kgtp/kgtp.py " + self.get("misc", "install_dir") + "/")
 
 	#Update setup_time
-	self.set(self, "misc", "setup_time", str(int(time.time())))
+	self.set("misc", "setup_time", str(int(time.time())))
 
 	#Add a flag to mark setup complete.
-	self.set(self, "misc", "setup", "done")
-	self.write(self)
+	self.set("misc", "setup", "done")
+	self.write()
 
 def usage(name):
+    global kgtp_dir
+
     print "Usage: " + name + " [option]"
     print "Options:"
     print "  -l, --language=LANGUAGE	  Set the language (English/Chinese) of output."
@@ -647,7 +657,7 @@ def init(argv):
        Return 2 is need auto reconfig.
        Return -1 is got error.'''
 
-    global lang, config
+    global lang, config, kgtp_dir, kgtp_need_gdb_version, kgtp_py_dir_name, kgtp_py_last_time
 
     #Check if we have root permission
     if os.geteuid() != 0:
@@ -673,6 +683,10 @@ def init(argv):
 	elif opt in ("-r", "--reconfig"):
 	    return 1
 
+    #Get kgtp_py_dir_name
+    kgtp_py_dir_name = os.path.realpath(argv[0])
+    kgtp_py_last_time = os.path.getmtime(kgtp_py_dir_name)
+
     #Dir
     if os.path.exists(kgtp_dir):
 	if not os.path.isdir(kgtp_dir):
@@ -682,10 +696,6 @@ def init(argv):
 	os.mkdir(kgtp_dir)
     os.chdir(kgtp_dir)
     kgtp_dir = os.path.realpath(kgtp_dir) + "/"
-
-    #Get kgtp_py_dir_name
-    kgtp_py_dir_name = os.path.realpath(argv[0])
-    kgtp_py_last_time = os.path.getmtime(kgtp_py_dir_name)
 
     #Config
     config = Config()
@@ -701,7 +711,7 @@ def init(argv):
         lang.set_language(config.get("misc", "language"))
 
     #Check if config is done
-    if config.get("misc", "setup") == "done":
+    if config.get("misc", "setup") != "done":
 	print lang.string('Config is not complete.')
 	return 1
 
@@ -712,19 +722,19 @@ def init(argv):
 
     #GDB
     if get_gdb_version(config.get("gdb", "dir")) < kgtp_need_gdb_version:
-	print lang.string('Cannot execute GDB in "%s" or its version is older than %s.') %self.get(self, "gdb", "dir"), str(kgtp_need_gdb_version)
+	print lang.string('Cannot execute GDB in "%s" or its version is older than %s.') %self.get("gdb", "dir"), str(kgtp_need_gdb_version)
 	return 1
 
     #Kernel
     if get_cmd("uname -r") != config.get("kernel", "version"):
 	print lang.string('Current Linux kernel version is not "%s".') %config.get("kernel", "version")
 	return 1
-    if config.get("kernel", "source") != ""
-       and not os.path.isdir(config.get("kernel", "source"))
+    if config.get("kernel", "source") != "" \
+       and not os.path.isdir(config.get("kernel", "source")):
         print lang.string('Linux kernel source "%s" is not right.') %config.get("kernel", "source")
         return 1
-    if config.get("kernel", "image") != ""
-       and not os.path.isfile(config.get("kernel", "image"))
+    if config.get("kernel", "image") != "" \
+       and not os.path.isfile(config.get("kernel", "image")):
         print lang.string('Linux kernel debug image "%s" is not right.') %config.get("kernel", "image")
         return 1
 
@@ -734,8 +744,8 @@ def init(argv):
 
     #Check if need auto check
     try:
-	update_days = int(self.get(self, "misc", "update_days"))
-	setup_time = int(self.get(self, "misc", "setup_time"))
+	update_days = int(self.get("misc", "update_days"))
+	setup_time = int(self.get("misc", "setup_time"))
     except:
 	print lang.string('Config is not complete.')
 	return 1
