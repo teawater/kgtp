@@ -182,7 +182,7 @@ def select_from_dict(k_dict, k_str, introduce):
 	    select = default
 	except Exception:
 	    select = -1
-	if select >= 0 or select < len(kgtp_repository_list):
+	if select >= 0 or select < len(k_dict):
 	    break
     return k_list[select][0]
 
