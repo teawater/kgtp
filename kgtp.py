@@ -28,6 +28,8 @@ KGTP_INSTALL_GDB = "gdb-7.6"
 KGTP_PY_DIR_NAME = ""
 KGTP_PY_LAST_TIME = 0
 
+KGTP_PY_DEVELOP_MODE = False
+
 class Lang(object):
     '''Language class.'''
     def __init__(self, language="en"):
@@ -177,7 +179,7 @@ def select_from_dict(k_dict, k_str, introduce):
         default_str = ""
         for i in range(0, len(k_list)):
             print("[%d] %s %s" %(i, k_list[i][0], k_list[i][1]))
-            if k_list[i][0] == k_str:
+            if k_str != "" and k_list[i][0] == k_str:
                 default = i
                 default_str = "[%d]" %i
         try:
@@ -186,7 +188,7 @@ def select_from_dict(k_dict, k_str, introduce):
             select = default
         except Exception:
             select = -1
-        if select >= 0 or select < len(k_dict):
+        if select >= 0 and select < len(k_dict):
             break
     return k_list[select][0]
 
@@ -323,7 +325,8 @@ class Config():
         self.add_miss_option(miss, "kgtp", "branch", "")
 
         self.add_miss_section(miss, "gdb")
-        self.add_miss_option(miss, "gdb", "dir", "gdb", True)
+        self.add_miss_option(miss, "gdb", "dir", "", True)
+        self.add_miss_option(miss, "gdb", "source", "")
 
         self.add_miss_section(miss, "kernel")
         self.add_miss_option(miss, "kernel", "version", "", True)
@@ -338,7 +341,7 @@ class Config():
         return miss
 
     def setup(self, auto=False):
-        global KGTP_DIR, KGTP_REPOSITORY_DICT, KGTP_BRANCH_DICT, KGTP_NEED_GDB_VERSION, KGTP_INSTALL_GDB, KGTP_PY_DIR_NAME, KGTP_PY_LAST_TIME
+        global KGTP_DIR, KGTP_REPOSITORY_DICT, KGTP_BRANCH_DICT, KGTP_NEED_GDB_VERSION, KGTP_INSTALL_GDB, KGTP_PY_DIR_NAME, KGTP_PY_LAST_TIME, KGTP_PY_DEVELOP_MODE
 
         #Add a flag to mark config file as doesn't complete.
         self.set("misc", "setup",)
@@ -374,42 +377,52 @@ class Config():
             install_packages(distro, ["git-core"], auto)
         else:
             install_packages(distro, ["git"], auto)
-        if not auto \
-           or not self.get("kgtp", "repository") in KGTP_REPOSITORY_DICT \
-           or not self.get("kgtp", "branch") in KGTP_BRANCH_DICT \
-           or not os.path.isdir(KGTP_DIR + "kgtp/.git/"):
-            shutil.rmtree(KGTP_DIR + "kgtp/", True)
-            while True:
-                r = select_from_dict(KGTP_REPOSITORY_DICT,
-                                self.get("kgtp", "repository"),
-                                lang.string('Please select git repository of KGTP:'))
-                self.set("kgtp", "repository", r)
-                b = select_from_dict(KGTP_BRANCH_DICT,
-                                self.get("kgtp", "branch"),
-                                lang.string('Please select git branch of KGTP:'))
-                self.set("kgtp", "branch", b)
-                if call_cmd("git clone " + r + " -b " + b,
-                            lang.string('Clone KGTP source failed.'),
-                            KGTP_DIR,
-                            True):
-                    break
-        else:
-            call_cmd("git pull",
-                     lang.string('Update KGTP source in "%s" failed.') %(KGTP_DIR + "kgtp/"),
-                     KGTP_DIR + "kgtp/")
+        get_kgtp_failed = False
+        while True:
+            if get_kgtp_failed \
+               or not self.get("kgtp", "repository") in KGTP_REPOSITORY_DICT \
+               or not self.get("kgtp", "branch") in KGTP_BRANCH_DICT \
+               or not os.path.isdir(KGTP_DIR + "kgtp/.git/"):
+                shutil.rmtree(KGTP_DIR + "kgtp/", True)
+                while True:
+                    r = select_from_dict(KGTP_REPOSITORY_DICT,
+                                         self.get("kgtp", "repository"),
+                                         lang.string('Please select git repository of KGTP:'))
+                    self.set("kgtp", "repository", r)
+                    b = select_from_dict(KGTP_BRANCH_DICT,
+                                         self.get("kgtp", "branch"),
+                                         lang.string('Please select git branch of KGTP:'))
+                    self.set("kgtp", "branch", b)
+                    if call_cmd("git clone " + r + " -b " + b,
+                                lang.string('Clone KGTP source failed.'),
+                                KGTP_DIR,
+                                True):
+                        break
+            else:
+                while True:
+                    if call_cmd("git pull",
+                                lang.string('Update KGTP source in "%s" failed.') %(KGTP_DIR + "kgtp/"),
+                                KGTP_DIR + "kgtp/", True):
+                        break
+	            if yes_no(lang.string("Change to another git repository:"), True, False):
+                        get_kgtp_failed = True
+                        break
+            if not get_kgtp_failed:
+                break
 
         #Check if kgtp.py is updated.  Restart it if need.
-        kgtp_py_updated = False
-        if KGTP_PY_DIR_NAME == os.path.realpath(KGTP_DIR + "kgtp/kgtp.py"):
-            if os.path.getmtime(KGTP_PY_DIR_NAME) != KGTP_PY_LAST_TIME:
-                kgtp_py_updated = True
-        else:
-            if os.system("diff " + KGTP_DIR + "kgtp/kgtp.py " + KGTP_PY_DIR_NAME) != 0:
-                kgtp_py_updated = True
-        if kgtp_py_updated:
-            print(lang.string("kgtp.py was updated, restarting..."))
-            self.write()
-            os.execl("/usr/bin/python", "python", KGTP_DIR + "kgtp/kgtp.py")
+        if not KGTP_PY_DEVELOP_MODE:
+            kgtp_py_updated = False
+            if KGTP_PY_DIR_NAME == os.path.realpath(KGTP_DIR + "kgtp/kgtp.py"):
+                if os.path.getmtime(KGTP_PY_DIR_NAME) != KGTP_PY_LAST_TIME:
+                    kgtp_py_updated = True
+            else:
+                if os.system("diff " + KGTP_DIR + "kgtp/kgtp.py " + KGTP_PY_DIR_NAME) != 0:
+                    kgtp_py_updated = True
+            if kgtp_py_updated:
+                print(lang.string("kgtp.py was updated, restarting..."))
+                self.write()
+                os.execl("/usr/bin/python", "python", KGTP_DIR + "kgtp/kgtp.py")
 
         #GDB
         if distro == "Other":
@@ -417,12 +430,19 @@ class Config():
         while True:
             #Get gdb_dir
             gdb_dir = self.get("gdb", "dir")
-            if gdb_dir == "":
+            if gdb_dir == "" or not os.path.isfile(gdb_dir):
                 #Find GDB from PATH
+                gdb_dir_dict = {}
+                gdb_dir_dict[""] = "Input another GDB"
                 for p in os.environ.get("PATH").split(':'):
                     if os.path.isfile(p + "/gdb"):
-                        gdb_dir = p + "/gdb"
-                        break
+                        gdb_dir_dict[p + "/gdb"] = ""
+                if len(gdb_dir_dict) == 1:
+		    gdb_dir = ""
+		else:
+                    gdb_dir = select_from_dict(gdb_dir_dict, "",
+					       lang.string('Please select a GDB:'))
+
             if not auto:
                 if gdb_dir != "":
                     s = lang.string('Please input the directory of GDB:') + "["+ gdb_dir +"]"
@@ -446,7 +466,7 @@ class Config():
                         self.set("gdb", "source",)
                     self.set("gdb", "dir", gdb_dir)
                 else:
-                    if not yes_no((lang.string('Version of "%s" is older than %s, do you want to get a new version GDB:') %gdb_dir, str(KGTP_NEED_GDB_VERSION)), True, True):
+                    if not yes_no((('Version of "%s" is older than %s, do you want to get a new version GDB:') %(gdb_dir, str(KGTP_NEED_GDB_VERSION))), True, True):
                         continue
             #GDB was built from source that is too old.  Remove it.
             if self.get("gdb", "source") != "":
@@ -658,10 +678,11 @@ def usage(name):
 
     print "Usage: " + name + " [option]"
     print "Options:"
-    print "  -l, --language=LANGUAGE          Set the language (English/Chinese) of output."
+    print "  -l, --language=LANGUAGE         Set the language (English/Chinese) of output."
     print "  -d, --dir=KGTP_DIR              Set dir of kgtp.  The default is \"" + KGTP_DIR + "\"."
     print "  -r, --reconfig                  Reconfig the KGTP."
-    print "  -h, --help                          Display this information."
+    print "  -e, --develop-mode"
+    print "  -h, --help                      Display this information."
 
 def init(argv):
     '''Return 0 if init OK.
@@ -669,7 +690,7 @@ def init(argv):
        Return 2 is need auto reconfig.
        Return -1 is got error.'''
 
-    global lang, config, KGTP_DIR, KGTP_NEED_GDB_VERSION, KGTP_PY_DIR_NAME, KGTP_PY_LAST_TIME
+    global lang, config, KGTP_DIR, KGTP_NEED_GDB_VERSION, KGTP_PY_DIR_NAME, KGTP_PY_LAST_TIME, KGTP_PY_DEVELOP_MODE
 
     #Check if we have root permission
     if os.geteuid() != 0:
@@ -680,7 +701,7 @@ def init(argv):
 
     #Handle argv
     try:
-        opts, args = getopt.getopt(argv[1:], "hl:d:r", ["help", "language=", "dir", "reconfig"])
+        opts, args = getopt.getopt(argv[1:], "hel:d:r", ["help", "develop-mode", "language=", "dir", "reconfig"])
     except getopt.GetoptError:
         usage(argv[0])
         return -1
@@ -688,6 +709,8 @@ def init(argv):
         if opt in ("-h", "--help"):
             usage(argv[0])
             return -1
+        if opt in ("-e", "--develop-mode"):
+            KGTP_PY_DEVELOP_MODE = True
         elif opt in ("-l", "--language"):
             lang.set_language(arg)
         elif opt in ("-d", "--dir"):
