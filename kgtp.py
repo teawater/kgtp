@@ -44,8 +44,9 @@ class Lang(object):
                  '开始设置KGTP...')
 
     def set_language(self, language):
-        self.language = language
-        self.is_set = True
+	if language != "":
+            self.language = language
+            self.is_set = True
 
     def add(self, en, cn):
         self.data[en] = cn
@@ -98,7 +99,7 @@ def get_distro():
 def get_cmd(cmd, first=True):
     f = os.popen(cmd)
     if first:
-        v = f.readline()
+        v = f.readline().rstrip()
     else:
         v = f.readlines()
     f.close()
@@ -348,7 +349,7 @@ class Config():
         self.write()
 
         #misc language
-        if ((not auto) or len(self.get("misc", "language")) == 0) and (not lang.is_set):
+        if ((not auto) or self.get("misc", "language") == "") and (not lang.is_set):
             while True:
                 s = raw_input("Which language do you want use?(English/Chinese)")
                 if len(s) == 0:
@@ -442,7 +443,6 @@ class Config():
 		else:
                     gdb_dir = select_from_dict(gdb_dir_dict, "",
 					       lang.string('Please select a GDB:'))
-
             if not auto:
                 if gdb_dir != "":
                     s = lang.string('Please input the directory of GDB:') + "["+ gdb_dir +"]"
@@ -463,8 +463,9 @@ class Config():
                         #Get a new GDB from input.
                         #So the source of GDB is not need.  Remove it.
                         shutil.rmtree(self.get("gdb", "source"), True)
-                        self.set("gdb", "source",)
+                        self.set("gdb", "source")
                     self.set("gdb", "dir", gdb_dir)
+                    break
                 else:
                     if not yes_no((('Version of "%s" is older than %s, do you want to get a new version GDB:') %(gdb_dir, str(KGTP_NEED_GDB_VERSION))), True, True):
                         continue
@@ -477,7 +478,7 @@ class Config():
                         print(lang.string('Get following error when remove directory "%s":') %self.get("gdb", "source"))
                         print(x)
                         retry()
-                self.set("gdb", "source",)
+                self.set("gdb", "source")
             #Try to install GDB from software source
             if distro != "Other":
                 print(lang.string("Check the software source..."))
@@ -612,8 +613,8 @@ class Config():
         call_cmd("make", lang.string("Build KGTP failed. "), KGTP_DIR + "kgtp/")
 
         #Insmod
-        if kgtp_insmod(self.get("gdb", "dir"),
-                       self.get("kernel", "image")):
+        if not kgtp_insmod(self.get("gdb", "dir"),
+			   self.get("kernel", "image")):
             exit(-1)
 
         #Ask how long do a auto reconfig to update KGTP
@@ -673,6 +674,8 @@ class Config():
         self.set("misc", "setup", "done")
         self.write()
 
+        return 0
+
 def usage(name):
     global KGTP_DIR
 
@@ -700,6 +703,7 @@ def init(argv):
     lang = Lang()
 
     #Handle argv
+    reconfig = False
     try:
         opts, args = getopt.getopt(argv[1:], "hel:d:r", ["help", "develop-mode", "language=", "dir", "reconfig"])
     except getopt.GetoptError:
@@ -716,7 +720,7 @@ def init(argv):
         elif opt in ("-d", "--dir"):
             KGTP_DIR = arg
         elif opt in ("-r", "--reconfig"):
-            return 1
+            reconfig = True
 
     #Get KGTP_PY_DIR_NAME
     KGTP_PY_DIR_NAME = os.path.realpath(argv[0])
@@ -741,14 +745,17 @@ def init(argv):
         print x
         return 1
 
-    #Set lang
-    if not lang.is_set:
-        lang.set_language(config.get("misc", "language"))
+    if reconfig:
+	return 1
 
     #Check if config is done
     if config.get("misc", "setup") != "done":
         print lang.string('Config is not complete.')
         return 1
+
+    #Set lang
+    if not lang.is_set:
+        lang.set_language(config.get("misc", "language"))
 
     #Distro
     if get_distro() != config.get("misc", "distro"):
@@ -763,6 +770,9 @@ def init(argv):
     #Kernel
     if get_cmd("uname -r") != config.get("kernel", "version"):
         print lang.string('Current Linux kernel version is not "%s".') %config.get("kernel", "version")
+        print 1
+        print get_cmd("uname -r")
+        print 2
         return 1
     if config.get("kernel", "source") != "" \
        and not os.path.isdir(config.get("kernel", "source")):
@@ -793,6 +803,8 @@ def init(argv):
     return 0
 
 def run():
+    global config
+
     ret = init(sys.argv)
     if ret > 0:
         #KGTP need setup.
@@ -804,7 +816,7 @@ def run():
         exit(ret)
 
     gdb_dir = config.get("gdb", "dir")
-    os.execl(gdb_dir, gdb_dir, config.get("kernel", "image"))
+    os.execl(gdb_dir, gdb_dir, config.get("kernel", "image"), "-ex", "target remote /sys/kernel/debug/gtp")
 
 if __name__ == "__main__":
     run()
