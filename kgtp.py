@@ -190,17 +190,19 @@ def select_from_dict(k_dict, k_str, introduce):
             break
     return k_list[select][0]
 
-def call_cmd(cmd, fail_str, chdir="", outside_retry=False):
+def call_cmd(cmd, fail_str="", chdir="", outside_retry=False):
     '''
     Return True if call cmd success.
     '''
+    if fail_str == "":
+        fail_str = lang.string('Call command "%s" failed. ') %cmd
     if chdir != "":
         os.chdir(chdir)
     while True:
         ret = os.system(cmd)
         if ret == 0:
             break
-        retry(lang.string(fail_str, ret))
+        retry(fail_str, ret)
         if outside_retry:
             return False
 
@@ -234,6 +236,7 @@ def kgtp_insmod(gdb, kernel_image):
 class Config():
     def __init__(self):
         self.c = ConfigParser.ConfigParser()
+        self.filename = ""
 
     def set(self, section, option, value=""):
         self.c.set(section, option, value)
@@ -348,10 +351,10 @@ class Config():
                 if len(s) == 0:
                     continue
                 if s[0] == "e" or s[0] == "E":
-                    lang.set_langue("en")
+                    lang.set_language("en")
                     break
                 elif s[0] == "c" or s[0] == "C":
-                    lang.set_langue("cn")
+                    lang.set_language("cn")
                     break
         self.set("misc", "language", lang.language)
 
@@ -372,7 +375,7 @@ class Config():
         else:
             install_packages(distro, ["git"], auto)
         if not auto \
-           or not self.get("kgtp", "repository") in kgtp_repository_list \
+           or not self.get("kgtp", "repository") in KGTP_REPOSITORY_DICT \
            or not self.get("kgtp", "branch") in KGTP_BRANCH_DICT \
            or not os.path.isdir(KGTP_DIR + "kgtp/.git/"):
             shutil.rmtree(KGTP_DIR + "kgtp/", True)
@@ -471,7 +474,11 @@ class Config():
             if distro == "Ubuntu":
                 install_packages(distro, ["gcc", "texinfo", "m4", "flex", "bison", "libncurses5-dev", "libexpat1-dev", "python-dev", "wget"], auto)
             else:
-                install_packages(distro, "gcc", "texinfo", "m4", "flex", "bison", "ncurses-devel", "expat-devel", "python-devel", "wget", auto)
+                install_packages(distro,
+                                 ["gcc", "texinfo", "m4", "flex",
+                                  "bison","ncurses-devel", "expat-devel",
+                                  "python-devel", "wget"],
+                                 auto)
             while True:
                 ret = os.system("wget http://ftp.gnu.org/gnu/gdb/" + KGTP_INSTALL_GDB + ".tar.bz2")
                 if ret != 0:
@@ -637,7 +644,7 @@ class Config():
                 os.makedirs(self.get("misc", "install_dir"), 0700)
             except:
                 pass
-            call_cmd("cp " + KGTP_DIR + "/kgtp/kgtp.py " + self.get("misc", "install_dir") + "/")
+            call_cmd("cp " + KGTP_DIR + "/kgtp/kgtp.py " + self.get("misc", "install_dir") + "/", lang.string("Install kgtp.py failed. "))
 
         #Update setup_time
         self.set("misc", "setup_time", str(int(time.time())))
@@ -682,7 +689,7 @@ def init(argv):
             usage(argv[0])
             return -1
         elif opt in ("-l", "--language"):
-            lang.set_langue(arg)
+            lang.set_language(arg)
         elif opt in ("-d", "--dir"):
             KGTP_DIR = arg
         elif opt in ("-r", "--reconfig"):
@@ -727,7 +734,7 @@ def init(argv):
 
     #GDB
     if get_gdb_version(config.get("gdb", "dir")) < KGTP_NEED_GDB_VERSION:
-        print lang.string('Cannot execute GDB in "%s" or its version is older than %s.') %self.get("gdb", "dir"), str(KGTP_NEED_GDB_VERSION)
+        print lang.string('Cannot execute GDB in "%s" or its version is older than %s.') %config.get("gdb", "dir"), str(KGTP_NEED_GDB_VERSION)
         return 1
 
     #Kernel
@@ -749,8 +756,8 @@ def init(argv):
 
     #Check if need auto check
     try:
-        update_days = int(self.get("misc", "update_days"))
-        setup_time = int(self.get("misc", "setup_time"))
+        update_days = int(config.get("misc", "update_days"))
+        setup_time = int(config.get("misc", "setup_time"))
     except:
         print lang.string('Config is not complete.')
         return 1
