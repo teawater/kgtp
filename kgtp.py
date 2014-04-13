@@ -142,14 +142,16 @@ def get_source_version(distro, name):
 def install_packages(distro, packages, auto):
     #Remove the package that doesn't need install from packages
     if distro != "Other":
+	new_packages = list(packages)
         for i in range(0, len(packages)):
             ret = 1
             if distro == "Redhat":
                 ret = os.system("rpm -q " + packages[i])
             elif distro == "Ubuntu":
                 ret = os.system("dpkg -s " + packages[i])
-            if ret == 0:
-                del packages[i]
+            if ret != 0:
+                new_packages.append(packages[i])
+        packages = new_packages
     if len(packages) == 0:
         return
 
@@ -439,9 +441,9 @@ class Config():
 
         #Get the KGTP source code
         if distro == "Ubuntu":
-            install_packages(distro, ["git-core"], auto)
+            install_packages(distro, ("git-core"), auto)
         else:
-            install_packages(distro, ["git"], auto)
+            install_packages(distro, ("git"), auto)
         get_kgtp_failed = False
         while True:
             if get_kgtp_failed \
@@ -491,7 +493,7 @@ class Config():
 
         #GDB
         if distro == "Other":
-            install_packages(distro, ["gdb"], auto)
+            install_packages(distro, ("gdb"), auto)
         while True:
             #Get gdb_dir
             gdb_dir = self.get("gdb", "dir")
@@ -515,10 +517,11 @@ class Config():
                 s = raw_input(s)
                 if len(s) == 0:
                     s = gdb_dir
-                if len(s) != 0 and get_gdb_version(s) < 0:
-                    print(lang.string('"%s" is not right.') %s)
-                    continue
-                gdb_dir = os.path.realpath(s)
+                if len(s) != 0:
+                    if get_gdb_version(s) < 0:
+			print(lang.string('"%s" is not right.') %s)
+			continue
+                    gdb_dir = os.path.realpath(s)
             #Check version
             if gdb_dir != "":
                 if get_gdb_version(gdb_dir) >= KGTP_NEED_GDB_VERSION:
@@ -549,7 +552,7 @@ class Config():
                 version = get_source_version(distro, "gdb")
                 if version >= KGTP_NEED_GDB_VERSION:
                     print lang.string("Install GDB...")
-                    install_packages(distro, ["gdb"], auto)
+                    install_packages(distro, ("gdb"), auto)
                     self.set("gdb", "dir", "gdb")
                     continue
                 else:
@@ -557,12 +560,12 @@ class Config():
             #Install GDB from source code
             print lang.string("Get and build a GDB that works OK with KGTP...")
             if distro == "Ubuntu":
-                install_packages(distro, ["gcc", "texinfo", "m4", "flex", "bison", "libncurses5-dev", "libexpat1-dev", "python-dev", "wget"], auto)
+                install_packages(distro, ("gcc", "texinfo", "m4", "flex", "bison", "libncurses5-dev", "libexpat1-dev", "python-dev", "wget"), auto)
             else:
                 install_packages(distro,
-                                 ["gcc", "texinfo", "m4", "flex",
+                                 ("gcc", "texinfo", "m4", "flex",
                                   "bison","ncurses-devel", "expat-devel",
-                                  "python-devel", "wget"],
+                                  "python-devel", "wget"),
                                  auto)
             while True:
                 ret = os.system("wget http://ftp.gnu.org/gnu/gdb/" + KGTP_INSTALL_GDB + ".tar.bz2")
@@ -603,10 +606,10 @@ class Config():
             kernel_image = ""
         if distro == "Ubuntu" and os.system("dpkg -s linux-image-" + kernel_version) == 0:
             #Install kernel dev package
-            install_packages(distro, ["linux-headers-generic"], auto)
+            install_packages(distro, ("linux-headers-generic"), auto)
             #source
             if kernel_source == "":
-                install_packages(distro, ["dpkg-dev", "wget"], auto)
+                install_packages(distro, ("dpkg-dev", "wget"), auto)
                 call_cmd("apt-get source linux-image-" + kernel_version,
                          lang.string("Install Linux kernel source failed. "),
                          KGTP_DIR)
@@ -637,10 +640,10 @@ class Config():
                 f.write("deb http://ddebs.ubuntu.com/ " + name + "-proposed main restricted universe multiverse\n")
                 f.close()
                 os.system("apt-get update")
-                install_packages(distro, ["linux-image-" + kernel_version + "-dbgsym"], auto)
+                install_packages(distro, ("linux-image-" + kernel_version + "-dbgsym"), auto)
             kernel_image = "/usr/lib/debug/boot/vmlinux-" + kernel_version
         elif distro == "Redhat" and os.system("rpm -q kernel-" + kernel_version) == 0:
-            install_packages(distro, ["kernel-devel-" + kernel_version], auto)
+            install_packages(distro, ("kernel-devel-" + kernel_version), auto)
             if os.system("rpm -q kernel-debuginfo-" + kernel_version) != 0:
                 call_cmd("debuginfo-install kernel",
                          lang.string("Install Linux kernel debug image failed. "))
@@ -649,7 +652,7 @@ class Config():
         elif not auto or kernel_image == "":
             kernel_source = ""
             if distro == "Other":
-                install_packages(distro, ["kernel-header", "kernel-debug-image", "kernel-source"], auto)
+                install_packages(distro, ("kernel-header", "kernel-debug-image", "kernel-source"), auto)
             if kernel_image != "":
                 default_dir = kernel_image
                 show_dir = "[" + default_dir + "]"
@@ -673,7 +676,7 @@ class Config():
 
         #Build KGTP
         if distro == "Redhat":
-            install_packages(distro, ["glibc-static"], auto)
+            install_packages(distro, ("glibc-static"), auto)
         call_cmd("make", lang.string("Build KGTP failed. "), KGTP_DIR + "kgtp/")
 
         #Insmod
