@@ -226,7 +226,7 @@ def kgtp_insmod(gdb, kernel_image):
 
     #Check if debug image is right
     #XXX
-    ##With /proc/kallsyms
+    ##With /proc/kallsyms 1
     #if os.path.isfile("/proc/kallsyms"):
         #f = read("/proc/kallsyms", "r")
         #f.read
@@ -344,16 +344,24 @@ class Config():
     def setup(self, auto=False):
         global KGTP_DIR, KGTP_REPOSITORY_DICT, KGTP_BRANCH_DICT, KGTP_NEED_GDB_VERSION, KGTP_INSTALL_GDB, KGTP_PY_DIR_NAME, KGTP_PY_LAST_TIME, KGTP_PY_DEVELOP_MODE
 
-        #Add a flag to mark config file as doesn't complete.
-        self.set("misc", "setup",)
-        self.write()
-
         #misc language
-        if ((not auto) or self.get("misc", "language") == "") and (not lang.is_set):
+        config_language = self.get("misc", "language")
+        if ((not auto) or config_language == "") and (not lang.is_set):
+	    if config_language == "en":
+		default_s = "en"
+		question_s = "[English]/Chinese"
+	    elif config_language == "cn":
+		default_s = "cn"
+		question_s = "English/[Chinese]"
+	    else:
+		default_s = ""
+		question_s = "English/Chinese"
             while True:
-                s = raw_input("Which language do you want use?(English/Chinese)")
+                s = raw_input("Which language do you want use?(%s)" %question_s)
                 if len(s) == 0:
-                    continue
+		    s = default_s
+		if len(s) == 0:
+		    continue
                 if s[0] == "e" or s[0] == "E":
                     lang.set_language("en")
                     break
@@ -364,6 +372,10 @@ class Config():
 
         print(lang.string("KGTP config begin, please make sure current machine can access internet first."))
         raw_input(lang.string('Press "Enter" to continue'))
+
+        #Add a flag to mark config file as doesn't complete.
+        self.set("misc", "setup",)
+        self.write()
 
         #misc distro
         distro = get_distro()
