@@ -816,7 +816,8 @@ def run():
         exit(ret)
 
     gdb_dir = config.get("gdb", "dir")
-    os.execl(gdb_dir, gdb_dir, config.get("kernel", "image"), "-ex", "target remote /sys/kernel/debug/gtp")
+    os.execl(gdb_dir, gdb_dir, config.get("kernel", "image"),
+	     "-ex", "target remote /sys/kernel/debug/gtp")
 
 if __name__ == "__main__":
     run()
