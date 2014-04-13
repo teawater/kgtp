@@ -23,7 +23,7 @@ KGTP_BRANCH_DICT = {
         "script" : "Just for test"}
 
 KGTP_NEED_GDB_VERSION = 7.6
-KGTP_INSTALL_GDB = "gdb-7.6"
+KGTP_INSTALL_GDB = "gdb-7.7"
 
 KGTP_PY_DIR_NAME = ""
 KGTP_PY_LAST_TIME = 0
@@ -224,16 +224,66 @@ def kgtp_insmod(gdb, kernel_image):
 	      %(KGTP_DIR + "kgtp/gtp.ko"))
         return False
 
-    #Check if debug image is right
-    #XXX
-    ##With /proc/kallsyms 1
-    #if os.path.isfile("/proc/kallsyms"):
-        #f = read("/proc/kallsyms", "r")
-        #f.read
-            #print lang.string('Linux kernel debug image "%s" is not for current Linux kernel.') %self.get(self, "kernel", "image")
-            #print lang.string('Please report to https://github.com/teawater/kgtp/issues or teawater@gmail.com.')
+    image_wrong = False
+    if os.path.isfile("/proc/kallsyms"):
+        f = open("/proc/kallsyms", "r")
+        got_sys_read = False
+        got_sys_write = False
+        while True:
+	    line = f.readline()
+            if not line:
+	        break
+            line = line.rstrip()
+            is_sys_read = False
+            is_sys_write = False
+            if not got_sys_read and re.match(r'.*[^\s]\ssys_read$', line):
+	        is_sys_read = True
+            if not got_sys_write and re.match(r'.*[^\s]\ssys_write$', line):
+	        is_sys_write = True
+	    if not is_sys_read and not is_sys_write:
+	        continue
+	    val = re.search(r'^[0-9a-fA-F]*', line).group()
+	    if is_sys_read:
+	        got_sys_read = True
+	        sys_read = val
+	    if is_sys_write:
+	        got_sys_write = True
+	        sys_write = val
+	    if got_sys_read and got_sys_write:
+	        break
+        f.close()
+        if got_sys_read:
+	    v = get_cmd(r'gdb /usr/lib/debug/lib/modules/3.13.8-200.fc20.x86_64/vmlinux -ex "printf \"%lx\\n\", sys_read" -ex "quit"', False)
+	    v = v[-1].rstrip()
+	    if v != sys_read:
+		image_wrong = False
+	else:
+	    print lang.string("Cannot found sys_read from /proc/kallsyms.")
+	    print lang.string('Please report to https://github.com/teawater/kgtp/issues or teawater@gmail.com.')
+        if got_sys_write:
+	    v = get_cmd(r'gdb /usr/lib/debug/lib/modules/3.13.8-200.fc20.x86_64/vmlinux -ex "printf \"%lx\\n\", sys_write" -ex "quit"', False)
+	    v = v[-1].rstrip()
+	    if v != sys_write:
+		image_wrong = True
+	else:
+	    print lang.string("Cannot found sys_write from /proc/kallsyms.")
+	    print lang.string('Please report to https://github.com/teawater/kgtp/issues or teawater@gmail.com.')
+    else:
+	print lang.string("Cannot check Linux kernel debug image with /proc/kallsyms because it is not available.")
 
-    ##With linux_banner
+    #With linux_banner
+    if not image_wrong:
+	v = get_cmd(r'gdb /usr/lib/debug/lib/modules/3.13.8-200.fc20.x86_64/vmlinux -ex "printf \"%s\", linux_banner" -ex "quit"', False)
+	linux_banner = v[-1].rstrip()
+	v = get_cmd(r'gdb /usr/lib/debug/lib/modules/3.13.8-200.fc20.x86_64/vmlinux -ex "target remote /sys/kernel/debug/gtp" -ex "printf \"%s\", linux_banner" -ex "set confirm off" -ex "quit"', False)
+	if v[-3].rstrip() != linux_banner:
+	    image_wrong = True
+
+    if image_wrong:
+	print lang.string('Linux kernel debug image "%s" is not for current Linux kernel.') %self.get(self, "kernel", "image")
+        print lang.string('Please report to https://github.com/teawater/kgtp/issues or teawater@gmail.com.')
+        return False
+
     return True
 
 class Config():
