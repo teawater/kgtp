@@ -654,7 +654,7 @@ class Config():
         #Install kgtp.py
         if not auto:
             while True:
-                answer = yes_no(lang.string("Do you want install kgtp.py to your system?"))
+                answer = yes_no(lang.string("Do you want install kgtp.py to your system?"), self.get("misc", "install_dir") != "", True)
                 if not answer:
                     self.set("misc", "install_dir")
                     break
