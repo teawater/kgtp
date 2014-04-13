@@ -93,8 +93,10 @@ def get_distro():
         fp.close()
         if cmp("ubuntu", version) == 0:
             return "Ubuntu"
-    finally:
-        return "other"
+    except:
+        pass
+
+    return "Other"
 
 def get_cmd(cmd, first=True):
     f = os.popen(cmd)
