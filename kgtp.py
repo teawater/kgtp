@@ -89,7 +89,7 @@ def get_distro():
 
     try:
         fp = open("/etc/issue", "r")
-        version = fp.readline()[0, 6].lower()
+        version = fp.readline()[0:6].lower()
         fp.close()
         if cmp("ubuntu", version) == 0:
             return "Ubuntu"
