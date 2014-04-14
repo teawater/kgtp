@@ -222,11 +222,12 @@ def kgtp_insmod(gdb, kernel_image):
     if not os.path.isdir("/sys/kernel/debug/"):
         os.system("mount -t sysfs none /sys/")
         os.system("mount -t debugfs none /sys/kernel/debug/")
-    os.system("rmmod gtp")
-    if os.system("insmod " + KGTP_DIR + "kgtp/gtp.ko"):
-        print(lang.string('Insmod KGTP module "%s" failed.')
-	      %(KGTP_DIR + "kgtp/gtp.ko"))
-        return False
+    if not KGTP_PY_DEVELOP_MODE or yes_no(lang.string("Insmod KGTP modules?")):
+	os.system("rmmod gtp")
+	if os.system("insmod " + KGTP_DIR + "kgtp/gtp.ko"):
+            print(lang.string('Insmod KGTP module "%s" failed.')
+	          %(KGTP_DIR + "kgtp/gtp.ko"))
+            return False
 
     image_wrong = False
     if os.path.isfile("/proc/kallsyms"):
@@ -257,7 +258,7 @@ def kgtp_insmod(gdb, kernel_image):
 	        break
         f.close()
         if got_sys_read:
-	    v = get_cmd(r'gdb /usr/lib/debug/lib/modules/3.13.8-200.fc20.x86_64/vmlinux -ex "printf \"%lx\\n\", sys_read" -ex "quit"', False)
+	    v = get_cmd(gdb + " " + image + r' -ex "printf \"%lx\\n\", sys_read" -ex "quit"', False)
 	    v = v[-1].rstrip()
 	    if v != sys_read:
 		image_wrong = False
@@ -265,7 +266,7 @@ def kgtp_insmod(gdb, kernel_image):
 	    print lang.string("Cannot found sys_read from /proc/kallsyms.")
 	    print lang.string('Please report to https://github.com/teawater/kgtp/issues or teawater@gmail.com.')
         if got_sys_write:
-	    v = get_cmd(r'gdb /usr/lib/debug/lib/modules/3.13.8-200.fc20.x86_64/vmlinux -ex "printf \"%lx\\n\", sys_write" -ex "quit"', False)
+	    v = get_cmd(gdb + " " + image + r' -ex "printf \"%lx\\n\", sys_write" -ex "quit"', False)
 	    v = v[-1].rstrip()
 	    if v != sys_write:
 		image_wrong = True
@@ -277,9 +278,9 @@ def kgtp_insmod(gdb, kernel_image):
 
     #With linux_banner
     if not image_wrong:
-	v = get_cmd(r'gdb /usr/lib/debug/lib/modules/3.13.8-200.fc20.x86_64/vmlinux -ex "printf \"%s\", linux_banner" -ex "quit"', False)
+	v = get_cmd(gdb + " " + image + r' -ex "printf \"%s\", linux_banner" -ex "quit"', False)
 	linux_banner = v[-1].rstrip()
-	v = get_cmd(r'gdb /usr/lib/debug/lib/modules/3.13.8-200.fc20.x86_64/vmlinux -ex "target remote /sys/kernel/debug/gtp" -ex "printf \"%s\", linux_banner" -ex "set confirm off" -ex "quit"', False)
+	v = get_cmd(gdb + " " + image + r' -ex "target remote /sys/kernel/debug/gtp" -ex "printf \"%s\", linux_banner" -ex "set confirm off" -ex "quit"', False)
 	if v[-3].rstrip() != linux_banner:
 	    image_wrong = True
 
@@ -295,8 +296,10 @@ class Config():
         self.c = ConfigParser.ConfigParser()
         self.filename = ""
 
-    def set(self, section, option, value=""):
+    def set(self, section, option, value="", write=True):
         self.c.set(section, option, value)
+        if write:
+            self.write()
 
     def get(self, section, option):
         return self.c.get(section, option)
@@ -354,7 +357,7 @@ class Config():
 
     def add_miss_option(self, miss, section, option, val, first=False):
         if not self.c.has_option(section, option):
-            self.set(section, option, val)
+            self.set(section, option, val, False)
             if first:
                 if not miss.has_key(section):
                     miss[section] = [option]
@@ -428,8 +431,7 @@ class Config():
         raw_input(lang.string('Press "Enter" to continue'))
 
         #Add a flag to mark config file as doesn't complete.
-        self.set("misc", "setup",)
-        self.write()
+        self.set("misc", "setup")
 
         #misc distro
         distro = get_distro()
@@ -488,7 +490,6 @@ class Config():
                     kgtp_py_updated = True
             if kgtp_py_updated:
                 print(lang.string("kgtp.py was updated, restarting..."))
-                self.write()
                 os.execl("/usr/bin/python", "python", KGTP_DIR + "kgtp/kgtp.py")
 
         #GDB
@@ -737,7 +738,6 @@ class Config():
 
         #Add a flag to mark setup complete.
         self.set("misc", "setup", "done")
-        self.write()
 
         return 0
 
