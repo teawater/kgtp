@@ -258,7 +258,7 @@ def kgtp_insmod(gdb, kernel_image):
 	        break
         f.close()
         if got_sys_read:
-	    v = get_cmd(gdb + " " + image + r' -ex "printf \"%lx\\n\", sys_read" -ex "quit"', False)
+	    v = get_cmd(gdb + " " + kernel_image + r' -ex "printf \"%lx\\n\", sys_read" -ex "quit"', False)
 	    v = v[-1].rstrip()
 	    if v != sys_read:
 		image_wrong = False
@@ -266,7 +266,7 @@ def kgtp_insmod(gdb, kernel_image):
 	    print lang.string("Cannot found sys_read from /proc/kallsyms.")
 	    print lang.string('Please report to https://github.com/teawater/kgtp/issues or teawater@gmail.com.')
         if got_sys_write:
-	    v = get_cmd(gdb + " " + image + r' -ex "printf \"%lx\\n\", sys_write" -ex "quit"', False)
+	    v = get_cmd(gdb + " " + kernel_image + r' -ex "printf \"%lx\\n\", sys_write" -ex "quit"', False)
 	    v = v[-1].rstrip()
 	    if v != sys_write:
 		image_wrong = True
@@ -278,9 +278,9 @@ def kgtp_insmod(gdb, kernel_image):
 
     #With linux_banner
     if not image_wrong:
-	v = get_cmd(gdb + " " + image + r' -ex "printf \"%s\", linux_banner" -ex "quit"', False)
+	v = get_cmd(gdb + " " + kernel_image + r' -ex "printf \"%s\", linux_banner" -ex "quit"', False)
 	linux_banner = v[-1].rstrip()
-	v = get_cmd(gdb + " " + image + r' -ex "target remote /sys/kernel/debug/gtp" -ex "printf \"%s\", linux_banner" -ex "set confirm off" -ex "quit"', False)
+	v = get_cmd(gdb + " " + kernel_image + r' -ex "target remote /sys/kernel/debug/gtp" -ex "printf \"%s\", linux_banner" -ex "set confirm off" -ex "quit"', False)
 	if v[-3].rstrip() != linux_banner:
 	    image_wrong = True
 
