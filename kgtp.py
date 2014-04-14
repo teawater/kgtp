@@ -44,7 +44,7 @@ class Lang(object):
                  '开始设置KGTP...')
 
     def set_language(self, language):
-	if language != "":
+        if language != "":
             self.language = language
             self.is_set = True
 
@@ -142,7 +142,7 @@ def get_source_version(distro, name):
 def install_packages(distro, packages, auto):
     #Remove the package that doesn't need install from packages
     if distro != "Other":
-	tmp_packages = []
+        tmp_packages = []
         for i in range(0, len(packages)):
             ret = 1
             if distro == "Redhat":
@@ -167,7 +167,7 @@ def install_packages(distro, packages, auto):
                 return
             while True:
                 print(lang.string("Please install " + packages
-				  + " before go to next step.\n"))
+                                  + " before go to next step.\n"))
                 s = raw_input(lang.string('Input "y" and press "Enter" to continue'))
                 if len(s) > 0 and (s[0] == 'y' or s[0] == "Y"):
                     return
@@ -223,10 +223,10 @@ def kgtp_insmod(gdb, kernel_image):
         os.system("mount -t sysfs none /sys/")
         os.system("mount -t debugfs none /sys/kernel/debug/")
     if not KGTP_PY_DEVELOP_MODE or yes_no(lang.string("Insmod KGTP modules?")):
-	os.system("rmmod gtp")
-	if os.system("insmod " + KGTP_DIR + "kgtp/gtp.ko"):
+        os.system("rmmod gtp")
+        if os.system("insmod " + KGTP_DIR + "kgtp/gtp.ko"):
             print(lang.string('Insmod KGTP module "%s" failed.')
-	          %(KGTP_DIR + "kgtp/gtp.ko"))
+                  %(KGTP_DIR + "kgtp/gtp.ko"))
             return False
 
     image_wrong = False
@@ -235,57 +235,57 @@ def kgtp_insmod(gdb, kernel_image):
         got_sys_read = False
         got_sys_write = False
         while True:
-	    line = f.readline()
+            line = f.readline()
             if not line:
-	        break
+                break
             line = line.rstrip()
             is_sys_read = False
             is_sys_write = False
             if not got_sys_read and re.match(r'.*[^\s]\ssys_read$', line):
-	        is_sys_read = True
+                is_sys_read = True
             if not got_sys_write and re.match(r'.*[^\s]\ssys_write$', line):
-	        is_sys_write = True
-	    if not is_sys_read and not is_sys_write:
-	        continue
-	    val = re.search(r'^[0-9a-fA-F]*', line).group()
-	    if is_sys_read:
-	        got_sys_read = True
-	        sys_read = val
-	    if is_sys_write:
-	        got_sys_write = True
-	        sys_write = val
-	    if got_sys_read and got_sys_write:
-	        break
+                is_sys_write = True
+            if not is_sys_read and not is_sys_write:
+                continue
+            val = re.search(r'^[0-9a-fA-F]*', line).group()
+            if is_sys_read:
+                got_sys_read = True
+                sys_read = val
+            if is_sys_write:
+                got_sys_write = True
+                sys_write = val
+            if got_sys_read and got_sys_write:
+                break
         f.close()
         if got_sys_read:
-	    v = get_cmd(gdb + " " + kernel_image + r' -ex "printf \"%lx\\n\", sys_read" -ex "quit"', False)
-	    v = v[-1].rstrip()
-	    if v != sys_read:
-		image_wrong = False
-	else:
-	    print lang.string("Cannot found sys_read from /proc/kallsyms.")
-	    print lang.string('Please report to https://github.com/teawater/kgtp/issues or teawater@gmail.com.')
+            v = get_cmd(gdb + " " + kernel_image + r' -ex "printf \"%lx\\n\", sys_read" -ex "quit"', False)
+            v = v[-1].rstrip()
+            if v != sys_read:
+                image_wrong = False
+        else:
+            print lang.string("Cannot found sys_read from /proc/kallsyms.")
+            print lang.string('Please report to https://github.com/teawater/kgtp/issues or teawater@gmail.com.')
         if got_sys_write:
-	    v = get_cmd(gdb + " " + kernel_image + r' -ex "printf \"%lx\\n\", sys_write" -ex "quit"', False)
-	    v = v[-1].rstrip()
-	    if v != sys_write:
-		image_wrong = True
-	else:
-	    print lang.string("Cannot found sys_write from /proc/kallsyms.")
-	    print lang.string('Please report to https://github.com/teawater/kgtp/issues or teawater@gmail.com.')
+            v = get_cmd(gdb + " " + kernel_image + r' -ex "printf \"%lx\\n\", sys_write" -ex "quit"', False)
+            v = v[-1].rstrip()
+            if v != sys_write:
+                image_wrong = True
+        else:
+            print lang.string("Cannot found sys_write from /proc/kallsyms.")
+            print lang.string('Please report to https://github.com/teawater/kgtp/issues or teawater@gmail.com.')
     else:
-	print lang.string("Cannot check Linux kernel debug image with /proc/kallsyms because it is not available.")
+        print lang.string("Cannot check Linux kernel debug image with /proc/kallsyms because it is not available.")
 
     #With linux_banner
     if not image_wrong:
-	v = get_cmd(gdb + " " + kernel_image + r' -ex "printf \"%s\", linux_banner" -ex "quit"', False)
-	linux_banner = v[-1].rstrip()
-	v = get_cmd(gdb + " " + kernel_image + r' -ex "target remote /sys/kernel/debug/gtp" -ex "printf \"%s\", linux_banner" -ex "set confirm off" -ex "quit"', False)
-	if v[-3].rstrip() != linux_banner:
-	    image_wrong = True
+        v = get_cmd(gdb + " " + kernel_image + r' -ex "printf \"%s\", linux_banner" -ex "quit"', False)
+        linux_banner = v[-1].rstrip()
+        v = get_cmd(gdb + " " + kernel_image + r' -ex "target remote /sys/kernel/debug/gtp" -ex "printf \"%s\", linux_banner" -ex "set confirm off" -ex "quit"', False)
+        if v[-3].rstrip() != linux_banner:
+            image_wrong = True
 
     if image_wrong:
-	print lang.string('Linux kernel debug image "%s" is not for current Linux kernel.') %self.get(self, "kernel", "image")
+        print lang.string('Linux kernel debug image "%s" is not for current Linux kernel.') %self.get(self, "kernel", "image")
         print lang.string('Please report to https://github.com/teawater/kgtp/issues or teawater@gmail.com.')
         return False
 
@@ -404,21 +404,21 @@ class Config():
         #misc language
         config_language = self.get("misc", "language")
         if ((not auto) or config_language == "") and (not lang.is_set):
-	    if config_language == "en":
-		default_s = "en"
-		question_s = "[English]/Chinese"
-	    elif config_language == "cn":
-		default_s = "cn"
-		question_s = "English/[Chinese]"
-	    else:
-		default_s = ""
-		question_s = "English/Chinese"
+            if config_language == "en":
+                default_s = "en"
+                question_s = "[English]/Chinese"
+            elif config_language == "cn":
+                default_s = "cn"
+                question_s = "English/[Chinese]"
+            else:
+                default_s = ""
+                question_s = "English/Chinese"
             while True:
                 s = raw_input("Which language do you want use?(%s)" %question_s)
                 if len(s) == 0:
-		    s = default_s
-		if len(s) == 0:
-		    continue
+                    s = default_s
+                if len(s) == 0:
+                    continue
                 if s[0] == "e" or s[0] == "E":
                     lang.set_language("en")
                     break
@@ -473,7 +473,7 @@ class Config():
                                 lang.string('Update KGTP source in "%s" failed.') %(KGTP_DIR + "kgtp/"),
                                 KGTP_DIR + "kgtp/", True):
                         break
-	            if yes_no(lang.string("Change to another git repository:"), True, False):
+                    if yes_no(lang.string("Change to another git repository:"), True, False):
                         get_kgtp_failed = True
                         break
             if not get_kgtp_failed:
@@ -506,10 +506,10 @@ class Config():
                     if os.path.isfile(p + "/gdb"):
                         gdb_dir_dict[p + "/gdb"] = ""
                 if len(gdb_dir_dict) == 1:
-		    gdb_dir = ""
-		else:
+                    gdb_dir = ""
+                else:
                     gdb_dir = select_from_dict(gdb_dir_dict, "",
-					       lang.string('Please select a GDB:'))
+                                               lang.string('Please select a GDB:'))
             if not auto:
                 if gdb_dir != "":
                     s = lang.string('Please input the directory of GDB:') + "["+ gdb_dir +"]"
@@ -519,13 +519,13 @@ class Config():
                 if len(s) == 0:
                     s = gdb_dir
                 if len(s) != 0:
-		    s = os.path.realpath(s)
+                    s = os.path.realpath(s)
                     if get_gdb_version(s) < 0:
-			print(lang.string('"%s" is not right.') %s)
-			if yes_no(lang.string("Want input another?")):
-			    continue
-			else:
-			    s = ""
+                        print(lang.string('"%s" is not right.') %s)
+                        if yes_no(lang.string("Want input another?")):
+                            continue
+                        else:
+                            s = ""
                     gdb_dir = s
             #Check version
             if gdb_dir != "":
@@ -573,18 +573,18 @@ class Config():
                                   "python-devel", "wget"],
                                  auto)
             while True:
-		shutil.rmtree(KGTP_DIR + KGTP_INSTALL_GDB + ".tar.bz2", True)
-		shutil.rmtree(KGTP_DIR + KGTP_INSTALL_GDB, True)
-		if not call_cmd("wget http://ftp.gnu.org/gnu/gdb/" + KGTP_INSTALL_GDB + ".tar.bz2", lang.string("Download source of GDB failed."), KGTP_DIR, True):
+                shutil.rmtree(KGTP_DIR + KGTP_INSTALL_GDB + ".tar.bz2", True)
+                shutil.rmtree(KGTP_DIR + KGTP_INSTALL_GDB, True)
+                if not call_cmd("wget http://ftp.gnu.org/gnu/gdb/" + KGTP_INSTALL_GDB + ".tar.bz2", lang.string("Download source of GDB failed."), KGTP_DIR, True):
                     continue
                 if not call_cmd("tar vxjf " + KGTP_INSTALL_GDB + ".tar.bz2" + " -C ./", lang.string("Uncompress GDB source package failed."), KGTP_DIR, True):
                     continue
                 shutil.rmtree(KGTP_DIR + KGTP_INSTALL_GDB + ".tar.bz2", True)
                 if not call_cmd("./configure --disable-sid --disable-rda --disable-gdbtk --disable-tk --disable-itcl --disable-tcl --disable-libgui --disable-ld --disable-gas --disable-binutils --disable-gprof --with-gdb-datadir=" + KGTP_DIR + KGTP_INSTALL_GDB + "/gdb/data-directory/", lang.string("Config GDB failed."), KGTP_DIR + KGTP_INSTALL_GDB, True):
-		    continue
-		if not call_cmd("make all", lang.string("Build GDB failed."), KGTP_DIR + KGTP_INSTALL_GDB, True):
-		    continue
-	        shutil.rmtree(KGTP_DIR + KGTP_INSTALL_GDB + ".tar.bz2", True)
+                    continue
+                if not call_cmd("make all", lang.string("Build GDB failed."), KGTP_DIR + KGTP_INSTALL_GDB, True):
+                    continue
+                shutil.rmtree(KGTP_DIR + KGTP_INSTALL_GDB + ".tar.bz2", True)
                 break
             self.set("gdb", "source", KGTP_DIR + KGTP_INSTALL_GDB)
             self.set("gdb", "dir", KGTP_DIR + KGTP_INSTALL_GDB + "/gdb/gdb")
@@ -679,7 +679,7 @@ class Config():
 
         #Insmod
         if not kgtp_insmod(self.get("gdb", "dir"),
-			   self.get("kernel", "image")):
+                           self.get("kernel", "image")):
             exit(-1)
 
         #Ask how long do a auto reconfig to update KGTP
@@ -732,6 +732,7 @@ class Config():
                 pass
             call_cmd("cp " + KGTP_DIR + "/kgtp/kgtp.py " + self.get("misc", "install_dir") + "/", lang.string("Install kgtp.py failed. "))
             call_cmd("chmod 0700 " + self.get("misc", "install_dir") + "/kgtp.py", lang.string("Install kgtp.py failed. "))
+            print(lang.string('Command "sudo kgtp.py" can start KGTP now.'))
 
         #Update setup_time
         self.set("misc", "setup_time", str(int(time.time())))
@@ -811,7 +812,7 @@ def init(argv):
         return 1
 
     if reconfig:
-	return 1
+        return 1
 
     #Check if config is done
     if config.get("misc", "setup") != "done":
@@ -882,7 +883,7 @@ def run():
 
     gdb_dir = config.get("gdb", "dir")
     os.execl(gdb_dir, gdb_dir, config.get("kernel", "image"),
-	     "-ex", "target remote /sys/kernel/debug/gtp")
+             "-ex", "target remote /sys/kernel/debug/gtp")
 
 if __name__ == "__main__":
     run()
