@@ -675,6 +675,7 @@ class Config():
         #Build KGTP
         if distro == "Redhat":
             install_packages(distro, ["glibc-static"], auto)
+        call_cmd("make clean", lang.string("Build KGTP failed. "), KGTP_DIR + "kgtp/")
         call_cmd("make", lang.string("Build KGTP failed. "), KGTP_DIR + "kgtp/")
 
         #Insmod
