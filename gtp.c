@@ -89,6 +89,11 @@
 /* Sepcial config ------------------------------------------------ */
 
 #include <linux/kernel.h>
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,14,0))
+#undef MODULE
+#include <linux/preempt.h>
+#define MODULE
+#endif
 #include <linux/module.h>
 #include <linux/uaccess.h>
 #include <linux/vmalloc.h>
