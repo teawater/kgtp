@@ -89,6 +89,11 @@
 /* Sepcial config ------------------------------------------------ */
 
 #include <linux/kernel.h>
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,14,0))
+#undef MODULE
+#include <linux/preempt.h>
+#define MODULE
+#endif
 #include <linux/module.h>
 #include <linux/uaccess.h>
 #include <linux/vmalloc.h>
@@ -858,8 +863,10 @@ enum {
 
 	GTP_INFERIOR_PID_ID			= 47,
 
+	GTP_TASK_PT_REGS_ID			= 48,
+
 	GTP_VAR_SPECIAL_MIN			= GTP_VAR_VERSION_ID,
-	GTP_VAR_SPECIAL_MAX			= GTP_INFERIOR_PID_ID,
+	GTP_VAR_SPECIAL_MAX			= GTP_TASK_PT_REGS_ID,
 };
 
 enum pe_tv_id {
@@ -1990,6 +1997,18 @@ static struct gtp_var_hooks	gtp_inferior_pid_hooks = {
 };
 
 static int
+gtp_task_pt_regs_get_val(struct gtp_trace_s *gts, struct gtp_var *gtv,
+			 int64_t *val)
+{
+	*val = (int64_t)task_pt_regs(get_current());
+	return 0;
+}
+
+static struct gtp_var_hooks	gtp_task_pt_regs_hooks = {
+	.agent_get_val = gtp_task_pt_regs_get_val,
+};
+
+static int
 gtp_var_special_add_all(void)
 {
 	struct gtp_var	*var;
@@ -2226,6 +2245,11 @@ gtp_var_special_add_all(void)
 
 	var = gtp_var_special_add(GTP_INFERIOR_PID_ID, 0, 0,
 				  "inferior_pid", &gtp_inferior_pid_hooks);
+	if (IS_ERR(var))
+		return PTR_ERR(var);
+
+	var = gtp_var_special_add(GTP_TASK_PT_REGS_ID, 0, 0,
+				  "task_pt_regs", &gtp_task_pt_regs_hooks);
 	if (IS_ERR(var))
 		return PTR_ERR(var);
 

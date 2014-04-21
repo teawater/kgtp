@@ -19,6 +19,10 @@
 * Remove "doc_install" and "doc_uninstall" in Makefile to handle error
   of "make install".
 
+* Add TSV $task_pt_regs.
+
+* Fix the build failed with the Linux kernel that newer than 3.13.
+
 *** 20131220
 
 * Get in github:
