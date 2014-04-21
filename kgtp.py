@@ -837,9 +837,6 @@ def init(argv):
     #Kernel
     if get_cmd("uname -r") != config.get("kernel", "version"):
         print lang.string('Current Linux kernel version is not "%s".') %config.get("kernel", "version")
-        print 1
-        print get_cmd("uname -r")
-        print 2
         return 1
     if config.get("kernel", "source") != "" \
        and not os.path.isdir(config.get("kernel", "source")):
