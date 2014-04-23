@@ -36,6 +36,41 @@ class Lang(object):
         self.data = {}
         self.language = language
         self.is_set = False
+        self.add('Please install "%s" before go to next step.',
+                 '在进行下一步以前请先安装软件包"%s"。')
+        self.add('Input "y" and press "Enter" to continue',
+                 '输入"y"后按回车键继续')
+        self.add("Install packages failed.",
+                 "安装包失败。")
+        self.add('Call command "%s" failed. ',
+                 '调用命令"%s"失败。 ')
+        self.add("Insmod KGTP modules?",
+                 "是否装载KGTP模块到系统中？")
+	self.add('Insmod KGTP module "%s" failed.',
+                 '装载KGTP模块"%s"到系统中失败。')
+	self.add("Cannot found sys_read from /proc/kallsyms.",
+                 "无法从/proc/kallsyms中找到sys_read。")
+	self.add('Call command "%s" failed. ',
+                 '调用命令"%s"失败。 ')
+	self.add('Call command "%s" failed. ',
+                 '调用命令"%s"失败。 ')
+	self.add('Call command "%s" failed. ',
+                 '调用命令"%s"失败。 ')
+	self.add('Call command "%s" failed. ',
+                 '调用命令"%s"失败。 ')
+	self.add('Call command "%s" failed. ',
+                 '调用命令"%s"失败。 ')
+	self.add('Call command "%s" failed. ',
+                 '调用命令"%s"失败。 ')
+	self.add('Call command "%s" failed. ',
+                 '调用命令"%s"失败。 ')
+	self.add('Call command "%s" failed. ',
+                 '调用命令"%s"失败。 ')
+	self.add('Call command "%s" failed. ',
+                 '调用命令"%s"失败。 ')
+	self.add('Call command "%s" failed. ',
+                 '调用命令"%s"失败。 ')
+	
         self.add('Get following error when write config file "%s":',
                  '写配置文件"%s"时有下面的错误:')
         self.add('Get following error when read config file "%s":',
@@ -166,8 +201,7 @@ def install_packages(distro, packages, auto):
             if auto:
                 return
             while True:
-                print(lang.string("Please install " + packages
-                                  + " before go to next step.\n"))
+                print(lang.string('Please install \"%s\" before go to next step.') %packages)
                 s = raw_input(lang.string('Input "y" and press "Enter" to continue'))
                 if len(s) > 0 and (s[0] == 'y' or s[0] == "Y"):
                     return
