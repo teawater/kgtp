@@ -966,7 +966,7 @@ def init(argv):
     if update_days * 24 * 3600 + setup_time < int(time.time()):
         if update_days > 0:
             print lang.string("KGTP source has not been updated more than %d days.") %update_days
-        if yes_no("Update source of KGTP?", True, update_days > 0):
+        if yes_no(lang.string("Update source of KGTP?"), True, update_days > 0):
             return 2
 
     return 0
