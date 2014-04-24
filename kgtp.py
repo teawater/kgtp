@@ -50,33 +50,104 @@ class Lang(object):
                  '装载KGTP模块"%s"到系统中失败。')
 	self.add("Cannot found sys_read from /proc/kallsyms.",
                  "无法从/proc/kallsyms中找到sys_read。")
-	self.add('Call command "%s" failed. ',
-                 '调用命令"%s"失败。 ')
-	self.add('Call command "%s" failed. ',
-                 '调用命令"%s"失败。 ')
-	self.add('Call command "%s" failed. ',
-                 '调用命令"%s"失败。 ')
-	self.add('Call command "%s" failed. ',
-                 '调用命令"%s"失败。 ')
-	self.add('Call command "%s" failed. ',
-                 '调用命令"%s"失败。 ')
-	self.add('Call command "%s" failed. ',
-                 '调用命令"%s"失败。 ')
-	self.add('Call command "%s" failed. ',
-                 '调用命令"%s"失败。 ')
-	self.add('Call command "%s" failed. ',
-                 '调用命令"%s"失败。 ')
-	self.add('Call command "%s" failed. ',
-                 '调用命令"%s"失败。 ')
-	self.add('Call command "%s" failed. ',
-                 '调用命令"%s"失败。 ')
-	
+	self.add('Please report this issue to https://github.com/teawater/kgtp/issues or teawater@gmail.com.',
+                 '请汇报这个问题到 https://github.com/teawater/kgtp/issues 或者 teawater@gmail.com。')
+	self.add("Cannot found sys_write from /proc/kallsyms.",
+                 "无法从/proc/kallsyms中找到sys_write。")
+	self.add("Cannot check Linux kernel debug image with /proc/kallsyms because it is not available.",
+                 "因为/proc/kallsyms不存在，所以无法通过其检查Linux内核调试镜像是否正确。")
+	self.add('Linux kernel debug image "%s" is not for current Linux kernel.',
+                 'Linux内核调试镜像 "%s"不适应于当前Linux内核。')
         self.add('Get following error when write config file "%s":',
                  '写配置文件"%s"时有下面的错误:')
+	self.add("KGTP config begin, please make sure current machine can access internet first.",
+                 "KGTP配置开始，请确保当前主机能访问互联网。")
+	self.add('Press "Enter" to continue',
+                 '请按回车键继续')
+	self.add('Current system is "%s".',
+                 '当前系统是"%s".')
+	self.add("Current system is not complete support.  Need execute some commands with yourself.\nIf you want KGTP support your system, please report to https://github.com/teawater/kgtp/issues or teawater@gmail.com.",
+                 "当前系统还没有被支持，需要手动执行一些命令。\n如果你希望KGTP支持你的系统，请汇报这个到 https://github.com/teawater/kgtp/issues 或者 teawater@gmail.com。")
+	self.add('Please select git repository of KGTP:',
+                 '请选择KGTP的GIT仓库:')
+	self.add('Please select git branch of KGTP:',
+                 '请选择KGTP的GIT分支:')
+	self.add('Clone KGTP source failed.',
+                 '克隆KGTP源码失败。')
+	self.add('Update KGTP source in "%s" failed.',
+                 '升级在目录"%s"的KGTP源码失败。')
+	self.add("Change to another git repository?",
+                 "选择其他GIT仓库？")
+	self.add("kgtp.py was updated, restarting...",
+                 "kgtp.py被更新，自动重启...")
+	self.add('Please select a GDB:',
+                 '请选择一个GDB:')
+	self.add('Please input the filename of GDB:',
+                 '请输入GDB的文件名:')
+	self.add('Please input the filename of GDB or just "Enter" to install it now:',
+                 '请输入GDB的文件名或者直接回车将开始自动安装:')
+	self.add('"%s" is not right.',
+                 '"%s"不正确。')
+	self.add("Want input another?",
+                 "要输入其他的吗?")
+	self.add('Version of "%s" is older than %s that KGTP need, do you want to get a new version GDB:',
+                 '"%s"的版本比KGTP需要的%s老，do you want to get a new version GDB:')
+	self.add('Get following error when remove directory "%s":',
+                 '删除目录"%s"时发生下面的错误:')
+	self.add("Check the software source...",
+                 '检查软件源...')
+	self.add("GDB in software source is too old for KGTP.",
+                 "软件源中的GDB比KGTP需要的老。")
+	self.add("Get and build a GDB (it will not install to current system) that works OK with KGTP...",
+                 '取得并编译一个可以和KGTP一起工作的GDB(并不会安装到当前系统中)...')
+	self.add("Download GDB source package failed.",
+                 '下载GDB源码包失败。')
+	self.add("Uncompress GDB source package failed.",
+                 '解压缩GDB源码包失败。')
+	self.add("Build GDB failed.",
+                 "编译GDB失败。")
+	self.add("Install Linux kernel source failed. ",
+                 '安装内核源码失败。')
+	self.add('Cannot find Linux kernel source in "%s".',
+                 '无法在"%s"找到内核源码。')
+	self.add("Install Linux kernel debug image failed. ",
+                 '安装Linux内核调试镜像失败。')
+	self.add("Please input the filename of Linux kernel debug image:",
+                 '请输入Linux内核调试文件的文件名:')
+	self.add("Build KGTP failed. ",
+                 "编译KGTP failed。 ")
+	self.add("How many days are prompted to update KGTP source? (0 means every time):",
+                 "多少天提示一次更新KGTP源码? (0表示每次):")
+	self.add("Do you want install kgtp.py to current system?",
+                 '你是否要安装kgtp.py到当前系统中?')
+	self.add("Please input the directory that you want to install kgtp.py:",
+                 '请输入要安装kgtp.py的目录:')
+	self.add('"%s" exists but it is not a directory.',
+                 '"%s"存在但是其不是一个目录。')
+	self.add("Install kgtp.py failed. ",
+                 '安装kgtp.py失败。 ')
+	self.add('Command "sudo kgtp.py" can start KGTP now.',
+                 '现在命令"sudo kgtp.py"可以启动KGTP。')
+	self.add('"%s" is not a directory.',
+                 '"%s"不是一个目录。')
         self.add('Get following error when read config file "%s":',
                  '读配置文件"%s"时有下面的错误:')
-        self.add("Begin to setup KGTP...",
-                 '开始设置KGTP...')
+	self.add('Config is not complete.',
+                 '配置不完整。')
+	self.add('Distro is changed.',
+                 '发行版被更换了。')
+	self.add('Cannot execute GDB in "%s" or its version is older than %s.',
+                 '不能执行GDB"%s"或者其版本比%s老。')
+	self.add('Current Linux kernel version is not "%s".',
+                 '当前Linux内核版本不是"%s"。')
+	self.add('Linux kernel source "%s" is not right.',
+                 'Linux内核源码"%s"不正确。')
+	self.add('Linux kernel debug image "%s" is not right.',
+                 'Linux内核调试镜像"%s"不正确。')
+	self.add("KGTP source has not been updated more than %d days.",
+                 'KGTP源码已经超过%d天没有更新过了。')
+	self.add('Update source of KGTP?',
+                 '升级KGTP源码?')
 
     def set_language(self, language):
         if language != "":
@@ -298,7 +369,7 @@ def kgtp_insmod(gdb, kernel_image):
                 image_wrong = False
         else:
             print lang.string("Cannot found sys_read from /proc/kallsyms.")
-            print lang.string('Please report to https://github.com/teawater/kgtp/issues or teawater@gmail.com.')
+            print lang.string('Please report this issue to https://github.com/teawater/kgtp/issues or teawater@gmail.com.')
         if got_sys_write:
             v = get_cmd(gdb + " " + kernel_image + r' -ex "printf \"%lx\\n\", sys_write" -ex "quit"', False)
             v = v[-1].rstrip()
@@ -306,7 +377,7 @@ def kgtp_insmod(gdb, kernel_image):
                 image_wrong = True
         else:
             print lang.string("Cannot found sys_write from /proc/kallsyms.")
-            print lang.string('Please report to https://github.com/teawater/kgtp/issues or teawater@gmail.com.')
+            print lang.string('Please report this issue to https://github.com/teawater/kgtp/issues or teawater@gmail.com.')
     else:
         print lang.string("Cannot check Linux kernel debug image with /proc/kallsyms because it is not available.")
 
@@ -320,7 +391,7 @@ def kgtp_insmod(gdb, kernel_image):
 
     if image_wrong:
         print lang.string('Linux kernel debug image "%s" is not for current Linux kernel.') %self.get(self, "kernel", "image")
-        print lang.string('Please report to https://github.com/teawater/kgtp/issues or teawater@gmail.com.')
+        print lang.string('Please report this issue to https://github.com/teawater/kgtp/issues or teawater@gmail.com.')
         return False
 
     return True
@@ -507,7 +578,7 @@ class Config():
                                 lang.string('Update KGTP source in "%s" failed.') %(KGTP_DIR + "kgtp/"),
                                 KGTP_DIR + "kgtp/", True):
                         break
-                    if yes_no(lang.string("Change to another git repository:"), True, False):
+                    if yes_no(lang.string("Change to another git repository?"), True, False):
                         get_kgtp_failed = True
                         break
             if not get_kgtp_failed:
@@ -546,9 +617,9 @@ class Config():
                                                lang.string('Please select a GDB:'))
             if not auto:
                 if gdb_dir != "":
-                    s = lang.string('Please input the directory of GDB:') + "["+ gdb_dir +"]"
+                    s = lang.string('Please input the filename of GDB:') + "["+ gdb_dir +"]"
                 else:
-                    s = lang.string('Please input the directory of GDB or just "Enter" to install it now:')
+                    s = lang.string('Please input the filename of GDB or just "Enter" to install it now:')
                 s = raw_input(s)
                 if len(s) == 0:
                     s = gdb_dir
@@ -573,7 +644,7 @@ class Config():
                     self.set("gdb", "dir", gdb_dir)
                     break
                 else:
-                    if not yes_no((('Version of "%s" is older than %s, do you want to get a new version GDB:') %(gdb_dir, str(KGTP_NEED_GDB_VERSION))), True, True):
+                    if not yes_no((('Version of "%s" is older than %s that KGTP need, do you want to get a new version GDB:') %(gdb_dir, str(KGTP_NEED_GDB_VERSION))), True, True):
                         continue
             #GDB was built from source that is too old.  Remove it.
             if self.get("gdb", "source") != "":
@@ -597,7 +668,7 @@ class Config():
                 else:
                     print lang.string("GDB in software source is too old for KGTP.")
             #Install GDB from source code
-            print lang.string("Get and build a GDB that works OK with KGTP...")
+            print lang.string("Get and build a GDB (it will not install to current system) that works OK with KGTP...")
             if distro == "Ubuntu":
                 install_packages(distro, ["gcc", "texinfo", "m4", "flex", "bison", "libncurses5-dev", "libexpat1-dev", "python-dev", "wget"], auto)
             else:
@@ -609,7 +680,7 @@ class Config():
             while True:
                 shutil.rmtree(KGTP_DIR + KGTP_INSTALL_GDB + ".tar.bz2", True)
                 shutil.rmtree(KGTP_DIR + KGTP_INSTALL_GDB, True)
-                if not call_cmd("wget http://ftp.gnu.org/gnu/gdb/" + KGTP_INSTALL_GDB + ".tar.bz2", lang.string("Download source of GDB failed."), KGTP_DIR, True):
+                if not call_cmd("wget http://ftp.gnu.org/gnu/gdb/" + KGTP_INSTALL_GDB + ".tar.bz2", lang.string("Download GDB source package failed."), KGTP_DIR, True):
                     continue
                 if not call_cmd("tar vxjf " + KGTP_INSTALL_GDB + ".tar.bz2" + " -C ./", lang.string("Uncompress GDB source package failed."), KGTP_DIR, True):
                     continue
@@ -653,7 +724,7 @@ class Config():
                         source = f
                 if source == "":
                     print lang.string('Cannot find Linux kernel source in "%s".') %KGTP_DIR
-                    print lang.string('Please report to https://github.com/teawater/kgtp/issues or teawater@gmail.com.')
+                    print lang.string('Please report this issue to https://github.com/teawater/kgtp/issues or teawater@gmail.com.')
                     exit(-1)
                 try:
                     os.makedirs("/build/buildd/", 0700)
@@ -695,7 +766,7 @@ class Config():
                 default_dir = ""
                 show_dir = ""
             while True:
-                image_dir = raw_input(lang.string("Please input the directory name of kernel debug image:") + show_dir)
+                image_dir = raw_input(lang.string("Please input the filename of Linux kernel debug image:") + show_dir)
                 if len(image_dir) == 0:
                     image_dir = default_dir
                 image_dir = os.path.realpath(image_dir)
@@ -729,7 +800,7 @@ class Config():
                 default_str = "[" + str(update_days) + "]"
             while True:
                 try:
-                    days = input(lang.string("Please input the number of days to update KGTP (0 means every time):") + default_str)
+                    days = input(lang.string("How many days are prompted to update KGTP source? (0 means every time):") + default_str)
                 except SyntaxError:
                     days = update_days
                 except Exception:
@@ -742,7 +813,7 @@ class Config():
         #Install kgtp.py
         if not auto:
             while True:
-                answer = yes_no(lang.string("Do you want install kgtp.py to your system?"), self.get("misc", "install_dir") != "", True)
+                answer = yes_no(lang.string("Do you want install kgtp.py to current system?"), self.get("misc", "install_dir") != "", True)
                 if not answer:
                     self.set("misc", "install_dir")
                     break
