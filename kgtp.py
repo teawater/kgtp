@@ -20,6 +20,7 @@ KGTP_REPOSITORY_DICT = {
         #"master"  : "Tested but does not released",
         #"dev"     : "Untested and unreleased"}
 KGTP_BRANCH_DICT = {
+	"dev"     : "Untested and unreleased",
         "script" : "Just for test"}
 
 KGTP_NEED_GDB_VERSION = 7.6
