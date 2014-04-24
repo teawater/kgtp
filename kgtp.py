@@ -79,7 +79,7 @@ class Lang(object):
 	self.add("Change to another git repository?",
                  "选择其他GIT仓库？")
 	self.add("kgtp.py was updated, restarting...",
-                 "kgtp.py被更新，自动重启...")
+                 "kgtp.py被更新，重启中...")
 	self.add('Please select a GDB:',
                  '请选择一个GDB:')
 	self.add('Please input the filename of GDB:',
@@ -148,6 +148,8 @@ class Lang(object):
                  'KGTP源码已经超过%d天没有更新过了。')
 	self.add('Update source of KGTP?',
                  '升级KGTP源码?')
+	self.add('kgtp.py is different with "%s", restarting...',
+                 'kgtp.py和"%s"不同, 重启中...')
 
     def set_language(self, language):
         if language != "":
@@ -920,14 +922,23 @@ def init(argv):
     if reconfig:
         return 1
 
+    #Set lang
+    if not lang.is_set:
+        lang.set_language(config.get("misc", "language"))
+
     #Check if config is done
     if config.get("misc", "setup") != "done":
         print lang.string('Config is not complete.')
         return 1
 
-    #Set lang
-    if not lang.is_set:
-        lang.set_language(config.get("misc", "language"))
+    #Check if this kgtp.py in kgtp dir or same with it.
+    #If not, restart and use kgtp.py in kgtp dir.
+    if not KGTP_PY_DEVELOP_MODE \
+       and KGTP_PY_DIR_NAME != os.path.realpath(KGTP_DIR + "kgtp/kgtp.py") \
+       and os.path.isfile(KGTP_DIR + "kgtp/kgtp.py") \
+       and os.system("diff " + KGTP_DIR + "kgtp/kgtp.py " + KGTP_PY_DIR_NAME) != 0:
+            print(lang.string('kgtp.py is different with "%s", restarting...') %(KGTP_DIR + "kgtp/kgtp.py"))
+            os.execl("/usr/bin/python", "python", KGTP_DIR + "kgtp/kgtp.py")
 
     #Distro
     if get_distro() != config.get("misc", "distro"):
