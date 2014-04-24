@@ -10,9 +10,9 @@ KGTP_DIR = os.environ.get("HOME") + "/kgtp/"
 
 KGTP_REPOSITORY_DICT = {
         "https://github.com/teawater/kgtp.git"     :"",
+        "git://gitshell.com/teawater/kgtp.git"     :"",
         "git://code.csdn.net/teawater/kgtp.git"    :"",
         "http://git.oschina.net/teawater/kgtp.git" :"",
-        "git://gitshell.com/teawater/kgtp.git"     :"",
         "git://gitcafe.com/teawater/kgtp.git"      :""}
 
 #KGTP_BRANCH_DICT = {
