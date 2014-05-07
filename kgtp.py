@@ -773,11 +773,14 @@ class Config():
                 os.system("apt-get update")
                 install_packages(distro, ["linux-image-" + kernel_version + "-dbgsym"], auto)
             kernel_image = "/usr/lib/debug/boot/vmlinux-" + kernel_version
-        elif distro == "Redhat" and os.system("rpm -q kernel-" + kernel_version) == 0:
+        elif (distro == "Redhat" or distro == "openSUSE") and os.system("rpm -q kernel-" + kernel_version) == 0:
             install_packages(distro, ["kernel-devel-" + kernel_version], auto)
             if os.system("rpm -q kernel-debuginfo-" + kernel_version) != 0:
-                call_cmd("debuginfo-install kernel",
-                         lang.string("Install Linux kernel debug image failed. "))
+		if distro == "Redhat":
+		    call_cmd("debuginfo-install kernel",
+			     lang.string("Install Linux kernel debug image failed. "))
+		else:
+		    install_packages(distro, ["kernel-debuginfo-" + kernel_version], auto)
             kernel_source = ""
             kernel_image = "/usr/lib/debug/lib/modules/" + kernel_version + "/vmlinux"
         elif not auto or kernel_image == "":
