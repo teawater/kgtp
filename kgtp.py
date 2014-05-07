@@ -198,10 +198,12 @@ def get_distro():
 
     try:
         fp = open("/etc/issue", "r")
-        version = fp.readline()[0:6].lower()
+        version = fp.readline().lower()
         fp.close()
-        if cmp("ubuntu", version) == 0:
+        if re.match('.*ubuntu.*', version):
             return "Ubuntu"
+        elif re.match('.*opensuse.*', version):
+	    return "openSUSE"
     except:
         pass
 
@@ -240,10 +242,25 @@ def get_source_version(distro, name):
             v = get_cmd("apt-get -qq changelog " + name)
         except:
             return 0
+    elif distro == "openSUSE":
+        try:
+            v = get_cmd("zypper info " + name, False)
+        except:
+            return 0
     else:
         return 0
 
-    if not re.match('^'+name, v):
+    if distro == "openSUSE":
+	got_name = False
+	got_version = False
+	for line in v:
+	    if got_name and re.match('^Version: ', line):
+		got_version = True
+		v = line
+		break
+	    if re.match('^Name: '+name, line):
+		got_name = True
+    elif not re.match('^'+name, v):
         return 0
 
     return float(re.search(r'\d+\.\d+', v).group())
@@ -254,7 +271,7 @@ def install_packages(distro, packages, auto):
         tmp_packages = []
         for i in range(0, len(packages)):
             ret = 1
-            if distro == "Redhat":
+            if distro == "Redhat" or distro == "openSUSE":
                 ret = os.system("rpm -q " + packages[i])
             elif distro == "Ubuntu":
                 ret = os.system("dpkg -s " + packages[i])
@@ -268,9 +285,11 @@ def install_packages(distro, packages, auto):
     while True:
         ret = 0
         if distro == "Redhat":
-            ret = os.system("sudo yum -y install " + packages)
+            ret = os.system("yum -y install " + packages)
         elif distro == "Ubuntu":
             ret = os.system("apt-get -y --force-yes install " + packages)
+        elif distro == "openSUSE":
+	    ret = os.system("zypper install " + packages)
         else:
             if auto:
                 return
@@ -544,7 +563,7 @@ class Config():
         #misc distro
         distro = get_distro()
         self.set("misc", "distro", distro)
-        if distro == "Redhat" or distro == "Ubuntu":
+        if distro == "Redhat" or distro == "Ubuntu" or distro == "openSUSE":
             print(lang.string('Current system is "%s".') %distro)
         else:
             print(lang.string("Current system is not complete support.  Need execute some commands with yourself.\nIf you want KGTP support your system, please report to https://github.com/teawater/kgtp/issues or teawater@gmail.com."))
@@ -674,6 +693,12 @@ class Config():
             print lang.string("Get and build a GDB (it will not install to current system) that works OK with KGTP...")
             if distro == "Ubuntu":
                 install_packages(distro, ["gcc", "texinfo", "m4", "flex", "bison", "libncurses5-dev", "libexpat1-dev", "python-dev", "wget"], auto)
+            elif distro == "openSUSE":
+		install_packages(distro,
+                                 ["gcc", "texinfo", "m4", "flex",
+                                  "bison","ncurses-devel", "libexpat-devel",
+                                  "python-devel", "wget"],
+                                 auto)
             else:
                 install_packages(distro,
                                  ["gcc", "texinfo", "m4", "flex",
