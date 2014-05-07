@@ -289,7 +289,7 @@ def install_packages(distro, packages, auto):
         elif distro == "Ubuntu":
             ret = os.system("apt-get -y --force-yes install " + packages)
         elif distro == "openSUSE":
-	    ret = os.system("zypper install " + packages)
+	    ret = os.system("zypper -n install " + packages)
         else:
             if auto:
                 return
@@ -569,10 +569,10 @@ class Config():
             print(lang.string("Current system is not complete support.  Need execute some commands with yourself.\nIf you want KGTP support your system, please report to https://github.com/teawater/kgtp/issues or teawater@gmail.com."))
 
         #Get the KGTP source code
-        if distro == "Ubuntu":
-            install_packages(distro, ["git-core"], auto)
-        else:
+        if distro == "Redhat":
             install_packages(distro, ["git"], auto)
+        else:
+            install_packages(distro, ["git-core"], auto)
         get_kgtp_failed = False
         while True:
             if get_kgtp_failed \
