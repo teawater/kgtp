@@ -289,7 +289,7 @@ def install_packages(distro, packages, auto):
         elif distro == "Ubuntu":
             ret = os.system("apt-get -y --force-yes install " + packages)
         elif distro == "openSUSE":
-	    ret = os.system("zypper -n install " + packages)
+	    ret = os.system("zypper -n install --oldpackage " + packages)
         else:
             if auto:
                 return
@@ -404,7 +404,7 @@ def kgtp_insmod(gdb, kernel_image):
         print lang.string("Cannot check Linux kernel debug image with /proc/kallsyms because it is not available.")
 
     #With linux_banner
-    if not image_wrong:
+    if not image_wrong and config.get("misc", "distro") != "openSUSE":
         v = get_cmd(gdb + " " + kernel_image + r' -ex "printf \"%s\", linux_banner" -ex "quit"', False)
         linux_banner = v[-1].rstrip()
         v = get_cmd(gdb + " " + kernel_image + r' -ex "target remote /sys/kernel/debug/gtp" -ex "printf \"%s\", linux_banner" -ex "set confirm off" -ex "quit"', False)
@@ -412,8 +412,8 @@ def kgtp_insmod(gdb, kernel_image):
             image_wrong = True
 
     if image_wrong:
-        print lang.string('Linux kernel debug image "%s" is not for current Linux kernel.') %self.get(self, "kernel", "image")
-        print lang.string('Please report this issue to https://github.com/teawater/kgtp/issues or teawater@gmail.com.')
+        print(lang.string('Linux kernel debug image "%s" is not for current Linux kernel.') %config.get("kernel", "image"))
+        print(lang.string('Please report this issue to https://github.com/teawater/kgtp/issues or teawater@gmail.com.'))
         return False
 
     return True
@@ -697,7 +697,7 @@ class Config():
 		install_packages(distro,
                                  ["gcc", "texinfo", "m4", "flex",
                                   "bison","ncurses-devel", "libexpat-devel",
-                                  "python-devel", "wget"],
+                                  "python-devel", "wget","make"],
                                  auto)
             else:
                 install_packages(distro,
@@ -787,12 +787,10 @@ class Config():
 		kernel_version0 = kernel_version_list[2]
 		kernel_version1 = kernel_version_list[0] + '-' + kernel_version_list[1] + ".1"
 		if os.system("rpm -q kernel-" + kernel_version0 + "-" + kernel_version1) == 0:
-		    install_packages(distro, ["kernel-devel-" + kernel_version], auto)
-            if os.system("rpm -q kernel-debuginfo-" + kernel_version) != 0:
-		call_cmd("zypper modifyrepo --enable repo-debug repo-debug-update")
-		install_packages(distro, ["kernel-" + kernel_version0 + "-devel-" + kernel_version1, "kernel-" + kernel_version0 + "-devel-debuginfo-" + kernel_version1, "kernel-" + kernel_version0 + "-devel-debugsource-" + kernel_version1], auto)
-		kernel_source = ""
-		kernel_image = "/usr/lib/debug/boot/vmlinux-" + kernel_version + ".debug"
+		    call_cmd("zypper modifyrepo --enable repo-debug repo-debug-update")
+		    install_packages(distro, ["kernel-" + kernel_version0 + "-devel-" + kernel_version1, "kernel-" + kernel_version0 + "-devel-debuginfo-" + kernel_version1, "kernel-" + kernel_version0 + "-debugsource-" + kernel_version1], auto)
+		    kernel_source = ""
+		    kernel_image = "/usr/lib/debug/boot/vmlinux-" + kernel_version + ".debug"
 	#Is not auto or didn't get kernel_image
         if not auto or kernel_image == "":
             kernel_source = ""
@@ -822,6 +820,8 @@ class Config():
         #Build KGTP
         if distro == "Redhat":
             install_packages(distro, ["glibc-static"], auto)
+        if distro == "openSUSE":
+            install_packages(distro, ["make", "gcc", "glibc-devel-static"], auto)
         call_cmd("make clean", lang.string("Build KGTP failed. "), KGTP_DIR + "kgtp/")
         call_cmd("make", lang.string("Build KGTP failed. "), KGTP_DIR + "kgtp/")
 
