@@ -736,7 +736,6 @@ class Config():
         else:
             kernel_source = ""
             kernel_image = ""
-        if distro == 
         if distro == "Ubuntu" and os.system("dpkg -s linux-image-" + kernel_version) == 0:
             #Install kernel dev package
             install_packages(distro, ["linux-headers-generic"], auto)
