@@ -1,0 +1,119 @@
+<html>
+<head>
+<meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+<meta id="_moz_html_fragment">
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-581509-4', 'teawater.github.io');
+ga('send', 'pageview');
+
+</script>
+<title>KGTP</title>
+</head>
+<body>
+<table
+style="text-align: left; width: 60%; margin-left: auto; margin-right: auto;"
+border="1" cellpadding="0" cellspacing="0">
+<tbody>
+<tr align="center">
+<td style="vertical-align: top;">什么是KGTP?<br>
+</td>
+</tr>
+<tr>
+<td style="vertical-align: top;">KGTP是一个能在产品系统上实时分析Linux内核和应用程序(包括Android)问题的全面动态跟踪器。<br>
+使用KGTP不需要在Linux内核上打PATCH或者重新编译，只要编译KGTP模块并insmod就可以。<br>
+<br>
+其让Linux内核提供一个远程GDB调试接口，于是在本地或者远程的主机上的GDB可以在不需要停止内核的情况下用GDB tracepoint和其他一些功能 调试 和 跟踪 Linux内核和应用程序。<br>
+即使板子上没有GDB而且其没有可用的远程接口，KGTP也可以用离线调试的功能调试内核（见http://code.google.com/p/kgtp/wiki/HOWTOCN#/sys/kernel/debug/gtpframe和离线调试）。<br>
+<br>
+KGTP支持 X86-32 ， X86-64 ， MIPS 和 ARM 。<br>
+KGTP支持大部分版本的Linux内核 (从 2.6.18 到upstream)。<br>
+<br>
+<a
+href="http://www.infoq.com/cn/presentations/gdb-sharp-knife-kgtp-linux-kernel">http://www.infoq.com/cn/presentations/gdb-sharp-knife-kgtp-linux-kernel</a>
+是介绍KGTP的中文视频<br>
+<a href="http://www.youtube.com/watch?v=7nfGAbNsEZY">http://www.youtube.com/watch?v=7nfGAbNsEZY</a>或者<a href="http://www.tudou.com/programs/view/fPu_koiKo38/">http://www.tudou.com/programs/view/fPu_koiKo38/</a>
+是介绍KGTP的英文视频。<br>
+</td>
+</tr>
+<tr align="center">
+<td style="vertical-align: top;"><br>
+</td>
+</tr>
+<tr align="center">
+<td style="vertical-align: top;">如何使用KGTP？<br>
+</td>
+</tr>
+<tr>
+<td style="vertical-align: top;">
+<b>#kgtp.py将在本机上自动配置和启动KGTP和GDB。<br>
+#第一次使用这个脚本需要等一段时间因为有一些包需要下载。<br>
+</b>wget
+https://raw.githubusercontent.com/teawater/kgtp/master/kgtp.py<br>
+sudo python kgtp.py<br>
+<b>#访问内核的内存。</b><br>
+(gdb) p jiffies_64<br>
+$2 = 5081634360<br>
+<b>#在函数vfs_read上设置trace点并收集这个函数的backtrace信息。</b><br>
+(gdb) trace vfs_read<br>
+Tracepoint 1 at 0xffffffff811b8c70: file fs/read_write.c, line 382.<br>
+(gdb) actions <br>
+Enter actions for tracepoint 1, one per line.<br>
+End with a line saying just "end".<br>
+&gt;collect $bt<br>
+&gt;end<br>
+(gdb) tstart <br>
+(gdb) tstop <br>
+(gdb) tfind <br>
+Found trace frame 0, tracepoint 1<br>
+#0 vfs_read (file=file@entry=0xffff88022017b000, <br>
+&nbsp;buf=buf@entry=0x7fff0fdd80f0 &lt;Address 0x7fff0fdd80f0 out of
+bounds&gt;, <br>
+&nbsp;count=count@entry=16, pos=pos@entry=0xffff8800626aff50) at
+fs/read_write.c:382<br>
+382 {<br>
+(gdb) bt<br>
+#0 vfs_read (file=file@entry=0xffff88022017b000, <br>
+&nbsp;buf=buf@entry=0x7fff0fdd80f0 &lt;Address 0x7fff0fdd80f0 out of
+bounds&gt;, <br>
+&nbsp;count=count@entry=16, pos=pos@entry=0xffff8800626aff50) at
+fs/read_write.c:382<br>
+#1 0xffffffff811b9819 in SYSC_read (count=16, <br>
+&nbsp;buf=0x7fff0fdd80f0 &lt;Address 0x7fff0fdd80f0 out of bounds&gt;,
+fd=&lt;optimized out&gt;)<br>
+&nbsp;at fs/read_write.c:506<br>
+<br>
+请到<a href="kgtpcn.html">KGTPCN（中文版）</a> or <a href="kgtp.html">KGTP（英文版）</a>看更多如何使用KGTP的介绍。<br>
+或者下载PDF版本：<a href="https://raw.github.com/teawater/kgtp/master/kgtpcn.pdf"> kgtpcn.pdf（中文版）</a> <a href="https://raw.github.com/teawater/kgtp/master/kgtp.pdf">kgtp.pdf（英文版）</a>.
+<br>
+<br>
+如果你有使用GDB的经验，请到
+<a href="kgtp.html">XXXTABLE</a> or <a href="kgtpcn.html">XXXTABLE chinese</a>看使用GDB调试普通程序和使用KGTP的区别。
+</td>
+</tr>
+<tr align="center">
+<td style="vertical-align: top;"><br>
+</td>
+</tr>
+<tr>
+<td style="vertical-align: top;">请到<a
+href="https://github.com/teawater/kgtp/blob/master/UPDATE">https://github.com/teawater/kgtp/blob/master/UPDATE</a>取得KGTP的更新信息。<br>
+<a href="http://www.freelists.org/list/kgtp">http://www.freelists.org/list/kgtp</a>是KGTP的邮件列表。<br>
+<b>317654748</b>是KGTP的QQ群。<br>
+如果KGTP帮到了你，请<a href="https://me.alipay.com/teawater">捐助</a>它的开发，谢谢！<br>
+</a></td>
+</tr>
+</tbody>
+</table>
+<div style="text-align: center;"><br>
+<a href="index.html">英文</a><br>
+</div>
+<br>
+<br>
+</body>
+</html>
+
