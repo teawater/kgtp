@@ -726,6 +726,7 @@ class Config():
         kernel_version = get_cmd("uname -r")
         if auto \
            and kernel_version == self.set("kernel", "version"):
+	    #This part of code help other distro and auto reconfig.
             kernel_source = os.path.realpath(self.get("kernel", "source"))
             if kernel_source == "" or not os.path.isdir(kernel_source):
                 kernel_source = ""
@@ -735,6 +736,7 @@ class Config():
         else:
             kernel_source = ""
             kernel_image = ""
+        if distro == 
         if distro == "Ubuntu" and os.system("dpkg -s linux-image-" + kernel_version) == 0:
             #Install kernel dev package
             install_packages(distro, ["linux-headers-generic"], auto)
@@ -773,17 +775,27 @@ class Config():
                 os.system("apt-get update")
                 install_packages(distro, ["linux-image-" + kernel_version + "-dbgsym"], auto)
             kernel_image = "/usr/lib/debug/boot/vmlinux-" + kernel_version
-        elif (distro == "Redhat" or distro == "openSUSE") and os.system("rpm -q kernel-" + kernel_version) == 0:
+        elif distro == "Redhat" and os.system("rpm -q kernel-" + kernel_version) == 0:
             install_packages(distro, ["kernel-devel-" + kernel_version], auto)
             if os.system("rpm -q kernel-debuginfo-" + kernel_version) != 0:
-		if distro == "Redhat":
-		    call_cmd("debuginfo-install kernel",
-			     lang.string("Install Linux kernel debug image failed. "))
-		else:
-		    install_packages(distro, ["kernel-debuginfo-" + kernel_version], auto)
+		call_cmd("debuginfo-install kernel",
+			 lang.string("Install Linux kernel debug image failed. "))
             kernel_source = ""
             kernel_image = "/usr/lib/debug/lib/modules/" + kernel_version + "/vmlinux"
-        elif not auto or kernel_image == "":
+        elif distro == "openSUSE":
+	    kernel_version_list = kernel_version.split('-')
+	    if len(kernel_version_list) == 3:
+		kernel_version0 = kernel_version_list[2]
+		kernel_version1 = kernel_version_list[0] + '-' + kernel_version_list[1] + ".1"
+		if os.system("rpm -q kernel-" + kernel_version0 + "-" + kernel_version1) == 0:
+		    install_packages(distro, ["kernel-devel-" + kernel_version], auto)
+            if os.system("rpm -q kernel-debuginfo-" + kernel_version) != 0:
+		call_cmd("zypper modifyrepo --enable repo-debug repo-debug-update")
+		install_packages(distro, ["kernel-" + kernel_version0 + "-devel-" + kernel_version1, "kernel-" + kernel_version0 + "-devel-debuginfo-" + kernel_version1, "kernel-" + kernel_version0 + "-devel-debugsource-" + kernel_version1], auto)
+		kernel_source = ""
+		kernel_image = "/usr/lib/debug/boot/vmlinux-" + kernel_version + ".debug"
+	#Is not auto or didn't get kernel_image
+        if not auto or kernel_image == "":
             kernel_source = ""
             if distro == "Other":
                 install_packages(distro, ["kernel-header", "kernel-debug-image", "kernel-source"], auto)
