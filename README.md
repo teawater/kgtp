@@ -3,14 +3,14 @@ KGTP http://teawater.github.io/kgtp/
 *[Chinese](http://teawater.github.io/kgtp/indexcn.html)*<br>
 
 <pre><code>
-<b>#kgtp.py将在本机上自动配置和启动KGTP和GDB。
-#第一次使用这个脚本需要等一段时间因为有一些包需要下载。</b>
+<b>#kgtp.py will auto setup and start KGTP and GDB in current machine.
+#The first time you use this script needs to wait for a while because there are some packages to download.</b>
 wget https://raw.githubusercontent.com/teawater/kgtp/master/kgtp.py
 sudo python kgtp.py
-#访问内核的内存。
+<b>#Access memory of Linux kernel.</b>
 (gdb) p jiffies_64
 $2 = 5081634360
-#在函数vfs_read上设置trace点并收集这个函数的backtrace信息。
+<b>#Set tracepoint in function vfs_read to collect its backtrace.</b>
 (gdb) trace vfs_read
 Tracepoint 1 at 0xffffffff811b8c70: file fs/read_write.c, line 382.
 (gdb) actions 
