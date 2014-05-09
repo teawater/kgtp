@@ -3,8 +3,8 @@ KGTP http://teawater.github.io/kgtp/
 *[Chinese](http://teawater.github.io/kgtp/indexcn.html)*<br>
 
 <pre><code>
-#kgtp.py将在本机上自动配置和启动KGTP和GDB。
-#第一次使用这个脚本需要等一段时间因为有一些包需要下载。
+<b>#kgtp.py将在本机上自动配置和启动KGTP和GDB。
+#第一次使用这个脚本需要等一段时间因为有一些包需要下载。</b>
 wget https://raw.githubusercontent.com/teawater/kgtp/master/kgtp.py
 sudo python kgtp.py
 #访问内核的内存。
