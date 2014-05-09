@@ -3,16 +3,16 @@
 * Remove txt documents because KGTP has pdf version documents now.
 
 * Update doc "Get help or report issues".
-  https://code.google.com/p/kgtp/wiki/HOWTO#Get_help_or_report_issues
-  https://code.google.com/p/kgtp/wiki/HOWTOCN#需要帮助或者汇报问题
+  http://teawater.github.io/kgtp/kgtp.html#__RefHeading__11582_1935127565
+  http://teawater.github.io/kgtp/kgtpcn.html#__RefHeading__3899_71337508
 
 * Update doc "Get KGTP through git".
-  https://code.google.com/p/kgtp/wiki/HOWTO#Get_KGTP_through_git
-  https://code.google.com/p/kgtp/wiki/HOWTOCN#通过git下载KGTP
+  http://teawater.github.io/kgtp/kgtp.html#__RefHeading__4098_695897485
+  http://teawater.github.io/kgtp/kgtpcn.html#__RefHeading__10760_71337508
 
 * Update doc "Get KGTP through http".
-  https://code.google.com/p/kgtp/wiki/HOWTO#Get_KGTP_through_http
-  https://code.google.com/p/kgtp/wiki/HOWTOCN#通过http下载KGTP
+  http://teawater.github.io/kgtp/kgtp.html#__RefHeading__4096_695897485
+  http://teawater.github.io/kgtp/kgtpcn.html#__RefHeading__10758_71337508
 
 * Remove line that access $no_self_trace in hotcode.py.
 
@@ -22,6 +22,21 @@
 * Add TSV $task_pt_regs.
 
 * Fix the build failed with the Linux kernel that newer than 3.13.
+
+* Add python script kgtp.py that can auto setup and start KGTP and GDB
+  in current machine.
+
+* Update doc.
+  Change "Preparatory work before use KGTP", "How to let GDB connect to KGTP" and "Add module symbols to GDB" as appendix.
+  http://teawater.github.io/kgtp/kgtp.html#__RefHeading__11428_1305468286
+  http://teawater.github.io/kgtp/kgtp.html#__RefHeading__4433_1176671169
+  http://teawater.github.io/kgtp/kgtp.html#__RefHeading__4828_1369842245
+  http://teawater.github.io/kgtp/kgtpcn.html#__RefHeading__11597_1305468286
+  http://teawater.github.io/kgtp/kgtpcn.html#__RefHeading__11575_71337508
+  http://teawater.github.io/kgtp/kgtpcn.html#__RefHeading__11597_71337508
+  Add "Quick config and start KGTP".
+  http://teawater.github.io/kgtp/kgtp.html#__RefHeading__11364_1305468286
+  http://teawater.github.io/kgtp/kgtpcn.html#__RefHeading__11595_1305468286
 
 *** 20131220
 
