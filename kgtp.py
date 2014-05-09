@@ -15,13 +15,10 @@ KGTP_REPOSITORY_DICT = {
         "http://git.oschina.net/teawater/kgtp.git" :"",
         "git://gitcafe.com/teawater/kgtp.git"      :""}
 
-#KGTP_BRANCH_DICT = {
-        #"release" : "Last release of KGTP",
-        #"master"  : "Tested but does not released",
-        #"dev"     : "Untested and unreleased"}
 KGTP_BRANCH_DICT = {
-	"dev"     : "Untested and unreleased",
-        "script" : "Just for test"}
+        "release" : "Last release version",
+        "master"  : "Last stable version",
+        "dev"     : "Untested and unreleased"}
 
 KGTP_NEED_GDB_VERSION = 7.6
 KGTP_INSTALL_GDB = "gdb-7.7"
