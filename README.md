@@ -63,6 +63,7 @@ is the video that introduced KGTP in Chinese.<br>
 </tr>
 <tr>
 <td style="vertical-align: top;">
+<pre><code>
 <b>#kgtp.py will auto setup and start KGTP and GDB in current machine.<br>
 #The first time you use this script needs to wait for a while because
 there are some packages to download.<br>
@@ -99,7 +100,7 @@ fs/read_write.c:382<br>
 #1 0xffffffff811b9819 in SYSC_read (count=16, <br>
 &nbsp;buf=0x7fff0fdd80f0 &lt;Address 0x7fff0fdd80f0 out of bounds&gt;,
 fd=&lt;optimized out&gt;)<br>
-&nbsp;at fs/read_write.c:506<br>
+&nbsp;at fs/read_write.c:506<br></code></pre>
 <br>
 Please goto <a href="kgtp.html">KGTP (English)</a> or <a href="kgtpcn.html">KGTPCN (Chinese)</a> to get howto use KGTP.<br>
 Or download the pdf version:
