@@ -1,20 +1,5 @@
-<html>
-<head>
-<meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
-<meta id="_moz_html_fragment">
-<script>
-(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-
-ga('create', 'UA-581509-4', 'teawater.github.io');
-ga('send', 'pageview');
-
-</script>
-<title>KGTP</title>
-</head>
-<body>
+KGTP http://teawater.github.io/kgtp/
+====
 <div style="text-align: center;">
 <a href="indexcn.html">Chinese</a><br>
 </div>
@@ -64,14 +49,14 @@ is the video that introduced KGTP in Chinese.<br>
 <tr>
 <td style="vertical-align: top;">
 <pre><code>
-#kgtp.py将在本机上自动配置和启动KGTP和GDB。
-#第一次使用这个脚本需要等一段时间因为有一些包需要下载。
+#kgtp.py will auto setup and start KGTP and GDB in current machine.
+#The first time you use this script needs to wait for a while because there are some packages to download.
 wget https://raw.githubusercontent.com/teawater/kgtp/master/kgtp.py
 sudo python kgtp.py
-#访问内核的内存。
+#Access memory of Linux kernel.
 (gdb) p jiffies_64
 $2 = 5081634360
-#在函数vfs_read上设置trace点并收集这个函数的backtrace信息。
+#Set tracepoint in function vfs_read to collect its backtrace.
 (gdb) trace vfs_read
 Tracepoint 1 at 0xffffffff811b8c70: file fs/read_write.c, line 382.
 (gdb) actions 
@@ -122,6 +107,3 @@ If KGTP help you, please <a href="https://me.alipay.com/teawater">donate</a> its
 </tr>
 </tbody>
 </table>
-</body>
-</html>
-
