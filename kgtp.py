@@ -774,7 +774,7 @@ class Config():
         elif distro == "Redhat" and os.system("rpm -q kernel-" + kernel_version) == 0:
             install_packages(distro, ["kernel-devel-" + kernel_version], auto)
             if os.system("rpm -q kernel-debuginfo-" + kernel_version) != 0:
-		call_cmd("debuginfo-install kernel",
+		call_cmd("debuginfo-install kernel --skip-broken",
 			 lang.string("Install Linux kernel debug image failed. "))
             kernel_source = ""
             kernel_image = "/usr/lib/debug/lib/modules/" + kernel_version + "/vmlinux"
