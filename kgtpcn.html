@@ -3,10 +3,10 @@
 <head>
 	<meta http-equiv="content-type" content="text/html; charset=utf-8">
 	<title>Linux Kernel GDB tracepoint module (KGTP)</title>
-	<meta name="generator" content="LibreOffice 4.2.3.3 (Linux)">
+	<meta name="generator" content="LibreOffice 4.2.4.2 (Linux)">
 	<meta name="author" content="teawater ">
 	<meta name="created" content="20130710;155757000000000">
-	<meta name="changed" content="20140509;170903590203162">
+	<meta name="changed" content="20140613;101814969550175">
 <script>
 (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
 (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -79,7 +79,7 @@ Kernel GDB tracepoint module</b></span></font></font></p>
 <p align="center"><br><br>
 </p>
 <p align="center"><font face="DejaVu Serif, serif"><span lang="en-US">Update
-in 2014-05-09</span></font></p>
+in 2014-06-13</span></font></p>
 <p align="center"><br><br>
 </p>
 <div id="内容目录1" dir="ltr">
@@ -146,8 +146,7 @@ in 2014-05-09</span></font></p>
 	<p style="margin-left: 1.5cm; margin-bottom: 0cm"><a href="#__RefHeading__13580_71337508">例子<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">1	43</a></span></font></font></p>
 	<p style="margin-left: 1.5cm; margin-bottom: 0cm"><a href="#__RefHeading__13582_71337508">例子<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">2	44</a></span></font></font></p>
 	<p style="margin-left: 1cm; margin-bottom: 0cm"><a href="#__RefHeading__13584_71337508">特殊<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">trace</a></span></font></font><a href="#__RefHeading__13584_71337508">状态变量
-	<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">$current_task</a></span></font></font><a href="#__RefHeading__13584_71337508">，<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">$current_task_pid</a></span></font></font><a href="#__RefHeading__13584_71337508">，<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">$current_thread_info</a></span></font></font><a href="#__RefHeading__13584_71337508">，<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">$cpu_id</a></span></font></font><a href="#__RefHeading__13584_71337508">，<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">$dump_stack</a></span></font></font><a href="#__RefHeading__13584_71337508">，<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">$printk_level</a></span></font></font><a href="#__RefHeading__13584_71337508">，
-<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">$printk_format</a></span></font></font><a href="#__RefHeading__13584_71337508">，<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">$printk_tmp</a></span></font></font><a href="#__RefHeading__13584_71337508">，<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">$clock</a></span></font></font><a href="#__RefHeading__13584_71337508">，<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">$hardirq_count</a></span></font></font><a href="#__RefHeading__13584_71337508">，<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">$softirq_count
+	<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">$current_task</a></span></font></font><a href="#__RefHeading__13584_71337508">，<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">$current_task_pid</a></span></font></font><a href="#__RefHeading__13584_71337508">，<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">$current_thread_info</a></span></font></font><a href="#__RefHeading__13584_71337508">，<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">$cpu_id</a></span></font></font><a href="#__RefHeading__13584_71337508">，<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">$dump_stack</a></span></font></font><a href="#__RefHeading__13584_71337508">，<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">$printk_level</a></span></font></font><a href="#__RefHeading__13584_71337508">，<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">$printk_format</a></span></font></font><a href="#__RefHeading__13584_71337508">，<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">$printk_tmp</a></span></font></font><a href="#__RefHeading__13584_71337508">，<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">$clock</a></span></font></font><a href="#__RefHeading__13584_71337508">，<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">$hardirq_count</a></span></font></font><a href="#__RefHeading__13584_71337508">，<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">$softirq_count
 	</a></span></font></font><a href="#__RefHeading__13584_71337508">和
 	<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">$irq_count	45</a></span></font></font></p>
 	<p style="margin-left: 1cm; margin-bottom: 0cm"><a href="#__RefHeading__13586_71337508">特殊<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">trace</a></span></font></font><a href="#__RefHeading__13586_71337508">状态变量
@@ -300,7 +299,9 @@ in 2014-05-09</span></font></p>
 <p align="left">其让<font face="DejaVu Serif, serif"><span lang="en-US">Linux</span></font>内核提供一个远程<font face="DejaVu Serif, serif"><span lang="en-US">GDB</span></font>调试接口，于是在本地或者远程的主机上的<font face="DejaVu Serif, serif"><span lang="en-US">GDB</span></font>可以在不需要停止内核的情况下用<font face="DejaVu Serif, serif"><span lang="en-US">GDB
 tracepoint</span></font>和其他一些功能 <b>调试</b> 和 <b>跟踪</b>
 <font face="DejaVu Serif, serif"><span lang="en-US">Linux</span></font>内核和应用程序。</p>
-<p align="left">即使板子上没有<font face="DejaVu Serif, serif"><span lang="en-US">GDB</span></font>而且其没有可用的远程接口，<font face="DejaVu Serif, serif"><span lang="en-US">KGTP</span></font>也可以用离线调试的功能调试内核（见<font face="DejaVu Serif, serif"><span lang="en-US"><a href="#/sys/kernel/debug/gtpframe和离线调试|outline">/sys/kernel/debug/gtpframe</a></span></font><a href="#/sys/kernel/debug/gtpframe和离线调试|outline">和离线调试</a>）。</p>
+<p align="left">即使板子上没有<font face="DejaVu Serif, serif"><span lang="en-US">GDB</span></font>而且其没有可用的远程接口，<font face="DejaVu Serif, serif"><span lang="en-US">KGTP</span></font>也可以用离线调试的功能调试内核（见<font face="DejaVu Serif, serif"><span lang="en-US"><a href="#/sys/kernel/debug/gtpframe和离线调试|outline">/sys/kernel/debug/gtpframe
+</a></span></font><a href="#/sys/kernel/debug/gtpframe和离线调试|outline">和
+离线调试</a>）。</p>
 <p align="left"><br><br>
 </p>
 <p align="left"><font face="DejaVu Serif, serif"><span lang="en-US"><a href="http://www.youtube.com/watch?v=7nfGAbNsEZY">http://www.youtube.com/watch?v=7nfGAbNsEZY</a>
@@ -489,11 +490,11 @@ fs/read_write.c:506</i></span></font></blockquote>
 			<p align="left"><font size="3" style="font-size: 12pt">读</font><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">Memory</span></font></font></p>
 		</td>
 		<td width="163" style="border-top: none; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: none; padding-top: 0cm; padding-bottom: 0.1cm; padding-left: 0.1cm; padding-right: 0cm">
-			<p align="left"><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">GDB</span></font></font><font size="3" style="font-size: 12pt">停止程序后</font><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">(</span></font></font><font size="3" style="font-size: 12pt">也许不需要</font><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">)</span></font></font><font size="3" style="font-size: 12pt">，它可以用</font><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">GDB</span></font></font><font size="3" style="font-size: 12pt">命令</font><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">&quot;print&quot;</span></font></font><font size="3" style="font-size: 12pt">或者</font><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">&quot;x&quot;</span></font></font><font size="3" style="font-size: 12pt"
->等应用程序的内存。</font></p>
+			<p align="left"><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">GDB</span></font></font><font size="3" style="font-size: 12pt">停止程序后</font><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">(</span></font></font><font size="3" style="font-size: 12pt">也许不需要</font><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">)</span></font></font><font size="3" style="font-size: 12pt">，它可以用</font><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">GDB</span></font></font><font size="3" style="font-size: 12pt">命令</font><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">&quot;print&quot;</span></font></font><font size="3" style="font-size: 12pt">或者</font><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">&quot;x&quot;</span></font></font><font size="3" style="font-size: 12pt">等应用程序的内存。</font></p>
 		</td>
 		<td width="336" style="border-top: none; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: 1px solid #000000; padding-top: 0cm; padding-bottom: 0.1cm; padding-left: 0.1cm; padding-right: 0.1cm">
-			<p align="left"><font size="3" style="font-size: 12pt">你可以在</font><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">tracepoint</span></font></font><font size="3" style="font-size: 12pt">中设置特殊的</font><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">action</span></font></font><font size="3" style="font-size: 12pt">收集内存到</font><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">traceframe</span></font></font><font size="3" style="font-size: 12pt">中，在</font><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">tracepoint</span></font></font><font size="3" style="font-size: 12pt">停止后取得他们的值。</font><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US"><a href="#collect expr1, expr2, ...|outline">collect
+			<p align="left"><font size="3" style="font-size: 12pt">你可以在</font><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">tracepoint</span></font></font><font size="3" style="font-size: 12pt">中设置特殊的</font><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">action</span></font></font><font size="3" style="font-size: 12pt">收集内存到</font><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">trace
+			frame</span></font></font><font size="3" style="font-size: 12pt">中，在</font><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">tracepoint</span></font></font><font size="3" style="font-size: 12pt">停止后取得他们的值。</font><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US"><a href="#collect expr1, expr2, ...|outline">collect
 			expr1, expr2, ...</a> </span></font></font><font size="3" style="font-size: 12pt"><a href="#用tfind选择trace帧缓存里面的条目|outline">用</a></font><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US"><a href="#用tfind选择trace帧缓存里面的条目|outline">tfind</a></span></font></font><font size="3" style="font-size: 12pt"><a href="#用tfind选择trace帧缓存里面的条目|outline">选择</a></font><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US"><a href="#用tfind选择trace帧缓存里面的条目|outline">trace</a></span></font></font><font size="3" style="font-size: 12pt"><a href="#用tfind选择trace帧缓存里面的条目|outline">帧缓存里面的条目</a>
 			</font>
 			</p>
@@ -649,7 +650,7 @@ trace *0x2117c4    // </i></span></font>一个地址</blockquote>
 <p align="left"><br><br>
 </p>
 <h4 class="cjk" style="page-break-before: always"><a name="__RefHeading__12709_71337508"></a>
-这个函数确实存在但是设置<font face="DejaVu Sans, sans-serif"><span lang="en-US">tracepoint</span></font>到上面会失败如何处理</h4>
+这个函数确实存在但是设置<font face="DejaVu Sans, sans-serif"><span lang="en-US">tracepoint</span></font>到上面会失败如何处理<font face="DejaVu Sans, sans-serif"><span lang="en-US">?</span></font></h4>
 <p align="left"><font face="DejaVu Serif, serif"><span lang="en-US">GCC</span></font>为了提高程序执行效率会<font face="DejaVu Serif, serif"><span lang="en-US">inline</span></font>一些<font face="DejaVu Serif, serif"><span lang="en-US">static</span></font>函数。因为目标文件没有<font face="DejaVu Serif, serif"><span lang="en-US">inline</span></font>函数的符号，所以你不能设置<font face="DejaVu Serif, serif"><span lang="en-US">tracepoint</span></font>在函数名上。</p>
 <p align="left">你可以用<font face="DejaVu Serif, serif"><span lang="en-US">&quot;trace
 </span></font>文件<font face="DejaVu Serif, serif"><span lang="en-US">:</span></font>行号<font face="DejaVu Serif, serif"><span lang="en-US">&quot;</span></font>在其上设置断点。</p>
@@ -702,8 +703,7 @@ condition 1 (buf[0] == 0x41)</i></span></font></blockquote>
 <h3 class="cjk" style="page-break-before: always"><a name="__RefHeading__12715_71337508"></a>
 <font face="DejaVu Serif, serif"><span lang="en-US">actions [num]</span></font></h3>
 <p align="left">这个命令将设置一组<font face="DejaVu Serif, serif"><span lang="en-US">action</span></font>当<font face="DejaVu Serif, serif"><span lang="en-US">tracepoint
-num</span></font>触发的时候执行。如果没有设置<font face="DejaVu Serif, serif"><span lang="en-US">num</span></font>则将设置<font face="DejaVu Serif, serif"><span lang="en-US">action</span></font>到最近创建的<font face="DejaVu Serif, serif"><span lang="en-US">tracepoint</span></font>上<font face="DejaVu Serif, serif"><span lang="en-US">(</span></font>因此你可以定义一个<font face="DejaVu Serif, serif"><span lang="en-US">tracepoint</span></font>然后直接输入<font face="DejaVu Serif, serif"><span lang="en-US">actions</span></font>而不需要参数<font face="DejaVu Serif, serif"><span lang="en-US">)</span></font>。然后就要在后面输入<font face="DejaVu Serif, serif"><span lang="en-US">action</span></font>，最后以<font face="DejaVu Serif, serif"><span lang="en-US">end</span></font>为结束。到目前为止，支持的<font face="DejaVu Serif, serif"><span lang="en-US">action</span></font>有<font face="DejaVu Serif, serif"><span lang="en-US">collect</span></font>，<font face="DejaVu Serif, serif"><span lang="en-US">teval</span></font>和<font face="DejaVu Serif, serif"><span lang="en-US">while-stepping</
-span></font>。</p>
+num</span></font>触发的时候执行。如果没有设置<font face="DejaVu Serif, serif"><span lang="en-US">num</span></font>则将设置<font face="DejaVu Serif, serif"><span lang="en-US">action</span></font>到最近创建的<font face="DejaVu Serif, serif"><span lang="en-US">tracepoint</span></font>上<font face="DejaVu Serif, serif"><span lang="en-US">(</span></font>因此你可以定义一个<font face="DejaVu Serif, serif"><span lang="en-US">tracepoint</span></font>然后直接输入<font face="DejaVu Serif, serif"><span lang="en-US">actions</span></font>而不需要参数<font face="DejaVu Serif, serif"><span lang="en-US">)</span></font>。然后就要在后面输入<font face="DejaVu Serif, serif"><span lang="en-US">action</span></font>，最后以<font face="DejaVu Serif, serif"><span lang="en-US">end</span></font>为结束。到目前为止，支持的<font face="DejaVu Serif, serif"><span lang="en-US">action</span></font>有<font face="DejaVu Serif, serif"><span lang="en-US">collect</span></font>，<font face="DejaVu Serif, serif"><span lang="en-US">teval</span></font>和<font face="DejaVu Serif, serif"><span lang="en-US">while-stepping</span></font>。</p>
 <p align="left"><br><br>
 </p>
 <h4 class="cjk" style="page-break-before: always"><a name="__RefHeading__12717_71337508"></a><a name="collect expr1, expr2, ...|outline"></a><a name="collect expr1, expr2, ...|outline"></a>
@@ -730,7 +730,7 @@ collect</span></font>指针指向的数据<font face="DejaVu Serif, serif"><span
 expr2, ...</span></font></h4>
 <p align="left">当<font face="DejaVu Serif, serif"><span lang="en-US">tracepoint</span></font>触发的时候，执行指定的表达式。这个命令可接受用逗号分割的一组列表。表达式的结果将被删除，所以最主要的作用是把值设置到<font face="DejaVu Serif, serif"><span lang="en-US">trace</span></font>状态变量中
 <font face="DejaVu Serif, serif"><span lang="en-US">(see
-</span></font><a href="#普通trace状态变量|outline">普通<font face="DejaVu Serif, serif"><span lang="en-US">trace</a></span></font><a href="#普通trace状态变量|outline">状态变量</a><font face="DejaVu Serif, serif"><span lang="en-US">)</span></font>，而不用想<font face="DejaVu Serif, serif"><span lang="en-US">collect</span></font>一样把这些值存到<font face="DejaVu Serif, serif"><span lang="en-US">trace</span></font>帧中。</p>
+</span></font><a href="#普通trace状态变量|outline">普通<font face="DejaVu Serif, serif"><span lang="en-US">trace</a></span></font><a href="#普通trace状态变量|outline">状态变量</a><font face="DejaVu Serif, serif"><span lang="en-US">)</span></font>，而不用像<font face="DejaVu Serif, serif"><span lang="en-US">collect</span></font>一样把这些值存到<font face="DejaVu Serif, serif"><span lang="en-US">trace</span></font>帧中。</p>
 <p align="left"><br><br>
 </p>
 <h4 class="cjk" style="page-break-before: always"><a name="__RefHeading__12721_71337508"></a>
@@ -765,9 +765,7 @@ tracepoint</span></font></h3>
 <h3 class="cjk" style="page-break-before: always"><a name="__RefHeading__12727_71337508"></a><a name="用tfind选择trace帧缓存里面的条目|outline"></a><a name="用tfind选择trace帧缓存里面的条目|outline"></a>
 用<font face="DejaVu Serif, serif"><span lang="en-US">tfind</span></font>选择<font face="DejaVu Serif, serif"><span lang="en-US">trace</span></font>帧缓存里面的条目</h3>
 <p align="left"><font face="DejaVu Serif, serif"><span lang="en-US">tracepoint</span></font>停止的时候，<font face="DejaVu Serif, serif"><span lang="en-US">GDB</span></font>命令<font face="DejaVu Serif, serif"><span lang="en-US">&quot;tfind&quot;</span></font>可以用来选择<font face="DejaVu Serif, serif"><span lang="en-US">trace</span></font>帧缓存里面的条目。</p>
-<p align="left">当<font face="DejaVu Serif, serif"><span lang="en-US">GDB</span></font>在<font face="DejaVu Serif, serif"><span lang="en-US">&quot;tfind&quot;</span></font>模式的时候，其只能显示<font face="DejaVu Serif, serif"><span lang="en-US">tracepoint
-action
-collect</span></font>的存在于这个条目中的数据。所以<font face="DejaVu Serif, serif"><span lang="en-US">GDB</span></font>将输出一些错误信息如果想打印没有<font face="DejaVu Serif, serif"><span lang="en-US">collect</span></font>的数据例如函数的参数。这不是<font face="DejaVu Serif, serif"><span lang="en-US">bug</span></font>，不用担心。</p>
+<p align="left">当<font face="DejaVu Serif, serif"><span lang="en-US">GDB</span></font>在<font face="DejaVu Serif, serif"><span lang="en-US">&quot;tfind&quot;</span></font>模式的时候，其只能显示用<font face="DejaVu Serif, serif"><span lang="en-US">collection</span></font>命令收集的的存在于这个条目中的数据。所以如果打印没有<font face="DejaVu Serif, serif"><span lang="en-US">collect</span></font>的数据例如函数的参数的时候，<font face="DejaVu Serif, serif"><span lang="en-US">GDB</span></font>将输出一些错误信息。这不是<font face="DejaVu Serif, serif"><span lang="en-US">bug</span></font>，不用担心。</p>
 <p align="left">如果想选择下一个条目，可以再次使用命令<font face="DejaVu Serif, serif"><span lang="en-US">&quot;tfind&quot;</span></font>。还可以用<font face="DejaVu Serif, serif"><span lang="en-US">&quot;tfind
 </span></font>条目<font face="DejaVu Serif, serif"><span lang="en-US">ID&quot;</span></font>去选择某个条目。</p>
 <p align="left">要回到普通模式<font face="DejaVu Serif, serif"><span lang="en-US">(</span></font><a href="#在普通模式直接访问当前值|outline">在普通模式直接访问当前值</a><font face="DejaVu Serif, serif"><span lang="en-US">)</span></font>，请使用<font face="DejaVu Serif, serif"><span lang="en-US">GDB</span></font>命令<font face="DejaVu Serif, serif"><span lang="en-US">&quot;tfind
@@ -821,7 +819,7 @@ at /build/buildd/linux-3.2.0/fs/read_write.c:365</i></span></font></blockquote>
 </p>
 <h3 class="cjk" style="page-break-before: always"><a name="__RefHeading__12731_71337508"></a>
 保存<font face="DejaVu Serif, serif"><span lang="en-US">trace</span></font>帧信息到一个文件中</h3>
-<p align="left"><font face="DejaVu Serif, serif"><span lang="en-US">/sys/kernel/debug/gtpframe</span></font>是一个当<font face="DejaVu Serif, serif"><span lang="en-US">KGTP</span></font>停止时的<font face="DejaVu Serif, serif"><span lang="en-US">tfine</span></font>格式（<font face="DejaVu Serif, serif"><span lang="en-US">GDB</span></font>可以读取它）的接口。</p>
+<p align="left"><font face="DejaVu Serif, serif"><span lang="en-US">/sys/kernel/debug/gtpframe</span></font>是一个当<font face="DejaVu Serif, serif"><span lang="en-US">KGTP</span></font>停止时的<font face="DejaVu Serif, serif"><span lang="en-US">tfind</span></font>格式（<font face="DejaVu Serif, serif"><span lang="en-US">GDB</span></font>可以读取它）的接口。</p>
 <p align="left">请 <b>注意</b> 有些<font face="DejaVu Serif, serif"><span lang="en-US">&quot;cp&quot;</span></font>不能很好的处理这个问题，可以用<font face="DejaVu Serif, serif"><span lang="en-US">&quot;cat
 /sys/kernel/debug/gtpframe &gt; ./gtpframe&quot;</span></font>拷贝它。</p>
 <p align="left">你可以在需要的时候打开文件<font face="DejaVu Serif, serif"><span lang="en-US">gtpframe:</span></font></p>
@@ -1193,7 +1191,7 @@ p $c</i></span></font></blockquote>
 = 100</i></span></font></blockquote>
 <blockquote class="cjk" style="margin-left: 0cm"><br>
 </blockquote>
-<p align="left">如果需要的时候，访问<font face="DejaVu Serif, serif"><span lang="en-US">trace</span></font>状态变量的<font face="DejaVu Serif, serif"><span lang="en-US">tracepoint
+<p align="left">需要的时候，访问<font face="DejaVu Serif, serif"><span lang="en-US">trace</span></font>状态变量的<font face="DejaVu Serif, serif"><span lang="en-US">tracepoint
 action</span></font>将自动加锁，所以其可以很好的处理<font face="DejaVu Serif, serif"><span lang="en-US">trace</span></font>状态变量的竞态条件问题。</p>
 <p align="left">下面这个例子即使在一个多<font face="DejaVu Serif, serif"><span lang="en-US">CPU</span></font>的环境也可以正常使用。</p>
 <blockquote class="cjk"><font face="DejaVu Serif, serif"><span lang="en-US"><i>&gt;teval
@@ -1203,7 +1201,7 @@ $c=$c+1</i></span></font></blockquote>
 <h3 class="cjk" style="page-break-before: always"><a name="__RefHeading__12755_71337508"></a><a name="Per_cpu trace状态变量|outline"></a>
 <font face="DejaVu Serif, serif"><span lang="en-US">Per_cpu trace</span></font>状态变量</h3>
 <p align="left"><font face="DejaVu Serif, serif"><span lang="en-US">Per_cpu
-trace</span></font>状态变量是一种特殊的普通<font face="DejaVu Serif, serif"><span lang="en-US">trace</span></font>状态变量。
+trace</span></font>状态变量是一种特殊的<font face="DejaVu Serif, serif"><span lang="en-US">trace</span></font>状态变量。
 当一个<font face="DejaVu Serif, serif"><span lang="en-US">tracepoint
 action</span></font>访问到其的时候，其将自动访问这个<font face="DejaVu Serif, serif"><span lang="en-US">CPU</span></font>的<font face="DejaVu Serif, serif"><span lang="en-US">Per_cpu
 trace</span></font>状态变量。</p>
@@ -1333,14 +1331,14 @@ $ignore_error=1</i></span></font></blockquote>
 </blockquote>
 <blockquote class="cjk"><font face="DejaVu Serif, serif"><span lang="en-US"><i>trace
 arch_local_irq_disable</i></span></font></blockquote>
-<blockquote class="cjk">  <font face="DejaVu Serif, serif"><span lang="en-US"><i>commands</i></span></font></blockquote>
+<blockquote class="cjk">  <font face="DejaVu Serif, serif"><span lang="en-US"><i>actions</i></span></font></blockquote>
 <blockquote class="cjk">    <font face="DejaVu Serif, serif"><span lang="en-US"><i>teval
 $p_count=$clock</i></span></font></blockquote>
 <blockquote class="cjk">  <font face="DejaVu Serif, serif"><span lang="en-US"><i>end</i></span></font></blockquote>
 <blockquote class="cjk"><font face="DejaVu Serif, serif"><span lang="en-US"><i>trace
 arch_local_irq_enable if ($p_count &amp;&amp; $p_cc &lt; $clock -
 $p_count)</i></span></font></blockquote>
-<blockquote class="cjk">  <font face="DejaVu Serif, serif"><span lang="en-US"><i>commands</i></span></font></blockquote>
+<blockquote class="cjk">  <font face="DejaVu Serif, serif"><span lang="en-US"><i>actions</i></span></font></blockquote>
 <blockquote class="cjk">    <font face="DejaVu Serif, serif"><span lang="en-US"><i>teval
 $p_cc = $clock - $p_count</i></span></font></blockquote>
 <blockquote class="cjk">    <font face="DejaVu Serif, serif"><span lang="en-US"><i>collect
@@ -1579,7 +1577,7 @@ tvariable $ignore_error=0</i></span></font></blockquote>
 </p>
 <h3 class="cjk" style="page-break-before: always"><a name="__RefHeading__13598_71337508"></a>
 通过<font face="DejaVu Serif, serif"><span lang="en-US">$bt</span></font>收集栈并用<font face="DejaVu Serif, serif"><span lang="en-US">GDB</span></font>命令<font face="DejaVu Serif, serif"><span lang="en-US">backtrace</span></font>进行分析</h3>
-<p align="left">因为这个方法更快（因为在<font face="DejaVu Serif, serif"><span lang="en-US">trace</span></font>的时候只收集）而且可以分析出大部分的调用栈中的信息（前面介绍的栈信息都可以分析出来），所以时间你使用这个方法做栈分析。</p>
+<p align="left">因为这个方法更快（只在<font face="DejaVu Serif, serif"><span lang="en-US">trace</span></font>时候收集栈帧信息）而且可以分析出大部分的调用栈中的信息（前面介绍的栈信息都可以分析出来），所以时间你使用这个方法做栈分析。</p>
 <p align="left">首先我们需要在<font face="DejaVu Serif, serif"><span lang="en-US">tracepoint
 action</span></font>中增加命令收集栈。</p>
 <p align="left"><strike><font face="DejaVu Serif, serif"><span lang="en-US">GDB</span></font>收集栈的通常命令是：
@@ -1830,7 +1828,7 @@ p ret</i></span></font></blockquote>
 <h3 class="cjk" style="page-break-before: always"><a name="__RefHeading__13602_71337508"></a>
 用 <font face="DejaVu Serif, serif"><span lang="en-US">$dump_stack
 </span></font>输出栈分析到<font face="DejaVu Serif, serif"><span lang="en-US">printk</span></font>里</h3>
-<p align="left">因为这个方法需要在<font face="DejaVu Serif, serif"><span lang="en-US">trace</span></font>的时候分析栈并调用<font face="DejaVu Serif, serif"><span lang="en-US">printk</span></font>，所以它比较慢，不安全，不清晰也不能访问调用栈中的很多内容，所以我建议你上一部分介绍的方法</p>
+<p align="left">因为这个方法需要在<font face="DejaVu Serif, serif"><span lang="en-US">trace</span></font>的时候分析栈并调用<font face="DejaVu Serif, serif"><span lang="en-US">printk</span></font>，所以它比较慢，不安全，不清晰也不能访问调用栈中的很多内容，所以我建议你使用上一部分介绍的方法</p>
 <p align="left"><font face="DejaVu Serif, serif"><span lang="en-US">KGTP</span></font>有一个特殊的<font face="DejaVu Serif, serif"><span lang="en-US">trace</span></font>状态变量<font face="DejaVu Serif, serif"><span lang="en-US">$dump_stack</span></font>，收集这个变量可以令<font face="DejaVu Serif, serif"><span lang="en-US">GDB</span></font>调用栈分析并用<font face="DejaVu Serif, serif"><span lang="en-US">printk</span></font>输出。
 下面是一个让内核输出<font face="DejaVu Serif, serif"><span lang="en-US">vfs_readdir</span></font>栈分析的例子：</p>
 <blockquote class="cjk"><font face="DejaVu Serif, serif"><span lang="en-US"><i>target
@@ -2190,8 +2188,7 @@ tracepoint</span></font>的<font face="DejaVu Serif, serif"><span lang="en-US">t
 			tracepoint($watch_set_addr</span></font></font><font size="3" style="font-size: 12pt">或者</font><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">$watch_set_id</span></font></font><font size="3" style="font-size: 12pt">设置</font><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">)</span></font></font><font size="3" style="font-size: 12pt">中并让其开始工作。</font></p>
 		</td>
 		<td width="102" style="border-top: none; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: none; padding-top: 0cm; padding-bottom: 0.1cm; padding-left: 0.1cm; padding-right: 0cm">
-			<p align="left"><font size="3" style="font-size: 12pt">取得这次开始的返回值。</font><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US"><br></span></font></font><font size="3" style="font-size: 12pt">（其可能会失败因为</font><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">X86</span></font></font><font size="3" style="font-size: 12pt">只有</font><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">4</span></font></font><font size="3" style="font-size: 12pt">个硬件断点）</font><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US"><br></span></font></font><font size="3" style="font-size: 12pt">取得</font><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">0</span></font></font><font size="3" style="font-size: 12pt">则成功，小于</font><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">0</span></font></font><font 
-size="3" style="font-size: 12pt">则是错误</font><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">ID</span></font></font><font size="3" style="font-size: 12pt">。</font></p>
+			<p align="left"><font size="3" style="font-size: 12pt">取得这次开始的返回值。</font><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US"><br></span></font></font><font size="3" style="font-size: 12pt">（其可能会失败因为</font><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">X86</span></font></font><font size="3" style="font-size: 12pt">只有</font><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">4</span></font></font><font size="3" style="font-size: 12pt">个硬件断点）</font><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US"><br></span></font></font><font size="3" style="font-size: 12pt">取得</font><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">0</span></font></font><font size="3" style="font-size: 12pt">则成功，小于</font><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">0</span></font></font><font size="3" style="font-size: 12pt">则是错误</font><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">ID</span></font></font><font size="3" style="font-size: 12pt">。</font></p>
 		</td>
 		<td width="97" style="border-top: none; border-bottom: 1px solid #000000; border-left: 1px solid #000000; border-right: none; padding-top: 0cm; padding-bottom: 0.1cm; padding-left: 0.1cm; padding-right: 0cm">
 			<p align="left"><font size="3" style="font-size: 12pt">不支持</font></p>
@@ -2487,7 +2484,7 @@ vfs_read</i></span></font></blockquote>
 <blockquote class="cjk"><font face="DejaVu Serif, serif"><span lang="en-US"><i>#</i></span></font>因为单步会影响系统速度，所以最好用<font face="DejaVu Serif, serif"><span lang="en-US"><i>passcount</i></span></font>或者<font face="DejaVu Serif, serif"><span lang="en-US"><i>condition</i></span></font>限制<font face="DejaVu Serif, serif"><span lang="en-US"><i>tracepoint</i></span></font>的执行次数。</blockquote>
 <blockquote class="cjk"><font face="DejaVu Serif, serif"><span lang="en-US"><i>passcount
 1</i></span></font></blockquote>
-<blockquote class="cjk">  <font face="DejaVu Serif, serif"><span lang="en-US"><i>commands</i></span></font></blockquote>
+<blockquote class="cjk">  <font face="DejaVu Serif, serif"><span lang="en-US"><i>actions</i></span></font></blockquote>
 <blockquote class="cjk">    <font face="DejaVu Serif, serif"><span lang="en-US"><i>collect
 $bt</i></span></font></blockquote>
 <blockquote class="cjk">    <font face="DejaVu Serif, serif"><span lang="en-US"><i>collect
@@ -2938,7 +2935,7 @@ at /home/teawater/kernel/linux/drivers/tty/tty_io.c:960</i></span></font></block
 </p>
 <h2 class="cjk" style="page-break-before: always"><a name="__RefHeading__11547_1050592842"></a><a name="/sys/kernel/debug/gtpframe和离线调试|outline"></a>
 <font face="DejaVu Serif, serif"><span lang="en-US">/sys/kernel/debug/gtpframe</span></font>和离线调试</h2>
-<p align="left"><font face="DejaVu Serif, serif"><span lang="en-US">/sys/kernel/debug/gtpframe</span></font>是一个当<font face="DejaVu Serif, serif"><span lang="en-US">KGTP</span></font>停止时的<font face="DejaVu Serif, serif"><span lang="en-US">tfine</span></font>格式（<font face="DejaVu Serif, serif"><span lang="en-US">GDB</span></font>可以读取它）的接口。</p>
+<p align="left"><font face="DejaVu Serif, serif"><span lang="en-US">/sys/kernel/debug/gtpframe</span></font>是一个当<font face="DejaVu Serif, serif"><span lang="en-US">KGTP</span></font>停止时的<font face="DejaVu Serif, serif"><span lang="en-US">tfind</span></font>格式（<font face="DejaVu Serif, serif"><span lang="en-US">GDB</span></font>可以读取它）的接口。</p>
 <p align="left"><br><br>
 </p>
 <p align="left">在运行<font face="DejaVu Serif, serif"><span lang="en-US">GDB</span></font>的主机上：</p>
@@ -3666,9 +3663,7 @@ kernel</span></font>或者用户层程序的热点代码。</p>
 </p>
 <h2 class="cjk" style="page-break-before: always"><a name="__RefHeading__11567_1050592842"></a><a name="如何增加用C写的插件|outline"></a>
 如何增加用<font face="DejaVu Serif, serif"><span lang="en-US">C</span></font>写的插件</h2>
-<p align="left"><font face="DejaVu Serif, serif"><span lang="en-US">KGTP</span></font>支持用<font face="DejaVu Serif, serif"><span lang="en-US">C</span></font>写的插件，插件将被编译成<font face="DejaVu Serif, serif"><span lang="en-US">LKM</span></font>。
-<font face="DejaVu Serif, serif"><span lang="en-US">KGTP support
-plugin that write in C. The plugin will be built as LKM</span></font></p>
+<p align="left"><font face="DejaVu Serif, serif"><span lang="en-US">KGTP</span></font>支持用<font face="DejaVu Serif, serif"><span lang="en-US">C</span></font>写的插件，插件将被编译成<font face="DejaVu Serif, serif"><span lang="en-US">LKM</span></font>。</p>
 <p align="left"><br><br>
 </p>
 <h3 class="cjk" style="page-break-before: always"><a name="__RefHeading__11569_1050592842"></a>
@@ -4477,7 +4472,7 @@ kgtp/</i></span></font></blockquote>
 <blockquote class="cjk"><font face="DejaVu Serif, serif"><span lang="en-US"><i>make</i></span></font></blockquote>
 <p align="left">在一些编译环境中<font face="DejaVu Serif, serif"><span lang="en-US">(</span></font>例如<font face="DejaVu Serif, serif"><span lang="en-US">Android)</span></font>将出现一些编译应用程序<font face="DejaVu Serif, serif"><span lang="en-US">getmod</span></font>或者<font face="DejaVu Serif, serif"><span lang="en-US">getframe</span></font>的错误。请忽略这些错误并使用目录中的<font face="DejaVu Serif, serif"><span lang="en-US">gtp.ko</span></font>。</p>
 <p align="left">如果你在<font face="DejaVu Serif, serif"><span lang="en-US">Fedora</span></font>上得到出错信息<font face="DejaVu Serif, serif"><span lang="en-US">&quot;/usr/bin/ld:
-cannot find -lc&quot;</span></font>，请用下面的命令处理其。</p>
+cannot find -lc&quot;</span></font>，请用下面的命令处理。</p>
 <blockquote class="cjk"><font face="DejaVu Serif, serif"><span lang="en-US"><i>sudo
 yum install glibc-static</i></span></font></blockquote>
 <p align="left"><br><br>
@@ -4749,7 +4744,7 @@ target remote :1234</i></span></font></blockquote>
 <h1 class="cjk" style="page-break-before: always"><a name="__RefHeading__11597_71337508"></a>
 附录<font face="DejaVu Sans, sans-serif"><span lang="en-US">C
 </span></font>增加模块的符号信息到<font face="DejaVu Sans, sans-serif"><span lang="en-US">GDB</span></font></h1>
-<p align="left">有时你需要添加一个<font face="DejaVu Serif, serif"><span lang="en-US">Linux</span></font>内核模块的符号信息到<font face="DejaVu Serif, serif"><span lang="en-US">GDB</span></font>好调试其。</p>
+<p align="left">有时你需要添加一个<font face="DejaVu Serif, serif"><span lang="en-US">Linux</span></font>内核模块的符号信息到<font face="DejaVu Serif, serif"><span lang="en-US">GDB</span></font>以其调试之。</p>
 <p align="left">手动增加符号信息不太容易，所以<font face="DejaVu Serif, serif"><span lang="en-US">KGTP</span></font>包里包含了<font face="DejaVu Serif, serif"><span lang="en-US">GDB
 Python</span></font>脚本<font face="DejaVu Serif, serif"><span lang="en-US">&quot;getmod.py&quot;</span></font>和程序<font face="DejaVu Serif, serif"><span lang="en-US">&quot;getmod&quot;</span></font>可以帮到你。</p>
 <p align="left"><br><br>
@@ -4808,7 +4803,7 @@ GDB.</i></span></font></blockquote>
 source ~/kgtp/getmod.py</i></span></font></blockquote>
 <p align="left" style="margin-right: 1cm">于是这个脚本将自动装载<font face="DejaVu Serif, serif"><span lang="en-US">Linux</span></font>内核模块到<font face="DejaVu Serif, serif"><span lang="en-US">GDB</span></font>中。</p>
 <div title="footer">
-	<p align="center" style="margin-top: 0.5cm; margin-bottom: 0cm"><sdfield type=PAGE subtype=RANDOM format=PAGE><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt">64</font></font></sdfield></p>
+	<p align="center" style="margin-top: 0.5cm; margin-bottom: 0cm"><sdfield type=PAGE subtype=RANDOM format=PAGE><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt">136</font></font></sdfield></p>
 </div>
 </body>
 </html>
