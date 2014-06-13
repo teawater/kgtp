@@ -1,4 +1,13 @@
+*** 20140510+
+
+* Fix format issue of kgtp.py。
+
+* Fix some issues of doc.
+  Thanks Linyu Zhu <lynuszhu@gmail.com>'s work.
+
 *** 20140510
+
+* https://lkml.org/lkml/2014/5/11/395
 
 * Remove txt documents because KGTP has pdf version documents now.
 
