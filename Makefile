@@ -4,7 +4,7 @@ else
 obj-m := gtp.o
 endif
 
-MODULEVERSION := 20140510
+MODULEVERSION := 20140510+
 
 KERNELVERSION := $(shell uname -r)
 KERNELDIR := /lib/modules/$(KERNELVERSION)/build/
