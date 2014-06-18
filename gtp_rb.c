@@ -218,7 +218,7 @@ gtp_rb_page_free(void)
 #define GTP_RB_UNLOCK(r)		spin_unlock(&r->lock)
 #define GTP_RB_LOCK_IRQ(r, flags)	spin_lock_irqsave(&r->lock, flags)
 #define GTP_RB_UNLOCK_IRQ(r, flags)	spin_unlock_irqrestore(&r->lock, flags)
-#define GTP_RB_RELEASE(r)		(r->prev_w = r->w)
+#define GTP_RB_RELEASE(r)		(r->w = r->prev_w)
 
 static inline void *
 gtp_rb_prev_frame_get(struct gtp_rb_s *rb)
