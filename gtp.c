@@ -2000,7 +2000,11 @@ static int
 gtp_task_pt_regs_get_val(struct gtp_trace_s *gts, struct gtp_var *gtv,
 			 int64_t *val)
 {
-	*val = (int64_t)task_pt_regs(get_current());
+#ifdef CONFIG_X86_32
+	*val = (uint32_t)task_pt_regs(get_current());
+#else 
+	*val = (uint64_t)task_pt_regs(get_current());
+#endif
 	return 0;
 }
 
@@ -13508,7 +13512,9 @@ static int __init gtp_init(void)
 out:
 	if (ret < 0)
 		gtp_release_all_mod();
-
+#ifdef GTP_DEBUG
+	printk(GTP_DEBUG "gtp inserted\n");
+#endif
 	return ret;
 }
 
