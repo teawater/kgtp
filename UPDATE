@@ -1,9 +1,17 @@
 *** 20140510+
 
-* Fix format issue of kgtp.py。
+* Lihang Li <licalmer@gmail.com>
+  Fix build warning in 32-bit.
 
-* Fix some issues of doc.
-  Thanks Linyu Zhu <lynuszhu@gmail.com>'s work.
+* Linyu Zhu <lynuszhu@gmail.com>
+  Lihang Li <licalmer@gmail.com>
+  Fix some issues of doc.
+
+* Linyu Zhu <lynuszhu@gmail.com>
+  Fix GTP_RB_RELEASE macro's issue in KGTP's ring buffer.
+
+* Hui Zhu <teawater@gmail.com>
+  Fix some issues of kgtp.py with Fedora.
 
 *** 20140510
 
