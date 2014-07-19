@@ -6,14 +6,14 @@ endif
 
 MODULEVERSION := 20140510+
 
-KERNELVERSION := $(shell uname -r)
-KERNELDIR := /lib/modules/$(KERNELVERSION)/build/
-CROSS_COMPILE :=
-MODULEDIR := /lib/modules/$(KERNELVERSION)/lib/
-#ARCH := i386
-#ARCH := x86_64
-#ARCH := mips
-#ARCH := arm
+KERNELVERSION ?= $(shell uname -r)
+KERNELDIR ?= /lib/modules/$(KERNELVERSION)/build/
+CROSS_COMPILE ?=
+MODULEDIR ?= /lib/modules/$(KERNELVERSION)/lib/
+#ARCH ?= i386
+#ARCH ?= x86_64
+#ARCH ?= mips
+#ARCH ?= arm
 
 export CONFIG_DEBUG_INFO=y
 
