@@ -36,6 +36,9 @@ endif
 ifeq ($(USE_PROC),1)
 EXTRA_CFLAGS += -DUSE_PROC
 endif
+ifeq ($(NO_WARNING),1)
+EXTRA_CFLAGS += -DNO_WARNING
+endif
 
 DKMS_FILES := Makefile dkms.conf dkms_others_install.sh                  \
 	      dkms_others_uninstall.sh gtp.c gtp_rb.c ring_buffer.c      \
