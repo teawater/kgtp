@@ -15,7 +15,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * Copyright(C) KGTP team (https://code.google.com/p/kgtp/), 2010-2013
+ * Copyright(C) KGTP team (http://teawater.github.io/kgtp/), 2010-2014
  *
  */
 
