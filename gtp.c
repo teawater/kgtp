@@ -2000,7 +2000,7 @@ static int
 gtp_task_pt_regs_get_val(struct gtp_trace_s *gts, struct gtp_var *gtv,
 			 int64_t *val)
 {
-#ifdef CONFIG_X86_32
+#if defined(CONFIG_X86_32) || defined(CONFIG_ARM) || defined(CONFIG_32BIT)
 	*val = (uint32_t)task_pt_regs(get_current());
 #else 
 	*val = (uint64_t)task_pt_regs(get_current());
