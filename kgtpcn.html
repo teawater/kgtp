@@ -3,10 +3,10 @@
 <head>
 	<meta http-equiv="content-type" content="text/html; charset=utf-8">
 	<title>Linux Kernel GDB tracepoint module (KGTP)</title>
-	<meta name="generator" content="LibreOffice 4.2.4.2 (Linux)">
+	<meta name="generator" content="LibreOffice 4.2.5.2 (Linux)">
 	<meta name="author" content="teawater ">
 	<meta name="created" content="20130710;155757000000000">
-	<meta name="changed" content="20140613;101814969550175">
+	<meta name="changed" content="20140722;113357502679597">
 <script>
 (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
 (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -79,7 +79,7 @@ Kernel GDB tracepoint module</b></span></font></font></p>
 <p align="center"><br><br>
 </p>
 <p align="center"><font face="DejaVu Serif, serif"><span lang="en-US">Update
-in 2014-06-13</span></font></p>
+in 2014-07-22</span></font></p>
 <p align="center"><br><br>
 </p>
 <div id="内容目录1" dir="ltr">
@@ -99,7 +99,7 @@ in 2014-06-13</span></font></p>
 	<p style="margin-left: 0.5cm; margin-bottom: 0cm"><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US"><a href="#__RefHeading__11613_71337508">GDB
 	tracepoint	14</a></span></font></font></p>
 	<p style="margin-left: 1cm; margin-bottom: 0cm"><a href="#__RefHeading__12707_71337508">设置<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">tracepint	15</a></span></font></font></p>
-	<p style="margin-left: 1.5cm; margin-bottom: 0cm"><a href="#__RefHeading__12709_71337508">这个函数确实存在但是设置<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">tracepoint</a></span></font></font><a href="#__RefHeading__12709_71337508">到上面会失败如何处理<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">	16</a></span></font></font></p>
+	<p style="margin-left: 1.5cm; margin-bottom: 0cm"><a href="#__RefHeading__12709_71337508">这个函数确实存在但是设置<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">tracepoint</a></span></font></font><a href="#__RefHeading__12709_71337508">到上面会失败如何处理<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">?	16</a></span></font></font></p>
 	<p style="margin-left: 1cm; margin-bottom: 0cm"><a href="#__RefHeading__12711_71337508">如何设置条件<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">tracepoint	17</a></span></font></font></p>
 	<p style="margin-left: 1.5cm; margin-bottom: 0cm"><a href="#__RefHeading__12713_71337508">如何处理错误
 	<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">&quot;Unsupported
@@ -256,30 +256,31 @@ in 2014-06-13</span></font></p>
 	<p style="margin-left: 0.5cm; margin-bottom: 0cm"><a href="#__RefHeading__10762_71337508">配置<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">KGTP	118</a></span></font></font></p>
 	<p style="margin-left: 0.5cm; margin-bottom: 0cm"><a href="#__RefHeading__10764_71337508">编译<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">KGTP	119</a></span></font></font></p>
 	<p style="margin-left: 1cm; margin-bottom: 0cm"><a href="#__RefHeading__10766_71337508">普通编译<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">	119</a></span></font></font></p>
-	<p style="margin-left: 1cm; margin-bottom: 0cm"><a href="#__RefHeading__10768_71337508">用一些特殊选项编译<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">KGTP	120</a></span></font></font></p>
+	<p style="margin-left: 1cm; margin-bottom: 0cm"><a href="#__RefHeading__17259_1486051692">编译错误处理<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">	120</a></span></font></font></p>
+	<p style="margin-left: 1cm; margin-bottom: 0cm"><a href="#__RefHeading__10768_71337508">用一些特殊选项编译<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">KGTP	121</a></span></font></font></p>
 	<p style="margin-left: 0.5cm; margin-bottom: 0cm"><a href="#__RefHeading__10770_71337508">安装和卸载
-	<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">KGTP	121</a></span></font></font></p>
-	<p style="margin-left: 0.5cm; margin-bottom: 0cm"><a href="#__RefHeading__10772_71337508">和<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">DKMS</a></span></font></font><a href="#__RefHeading__10772_71337508">一起使用<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">KGTP	122</a></span></font></font></p>
+	<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">KGTP	122</a></span></font></font></p>
+	<p style="margin-left: 0.5cm; margin-bottom: 0cm"><a href="#__RefHeading__10772_71337508">和<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">DKMS</a></span></font></font><a href="#__RefHeading__10772_71337508">一起使用<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">KGTP	123</a></span></font></font></p>
 	<p style="margin-left: 0.5cm; margin-bottom: 0cm"><a href="#__RefHeading__10774_71337508">使用<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">KGTP
-	Linux</a></span></font></font><a href="#__RefHeading__10774_71337508">内核<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">patch	123</a></span></font></font></p>
-	<p style="margin-left: 0.5cm; margin-bottom: 0cm"><a href="#__RefHeading__10776_71337508">安装可以和<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">KGTP</a></span></font></font><a href="#__RefHeading__10776_71337508">一起使用的<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">GDB	124</a></span></font></font></p>
+	Linux</a></span></font></font><a href="#__RefHeading__10774_71337508">内核<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">patch	124</a></span></font></font></p>
+	<p style="margin-left: 0.5cm; margin-bottom: 0cm"><a href="#__RefHeading__10776_71337508">安装可以和<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">KGTP</a></span></font></font><a href="#__RefHeading__10776_71337508">一起使用的<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">GDB	125</a></span></font></font></p>
 	<p style="margin-bottom: 0cm"><a href="#__RefHeading__11575_71337508">附录<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">B
-	</a></span></font></font><a href="#__RefHeading__11575_71337508">如何让<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">GDB</a></span></font></font><a href="#__RefHeading__11575_71337508">连接<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">KGTP	125</a></span></font></font></p>
-	<p style="margin-left: 0.5cm; margin-bottom: 0cm"><a href="#__RefHeading__11577_71337508">普通<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">Linux	125</a></span></font></font></p>
-	<p style="margin-left: 1cm; margin-bottom: 0cm"><a href="#__RefHeading__11579_71337508">安装<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">KGTP</a></span></font></font><a href="#__RefHeading__11579_71337508">模块<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">	125</a></span></font></font></p>
-	<p style="margin-left: 1cm; margin-bottom: 0cm"><a href="#__RefHeading__11581_71337508">处理找不到<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">&quot;/sys/kernel/debug/gtp&quot;</a></span></font></font><a href="#__RefHeading__11581_71337508">的问题<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">	126</a></span></font></font></p>
-	<p style="margin-left: 1cm; margin-bottom: 0cm"><a href="#__RefHeading__11583_71337508">让<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">GDB</a></span></font></font><a href="#__RefHeading__11583_71337508">连接到<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">KGTP	127</a></span></font></font></p>
-	<p style="margin-left: 1.5cm; margin-bottom: 0cm"><a href="#__RefHeading__10902_1675807557">装载<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">Linux</a></span></font></font><a href="#__RefHeading__10902_1675807557">内核调试镜像到<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">GDB	127</a></span></font></font></p>
-	<p style="margin-left: 1.5cm; margin-bottom: 0cm"><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US"><a href="#__RefHeading__11585_71337508">GDB</a></span></font></font><a href="#__RefHeading__11585_71337508">在本地主机上<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">	128</a></span></font></font></p>
-	<p style="margin-left: 1.5cm; margin-bottom: 0cm"><a href="#__RefHeading__11587_71337508">如果<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">GDB</a></span></font></font><a href="#__RefHeading__11587_71337508">在远程主机上<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">	129</a></span></font></font></p>
-	<p style="margin-left: 0.5cm; margin-bottom: 0cm"><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US"><a href="#__RefHeading__11589_71337508">Android	130</a></span></font></font></p>
-	<p style="margin-left: 1cm; margin-bottom: 0cm"><a href="#__RefHeading__11591_71337508">安装<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">KGTP</a></span></font></font><a href="#__RefHeading__11591_71337508">模块<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">	131</a></span></font></font></p>
-	<p style="margin-left: 1cm; margin-bottom: 0cm"><a href="#__RefHeading__11593_71337508">处理找不到<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">&quot;/sys/kernel/debug/gtp&quot;</a></span></font></font><a href="#__RefHeading__11593_71337508">的问题<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">	132</a></span></font></font></p>
-	<p style="margin-left: 1cm; margin-bottom: 0cm"><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US"><a href="#__RefHeading__11595_71337508">GDB</a></span></font></font><a href="#__RefHeading__11595_71337508">连接<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">KGTP	133</a></span></font></font></p>
+	</a></span></font></font><a href="#__RefHeading__11575_71337508">如何让<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">GDB</a></span></font></font><a href="#__RefHeading__11575_71337508">连接<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">KGTP	126</a></span></font></font></p>
+	<p style="margin-left: 0.5cm; margin-bottom: 0cm"><a href="#__RefHeading__11577_71337508">普通<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">Linux	126</a></span></font></font></p>
+	<p style="margin-left: 1cm; margin-bottom: 0cm"><a href="#__RefHeading__11579_71337508">安装<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">KGTP</a></span></font></font><a href="#__RefHeading__11579_71337508">模块<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">	126</a></span></font></font></p>
+	<p style="margin-left: 1cm; margin-bottom: 0cm"><a href="#__RefHeading__11581_71337508">处理找不到<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">&quot;/sys/kernel/debug/gtp&quot;</a></span></font></font><a href="#__RefHeading__11581_71337508">的问题<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">	127</a></span></font></font></p>
+	<p style="margin-left: 1cm; margin-bottom: 0cm"><a href="#__RefHeading__11583_71337508">让<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">GDB</a></span></font></font><a href="#__RefHeading__11583_71337508">连接到<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">KGTP	128</a></span></font></font></p>
+	<p style="margin-left: 1.5cm; margin-bottom: 0cm"><a href="#__RefHeading__10902_1675807557">装载<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">Linux</a></span></font></font><a href="#__RefHeading__10902_1675807557">内核调试镜像到<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">GDB	128</a></span></font></font></p>
+	<p style="margin-left: 1.5cm; margin-bottom: 0cm"><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US"><a href="#__RefHeading__11585_71337508">GDB</a></span></font></font><a href="#__RefHeading__11585_71337508">在本地主机上<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">	129</a></span></font></font></p>
+	<p style="margin-left: 1.5cm; margin-bottom: 0cm"><a href="#__RefHeading__11587_71337508">如果<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">GDB</a></span></font></font><a href="#__RefHeading__11587_71337508">在远程主机上<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">	130</a></span></font></font></p>
+	<p style="margin-left: 0.5cm; margin-bottom: 0cm"><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US"><a href="#__RefHeading__11589_71337508">Android	131</a></span></font></font></p>
+	<p style="margin-left: 1cm; margin-bottom: 0cm"><a href="#__RefHeading__11591_71337508">安装<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">KGTP</a></span></font></font><a href="#__RefHeading__11591_71337508">模块<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">	132</a></span></font></font></p>
+	<p style="margin-left: 1cm; margin-bottom: 0cm"><a href="#__RefHeading__11593_71337508">处理找不到<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">&quot;/sys/kernel/debug/gtp&quot;</a></span></font></font><a href="#__RefHeading__11593_71337508">的问题<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">	133</a></span></font></font></p>
+	<p style="margin-left: 1cm; margin-bottom: 0cm"><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US"><a href="#__RefHeading__11595_71337508">GDB</a></span></font></font><a href="#__RefHeading__11595_71337508">连接<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">KGTP	134</a></span></font></font></p>
 	<p style="margin-bottom: 0cm"><a href="#__RefHeading__11597_71337508">附录<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">C
-	</a></span></font></font><a href="#__RefHeading__11597_71337508">增加模块的符号信息到<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">GDB	134</a></span></font></font></p>
-	<p style="margin-left: 0.5cm; margin-bottom: 0cm"><a href="#__RefHeading__11599_71337508">如何使用<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">getmod	135</a></span></font></font></p>
-	<p style="margin-left: 0.5cm; margin-bottom: 0cm"><a href="#__RefHeading__11601_71337508">如何使用<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">getmod.py	136</a></span></font></font></p>
+	</a></span></font></font><a href="#__RefHeading__11597_71337508">增加模块的符号信息到<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">GDB	135</a></span></font></font></p>
+	<p style="margin-left: 0.5cm; margin-bottom: 0cm"><a href="#__RefHeading__11599_71337508">如何使用<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">getmod	136</a></span></font></font></p>
+	<p style="margin-left: 0.5cm; margin-bottom: 0cm"><a href="#__RefHeading__11601_71337508">如何使用<font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US">getmod.py	137</a></span></font></font></p>
 </div>
 <p align="center"><br><br>
 </p>
@@ -4470,13 +4471,43 @@ Makefile</span></font>里的配置。用这个配置，<font face="DejaVu Serif,
 <blockquote class="cjk"><font face="DejaVu Serif, serif"><span lang="en-US"><i>cd
 kgtp/</i></span></font></blockquote>
 <blockquote class="cjk"><font face="DejaVu Serif, serif"><span lang="en-US"><i>make</i></span></font></blockquote>
-<p align="left">在一些编译环境中<font face="DejaVu Serif, serif"><span lang="en-US">(</span></font>例如<font face="DejaVu Serif, serif"><span lang="en-US">Android)</span></font>将出现一些编译应用程序<font face="DejaVu Serif, serif"><span lang="en-US">getmod</span></font>或者<font face="DejaVu Serif, serif"><span lang="en-US">getframe</span></font>的错误。请忽略这些错误并使用目录中的<font face="DejaVu Serif, serif"><span lang="en-US">gtp.ko</span></font>。</p>
-<p align="left">如果你在<font face="DejaVu Serif, serif"><span lang="en-US">Fedora</span></font>上得到出错信息<font face="DejaVu Serif, serif"><span lang="en-US">&quot;/usr/bin/ld:
-cannot find -lc&quot;</span></font>，请用下面的命令处理。</p>
-<blockquote class="cjk"><font face="DejaVu Serif, serif"><span lang="en-US"><i>sudo
-yum install glibc-static</i></span></font></blockquote>
 <p align="left"><br><br>
 </p>
+<p align="left"><br><br>
+</p>
+<h3 class="cjk" style="page-break-before: always"><a name="__RefHeading__17259_1486051692"></a>
+编译错误处理</h3>
+<ul>
+	<li><p align="left">在一些编译环境中<font face="DejaVu Serif, serif"><span lang="en-US">(</span></font>例如<font face="DejaVu Serif, serif"><span lang="en-US">Android)</span></font>将出现一些编译应用程序<font face="DejaVu Serif, serif"><span lang="en-US">getmod</span></font>或者<font face="DejaVu Serif, serif"><span lang="en-US">getframe</span></font>的错误。请忽略这些错误并使用目录中的<font face="DejaVu Serif, serif"><span lang="en-US">gtp.ko</span></font>。</p>
+	<p align="left">或者用下面的命令处理：</p>
+</ul>
+<blockquote class="cjk"><font face="DejaVu Serif, serif"><span lang="en-US"><i>	cd
+kgtp/</i></span></font></blockquote>
+<blockquote class="cjk" align="left"><font face="DejaVu Serif, serif"><span lang="en-US"><i>	make
+kgtp.ko</i></span></font></blockquote>
+<p align="left"><br><br>
+</p>
+<ul>
+	<li><p align="left">如果在<font face="DejaVu Serif, serif"><span lang="en-US">Fedora</span></font>上得到出错信息<font face="DejaVu Serif, serif"><span lang="en-US">&quot;/usr/bin/ld:
+	cannot find -lc&quot;</span></font>，请用下面的命令处理：</p>
+</ul>
+<blockquote class="cjk"><font face="DejaVu Serif, serif"><span lang="en-US"><i>	sudo
+yum install glibc-static</i></span></font></blockquote>
+<blockquote class="cjk"><br>
+</blockquote>
+<ul>
+	<li><p>当编译<font face="DejaVu Serif, serif"><span lang="en-US">KGTP</span></font>的时候，如果一些功能不被<font face="DejaVu Serif, serif"><span lang="en-US">Linux</span></font>内核支持，会输入一些<font face="DejaVu Serif, serif"><span lang="en-US">warning</span></font>。一些编译环境会使<font face="DejaVu Serif, serif"><span lang="en-US">warning</span></font>转为<font face="DejaVu Serif, serif"><span lang="en-US">error</span></font>。要关掉这些<font face="DejaVu Serif, serif"><span lang="en-US">warning</span></font>，使用下面的命令处理：‘</p>
+</ul>
+<blockquote class="cjk"><font face="DejaVu Serif, serif"><span lang="en-US"><i>	cd
+kgtp/</i></span></font></blockquote>
+<blockquote class="cjk"><font face="DejaVu Serif, serif"><span lang="en-US"><i>	make
+NO_WARNING=1</i></span></font></blockquote>
+<p><font face="DejaVu Serif, serif"><span lang="en-US">	    </span></font>或者：</p>
+<blockquote class="cjk"><font face="DejaVu Serif, serif"><span lang="en-US"><i>	cd
+kgtp/</i></span></font></blockquote>
+<blockquote class="cjk"><font face="DejaVu Serif, serif"><span lang="en-US"><i>	export
+NO_WARNING=1</i></span></font></blockquote>
+<blockquote class="cjk"><font face="DejaVu Serif, serif"><span lang="en-US"><i>	make</i></span></font></blockquote>
 <h3 class="cjk" style="page-break-before: always"><a name="__RefHeading__10768_71337508"></a>
 用一些特殊选项编译<font face="DejaVu Serif, serif"><span lang="en-US">KGTP</span></font></h3>
 <p align="left">大部分时候，<font face="DejaVu Serif, serif"><span lang="en-US">KGTP</span></font>可以自动选择正确的参数和和各种版本的<font face="DejaVu Serif, serif"><span lang="en-US">Linux</span></font>内核一起编译。</p>
@@ -4803,7 +4834,7 @@ GDB.</i></span></font></blockquote>
 source ~/kgtp/getmod.py</i></span></font></blockquote>
 <p align="left" style="margin-right: 1cm">于是这个脚本将自动装载<font face="DejaVu Serif, serif"><span lang="en-US">Linux</span></font>内核模块到<font face="DejaVu Serif, serif"><span lang="en-US">GDB</span></font>中。</p>
 <div title="footer">
-	<p align="center" style="margin-top: 0.5cm; margin-bottom: 0cm"><sdfield type=PAGE subtype=RANDOM format=PAGE><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt">136</font></font></sdfield></p>
+	<p align="center" style="margin-top: 0.5cm; margin-bottom: 0cm"><sdfield type=PAGE subtype=RANDOM format=PAGE><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt">101</font></font></sdfield></p>
 </div>
 </body>
 </html>

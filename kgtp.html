@@ -3,10 +3,10 @@
 <head>
 	<meta http-equiv="content-type" content="text/html; charset=utf-8">
 	<title>Linux Kernel GDB tracepoint module (KGTP)</title>
-	<meta name="generator" content="LibreOffice 4.2.3.3 (Linux)">
+	<meta name="generator" content="LibreOffice 4.2.5.2 (Linux)">
 	<meta name="author" content="teawater ">
 	<meta name="created" content="20130710;155757000000000">
-	<meta name="changed" content="20140509;170947997149105">
+	<meta name="changed" content="20140722;113459693244616">
 <script>
 (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
 (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -80,7 +80,7 @@ Kernel GDB tracepoint module</b></span></font></font></p>
 <p align="center"><br><br>
 </p>
 <p align="center"><font face="DejaVu Serif, serif"><span lang="en-US">Update
-in 2014-05-09</span></font></p>
+in 2014-07-22</span></font></p>
 <p align="center"><br><br>
 </p>
 <p align="center"><br><br>
@@ -322,45 +322,47 @@ in 2014-05-09</span></font></p>
 	KGTP	120</a></span></font></font></p>
 	<p style="margin-left: 1cm; margin-bottom: 0cm"><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US"><a href="#__RefHeading__4752_695897485">Normal
 	compile	120</a></span></font></font></p>
+	<p style="margin-left: 1cm; margin-bottom: 0cm"><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US"><a href="#__RefHeading__17277_1486051692">Handle
+	the compile errors	121</a></span></font></font></p>
 	<p style="margin-left: 1cm; margin-bottom: 0cm"><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US"><a href="#__RefHeading__4754_695897485">Compile
-	KGTP with some special config	121</a></span></font></font></p>
+	KGTP with some special config	122</a></span></font></font></p>
 	<p style="margin-left: 0.5cm; margin-bottom: 0cm"><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US"><a href="#__RefHeading__4756_695897485">Install
-	and uninstall KGTP	122</a></span></font></font></p>
+	and uninstall KGTP	123</a></span></font></font></p>
 	<p style="margin-left: 0.5cm; margin-bottom: 0cm"><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US"><a href="#__RefHeading__4427_1176671169">Use
-	KGTP with DKMS	123</a></span></font></font></p>
+	KGTP with DKMS	124</a></span></font></font></p>
 	<p style="margin-left: 0.5cm; margin-bottom: 0cm"><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US"><a href="#__RefHeading__4429_1176671169">Use
-	KGTP patch for Linux kernel	124</a></span></font></font></p>
+	KGTP patch for Linux kernel	125</a></span></font></font></p>
 	<p style="margin-left: 0.5cm; margin-bottom: 0cm"><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US"><a href="#__RefHeading__4431_1176671169">Install
-	GDB for KGTP	125</a></span></font></font></p>
+	GDB for KGTP	126</a></span></font></font></p>
 	<p style="margin-bottom: 0cm"><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US"><a href="#__RefHeading__4433_1176671169">Appendix
-	B How to let GDB connect to KGTP	126</a></span></font></font></p>
+	B How to let GDB connect to KGTP	127</a></span></font></font></p>
 	<p style="margin-left: 0.5cm; margin-bottom: 0cm"><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US"><a href="#__RefHeading__4435_1176671169">Normal
-	Linux	126</a></span></font></font></p>
+	Linux	127</a></span></font></font></p>
 	<p style="margin-left: 1cm; margin-bottom: 0cm"><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US"><a href="#__RefHeading__4437_1176671169">Insmod
-	the KGTP module	126</a></span></font></font></p>
+	the KGTP module	127</a></span></font></font></p>
 	<p style="margin-left: 1cm; margin-bottom: 0cm"><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US"><a href="#__RefHeading__4439_1176671169">Handle
-	the issue that cannot find &quot;/sys/kernel/debug/gtp&quot;	127</a></span></font></font></p>
+	the issue that cannot find &quot;/sys/kernel/debug/gtp&quot;	128</a></span></font></font></p>
 	<p style="margin-left: 1cm; margin-bottom: 0cm"><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US"><a href="#__RefHeading__4283_1369842245">Make
-	GDB connect to gtp	128</a></span></font></font></p>
+	GDB connect to gtp	129</a></span></font></font></p>
 	<p style="margin-left: 1.5cm; margin-bottom: 0cm"><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US"><a href="#__RefHeading__10764_1675807557">Load
-	Linux kernel debug image to GDB	128</a></span></font></font></p>
+	Linux kernel debug image to GDB	129</a></span></font></font></p>
 	<p style="margin-left: 1.5cm; margin-bottom: 0cm"><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US"><a href="#__RefHeading__4816_1369842245">GDB
-	on the current machine	129</a></span></font></font></p>
+	on the current machine	130</a></span></font></font></p>
 	<p style="margin-left: 1.5cm; margin-bottom: 0cm"><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US"><a href="#__RefHeading__4818_1369842245">GDB
-	on remote machine	130</a></span></font></font></p>
-	<p style="margin-left: 0.5cm; margin-bottom: 0cm"><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US"><a href="#__RefHeading__4820_1369842245">Android	131</a></span></font></font></p>
+	on remote machine	131</a></span></font></font></p>
+	<p style="margin-left: 0.5cm; margin-bottom: 0cm"><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US"><a href="#__RefHeading__4820_1369842245">Android	132</a></span></font></font></p>
 	<p style="margin-left: 1cm; margin-bottom: 0cm"><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US"><a href="#__RefHeading__4822_1369842245">Insmod
-	the KGTP module	131</a></span></font></font></p>
+	the KGTP module	132</a></span></font></font></p>
 	<p style="margin-left: 1cm; margin-bottom: 0cm"><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US"><a href="#__RefHeading__4824_1369842245">Handle
-	the issue that cannot find &quot;/sys/kernel/debug/gtp&quot;	132</a></span></font></font></p>
+	the issue that cannot find &quot;/sys/kernel/debug/gtp&quot;	133</a></span></font></font></p>
 	<p style="margin-left: 1cm; margin-bottom: 0cm"><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US"><a href="#__RefHeading__4826_1369842245">GDB
-	connect to the KGTP	133</a></span></font></font></p>
+	connect to the KGTP	134</a></span></font></font></p>
 	<p style="margin-bottom: 0cm"><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US"><a href="#__RefHeading__4828_1369842245">Appendix
-	C Add module symbols to GDB	134</a></span></font></font></p>
+	C Add module symbols to GDB	135</a></span></font></font></p>
 	<p style="margin-left: 0.5cm; margin-bottom: 0cm"><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US"><a href="#__RefHeading__4830_1369842245">How
-	to use getmod	134</a></span></font></font></p>
+	to use getmod	135</a></span></font></font></p>
 	<p style="margin-left: 0.5cm; margin-bottom: 0cm"><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt"><span lang="en-US"><a href="#__RefHeading__4832_1369842245">How
-	to use getmod.py	136</a></span></font></font></p>
+	to use getmod.py	137</a></span></font></font></p>
 </div>
 <h1 class="cjk" align="left" style="font-variant: normal"><br><br>
 </h1>
@@ -6321,9 +6323,9 @@ default, it is set to the kernel that you are running. </span></font>
 </p>
 <p><font face="DejaVu Serif, serif"><span lang="en-US">Please note
 that this directory should be Linux kernel build directory or
-linux-headers directory but not the source directory but not the
-Linux kernel source directory. And the Linux kernel build directory
-should be used after build successful. </span></font>
+linux-headers directory but not the Linux kernel source directory.
+And the Linux kernel build directory should be used after build
+successful. </span></font>
 </p>
 <p><font face="DejaVu Serif, serif"><span lang="en-US">CROSS_COMPILE
 is set to the prefix name of compiler that you want to build KGTP.
@@ -6367,17 +6369,55 @@ kgtp/ </i></span></font>
 </blockquote>
 <blockquote class="cjk" style="margin-left: 0cm"><br>
 </blockquote>
-<p><font face="DejaVu Serif, serif"><span lang="en-US">In some build
-environment (for example Android) will get some error with user space
-program getmod or getframe. Please ignore this error and use the
-gtp.ko in this directory. </span></font>
-</p>
-<p><font face="DejaVu Serif, serif"><span lang="en-US">If you get
-error message &quot;/usr/bin/ld: cannot find -lc&quot; in Fedora,
-please use following command handle it. </span></font>
-</p>
-<blockquote class="cjk"><font face="DejaVu Serif, serif"><span lang="en-US"><i>sudo
+<blockquote class="cjk" style="margin-left: 0cm"><br>
+</blockquote>
+<blockquote class="cjk" style="margin-left: 0cm"><br>
+</blockquote>
+<h3 class="cjk" style="page-break-before: always"><a name="__RefHeading__17277_1486051692"></a>
+<font face="DejaVu Serif, serif"><span lang="en-US">Handle the
+compile errors</span></font></h3>
+<ul>
+	<li><p><font face="DejaVu Serif, serif"><span lang="en-US">In some
+	build environment (for example Android) will get some error with
+	user space program getmod or getframe. Please ignore this error and
+	use the gtp.ko in this directory. </span></font>
+	</p>
+	<p><font face="DejaVu Serif, serif"><span lang="en-US">Or build with
+	commands:</span></font></p>
+</ul>
+<blockquote class="cjk"><font face="DejaVu Serif, serif"><span lang="en-US"><i>	cd
+kgtp/</i></span></font></blockquote>
+<blockquote class="cjk"><font face="DejaVu Serif, serif"><span lang="en-US"><i>	make
+kgtp.ko</i></span></font></blockquote>
+<blockquote class="cjk"><br>
+</blockquote>
+<ul>
+	<li><p><font face="DejaVu Serif, serif"><span lang="en-US">If you
+	get error message &quot;/usr/bin/ld: cannot find -lc&quot; in
+	Fedora, please use following command handle it. </span></font>
+	</p>
+</ul>
+<blockquote class="cjk"><font face="DejaVu Serif, serif"><span lang="en-US"><i>	sudo
 yum install glibc-static</i></span></font></blockquote>
+<blockquote class="cjk" style="margin-left: 0cm"><br>
+</blockquote>
+<ul>
+	<li><p><font face="DejaVu Serif, serif"><span lang="en-US">When
+	build KGTP, it will output some warnings if some features are not
+	supported by current Linux kernel.  Some build environments will
+	make all warnings into hard errors.  To close these warnings, build
+	KGTP with commands:</span></font></p>
+</ul>
+<blockquote class="cjk"><font face="DejaVu Serif, serif"><span lang="en-US"><i>	cd
+kgtp/</i></span></font></blockquote>
+<blockquote class="cjk"><font face="DejaVu Serif, serif"><span lang="en-US"><i>	make
+NO_WARNING=1</i></span></font></blockquote>
+<p><font face="DejaVu Serif, serif"><span lang="en-US">	    Or:</span></font></p>
+<blockquote class="cjk"><font face="DejaVu Serif, serif"><span lang="en-US"><i>	cd
+kgtp/</i></span></font></blockquote>
+<blockquote class="cjk"><font face="DejaVu Serif, serif"><span lang="en-US"><i>	export
+NO_WARNING=1</i></span></font></blockquote>
+<blockquote class="cjk"><font face="DejaVu Serif, serif"><span lang="en-US"><i>	make</i></span></font></blockquote>
 <h3 class="cjk" style="page-break-before: always"><a name="__RefHeading__4754_695897485"></a>
 <font face="DejaVu Serif, serif"><span lang="en-US">Compile KGTP with
 some special config </span></font>
@@ -6896,7 +6936,7 @@ source ~/kgtp/getmod.py</i></span></font></blockquote>
 this script will auto load the Linux kernel module's symbols to GDB. </span></font>
 </p>
 <div title="footer">
-	<p align="center" style="margin-top: 0.5cm; margin-bottom: 0cm"><sdfield type=PAGE subtype=RANDOM format=PAGE><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt">136</font></font></sdfield></p>
+	<p align="center" style="margin-top: 0.5cm; margin-bottom: 0cm"><sdfield type=PAGE subtype=RANDOM format=PAGE><font face="DejaVu Serif, serif"><font size="3" style="font-size: 12pt">137</font></font></sdfield></p>
 </div>
 </body>
 </html>
