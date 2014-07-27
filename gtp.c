@@ -15,12 +15,12 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * Copyright(C) KGTP team (https://code.google.com/p/kgtp/), 2010-2013
+ * Copyright(C) KGTP team (http://teawater.github.io/kgtp/), 2010-2014
  *
  */
 
 /* If "* 10" means that this is not a release version.  */
-#define GTP_VERSION			(20140510)
+#define GTP_VERSION			(20140510 * 10)
 
 #include <linux/version.h>
 #ifndef RHEL_RELEASE_VERSION
@@ -51,13 +51,17 @@
 #endif
 #ifndef USE_PROC
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,11))
+#ifndef NO_WARNING
 #warning If got some build error about debugfs, you can use "USE_PROC=1" handle it.
+#endif
 #endif
 #endif
 
 #ifdef GTP_FTRACE_RING_BUFFER
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,30))
+#ifndef NO_WARNING
 #warning If got some build error about ring buffer, you can use "FRAME_SIMPLE=1" handle it.
+#endif
 #endif
 #endif
 
@@ -69,12 +73,16 @@
 #endif
 #ifndef GTP_CLOCK_CYCLE
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,24))
+#ifndef NO_WARNING
 #warning If got some build error about cpu_clock or local_clock, you can use "CLOCK_CYCLE=1" handle it.
+#endif
 #endif
 #endif
 
 #ifdef CONFIG_LOCKDEP
+#ifndef NO_WARNING
 #warning Current kernel open the runtime locking correctness validator (CONFIG_LOCKDEP) that will make KGTP trace functions about locks get deadlock.  Please DO NOT trace function about locks.
+#endif
 #endif
 
 #ifdef GTP_FTRACE_RING_BUFFER
@@ -83,7 +91,9 @@
 #include "ring_buffer.h"
 #include "ring_buffer.c"
 #define GTP_SELF_RING_BUFFER
+#ifndef NO_WARNING
 #warning Use the ring buffer inside KGTP.
+#endif
 #endif
 #endif
 /* Sepcial config ------------------------------------------------ */
@@ -129,13 +139,17 @@
 #ifdef CONFIG_PERF_EVENTS
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,33)) \
     && (RHEL_RELEASE_CODE < RHEL_RELEASE_VERSION(6,1))
+#ifndef NO_WARNING
 #warning "Current Kernel is too old.  Function of performance counters is not available."
+#endif
 #else
 #include <linux/perf_event.h>
 #define GTP_PERF_EVENTS
 #endif
 #else
+#ifndef NO_WARNING
 #warning "Current Kernel doesn't open CONFIG_PERF_EVENTS.  Function of performance counters is not available."
+#endif
 #endif
 
 /* Handle KGTP_API_VERSION for the special kernel that include KGTP_API.  */
@@ -157,20 +171,28 @@
 
 /* check ---------------------------------------------------------- */
 #ifndef CONFIG_KPROBES
+#ifndef NO_WARNING
 #warning "Cannot trace Linux kernel because Linux Kernel config doesn't open KPROBES.  Please open it in 'General setup->Kprobes' if you need it."
+#endif
 #endif
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,9,0))
 #ifndef CONFIG_UPROBES
+#ifndef NO_WARNING
 #warning "Cannot trace user program because Linux Kernel config doesn't open UPROBES.  Please open it in 'Kernel hacking->Tracers->Enable uprobes-based dynamic events' if you need it."
 #endif
+#endif
 #else
+#ifndef NO_WARNING
 #warning "Cannot trace user program because the Linux Kernel that older than 3.9 doesn't support UPROBES."
+#endif
 #endif
 
 #ifdef USE_PROC
 #ifndef CONFIG_PROC_FS
+#ifndef NO_WARNING
 #error "Linux Kernel doesn't support procfs."
+#endif
 #endif
 #else
 #ifndef CONFIG_DEBUG_FS
@@ -2000,7 +2022,7 @@ static int
 gtp_task_pt_regs_get_val(struct gtp_trace_s *gts, struct gtp_var *gtv,
 			 int64_t *val)
 {
-#ifdef CONFIG_X86_32
+#if defined(CONFIG_X86_32) || defined(CONFIG_ARM) || defined(CONFIG_32BIT)
 	*val = (uint32_t)task_pt_regs(get_current());
 #else 
 	*val = (uint64_t)task_pt_regs(get_current());

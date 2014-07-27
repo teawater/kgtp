@@ -44,109 +44,109 @@ class Lang(object):
                  '调用命令"%s"失败。 ')
         self.add("Insmod KGTP modules?",
                  "是否装载KGTP模块到系统中？")
-	self.add('Insmod KGTP module "%s" failed.',
+        self.add('Insmod KGTP module "%s" failed.',
                  '装载KGTP模块"%s"到系统中失败。')
-	self.add("Cannot found sys_read from /proc/kallsyms.",
+        self.add("Cannot found sys_read from /proc/kallsyms.",
                  "无法从/proc/kallsyms中找到sys_read。")
-	self.add('Please report this issue to https://github.com/teawater/kgtp/issues or teawater@gmail.com.',
+        self.add('Please report this issue to https://github.com/teawater/kgtp/issues or teawater@gmail.com.',
                  '请汇报这个问题到 https://github.com/teawater/kgtp/issues 或者 teawater@gmail.com。')
-	self.add("Cannot found sys_write from /proc/kallsyms.",
+        self.add("Cannot found sys_write from /proc/kallsyms.",
                  "无法从/proc/kallsyms中找到sys_write。")
-	self.add("Cannot check Linux kernel debug image with /proc/kallsyms because it is not available.",
+        self.add("Cannot check Linux kernel debug image with /proc/kallsyms because it is not available.",
                  "因为/proc/kallsyms不存在，所以无法通过其检查Linux内核调试镜像是否正确。")
-	self.add('Linux kernel debug image "%s" is not for current Linux kernel.',
+        self.add('Linux kernel debug image "%s" is not for current Linux kernel.',
                  'Linux内核调试镜像 "%s"不适应于当前Linux内核。')
         self.add('Get following error when write config file "%s":',
                  '写配置文件"%s"时有下面的错误:')
-	self.add("KGTP config begin, please make sure current machine can access internet first.",
+        self.add("KGTP config begin, please make sure current machine can access internet first.",
                  "KGTP配置开始，请确保当前主机能访问互联网。")
-	self.add('Press "Enter" to continue',
+        self.add('Press "Enter" to continue',
                  '请按回车键继续')
-	self.add('Current system is "%s".',
+        self.add('Current system is "%s".',
                  '当前系统是"%s".')
-	self.add("Current system is not complete support.  Need execute some commands with yourself.\nIf you want KGTP support your system, please report to https://github.com/teawater/kgtp/issues or teawater@gmail.com.",
+        self.add("Current system is not complete support.  Need execute some commands with yourself.\nIf you want KGTP support your system, please report to https://github.com/teawater/kgtp/issues or teawater@gmail.com.",
                  "当前系统还没有被支持，需要手动执行一些命令。\n如果你希望KGTP支持你的系统，请汇报这个到 https://github.com/teawater/kgtp/issues 或者 teawater@gmail.com。")
-	self.add('Please select git repository of KGTP:',
+        self.add('Please select git repository of KGTP:',
                  '请选择KGTP的GIT仓库:')
-	self.add('Please select git branch of KGTP:',
+        self.add('Please select git branch of KGTP:',
                  '请选择KGTP的GIT分支:')
-	self.add('Clone KGTP source failed.',
+        self.add('Clone KGTP source failed.',
                  '克隆KGTP源码失败。')
-	self.add('Update KGTP source in "%s" failed.',
+        self.add('Update KGTP source in "%s" failed.',
                  '升级在目录"%s"的KGTP源码失败。')
-	self.add("Change to another git repository?",
+        self.add("Change to another git repository?",
                  "选择其他GIT仓库？")
-	self.add("kgtp.py was updated, restarting...",
+        self.add("kgtp.py was updated, restarting...",
                  "kgtp.py被更新，重启中...")
-	self.add('Please select a GDB:',
+        self.add('Please select a GDB:',
                  '请选择一个GDB:')
-	self.add('Please input the filename of GDB:',
+        self.add('Please input the filename of GDB:',
                  '请输入GDB的文件名:')
-	self.add('Please input the filename of GDB or just "Enter" to install it now:',
+        self.add('Please input the filename of GDB or just "Enter" to install it now:',
                  '请输入GDB的文件名或者直接回车将开始自动安装:')
-	self.add('"%s" is not right.',
+        self.add('"%s" is not right.',
                  '"%s"不正确。')
-	self.add("Want input another?",
+        self.add("Want input another?",
                  "要输入其他的吗?")
-	self.add('Version of "%s" is older than %s that KGTP need, do you want to get a new version GDB:',
+        self.add('Version of "%s" is older than %s that KGTP need, do you want to get a new version GDB:',
                  '"%s"的版本比KGTP需要的%s老，do you want to get a new version GDB:')
-	self.add('Get following error when remove directory "%s":',
+        self.add('Get following error when remove directory "%s":',
                  '删除目录"%s"时发生下面的错误:')
-	self.add("Check the software source...",
+        self.add("Check the software source...",
                  '检查软件源...')
-	self.add("GDB in software source is too old for KGTP.",
+        self.add("GDB in software source is too old for KGTP.",
                  "软件源中的GDB比KGTP需要的老。")
-	self.add("Get and build a GDB (it will not install to current system) that works OK with KGTP...",
+        self.add("Get and build a GDB (it will not install to current system) that works OK with KGTP...",
                  '取得并编译一个可以和KGTP一起工作的GDB(并不会安装到当前系统中)...')
-	self.add("Download GDB source package failed.",
+        self.add("Download GDB source package failed.",
                  '下载GDB源码包失败。')
-	self.add("Uncompress GDB source package failed.",
+        self.add("Uncompress GDB source package failed.",
                  '解压缩GDB源码包失败。')
-	self.add("Build GDB failed.",
+        self.add("Build GDB failed.",
                  "编译GDB失败。")
-	self.add("Install Linux kernel source failed. ",
+        self.add("Install Linux kernel source failed. ",
                  '安装内核源码失败。')
-	self.add('Cannot find Linux kernel source in "%s".',
+        self.add('Cannot find Linux kernel source in "%s".',
                  '无法在"%s"找到内核源码。')
-	self.add("Install Linux kernel debug image failed. ",
+        self.add("Install Linux kernel debug image failed. ",
                  '安装Linux内核调试镜像失败。')
-	self.add("Please input the filename of Linux kernel debug image:",
+        self.add("Please input the filename of Linux kernel debug image:",
                  '请输入Linux内核调试文件的文件名:')
-	self.add("Build KGTP failed. ",
+        self.add("Build KGTP failed. ",
                  "编译KGTP failed。 ")
-	self.add("How many days are prompted to update KGTP source? (0 means every time):",
+        self.add("How many days are prompted to update KGTP source? (0 means every time):",
                  "多少天提示一次更新KGTP源码? (0表示每次):")
-	self.add("Do you want install kgtp.py to current system?",
+        self.add("Do you want install kgtp.py to current system?",
                  '你是否要安装kgtp.py到当前系统中?')
-	self.add("Please input the directory that you want to install kgtp.py:",
+        self.add("Please input the directory that you want to install kgtp.py:",
                  '请输入要安装kgtp.py的目录:')
-	self.add('"%s" exists but it is not a directory.',
+        self.add('"%s" exists but it is not a directory.',
                  '"%s"存在但是其不是一个目录。')
-	self.add("Install kgtp.py failed. ",
+        self.add("Install kgtp.py failed. ",
                  '安装kgtp.py失败。 ')
-	self.add('Command "sudo kgtp.py" can start KGTP now.',
+        self.add('Command "sudo kgtp.py" can start KGTP now.',
                  '现在命令"sudo kgtp.py"可以启动KGTP。')
-	self.add('"%s" is not a directory.',
+        self.add('"%s" is not a directory.',
                  '"%s"不是一个目录。')
         self.add('Get following error when read config file "%s":',
                  '读配置文件"%s"时有下面的错误:')
-	self.add('Config is not complete.',
+        self.add('Config is not complete.',
                  '配置不完整。')
-	self.add('Distro is changed.',
+        self.add('Distro is changed.',
                  '发行版被更换了。')
-	self.add('Cannot execute GDB in "%s" or its version is older than %s.',
+        self.add('Cannot execute GDB in "%s" or its version is older than %s.',
                  '不能执行GDB"%s"或者其版本比%s老。')
-	self.add('Current Linux kernel version is not "%s".',
+        self.add('Current Linux kernel version is not "%s".',
                  '当前Linux内核版本不是"%s"。')
-	self.add('Linux kernel source "%s" is not right.',
+        self.add('Linux kernel source "%s" is not right.',
                  'Linux内核源码"%s"不正确。')
-	self.add('Linux kernel debug image "%s" is not right.',
+        self.add('Linux kernel debug image "%s" is not right.',
                  'Linux内核调试镜像"%s"不正确。')
-	self.add("KGTP source has not been updated more than %d days.",
+        self.add("KGTP source has not been updated more than %d days.",
                  'KGTP源码已经超过%d天没有更新过了。')
-	self.add('Update source of KGTP?',
+        self.add('Update source of KGTP?',
                  '升级KGTP源码?')
-	self.add('kgtp.py is different with "%s", restarting...',
+        self.add('kgtp.py is different with "%s", restarting...',
                  'kgtp.py和"%s"不同, 重启中...')
 
     def set_language(self, language):
@@ -200,7 +200,7 @@ def get_distro():
         if re.match('.*ubuntu.*', version):
             return "Ubuntu"
         elif re.match('.*opensuse.*', version):
-	    return "openSUSE"
+            return "openSUSE"
     except:
         pass
 
@@ -248,15 +248,15 @@ def get_source_version(distro, name):
         return 0
 
     if distro == "openSUSE":
-	got_name = False
-	got_version = False
-	for line in v:
-	    if got_name and re.match('^Version: ', line):
-		got_version = True
-		v = line
-		break
-	    if re.match('^Name: '+name, line):
-		got_name = True
+        got_name = False
+        got_version = False
+        for line in v:
+            if got_name and re.match('^Version: ', line):
+                got_version = True
+                v = line
+                break
+            if re.match('^Name: '+name, line):
+                got_name = True
     elif not re.match('^'+name, v):
         return 0
 
@@ -286,7 +286,7 @@ def install_packages(distro, packages, auto):
         elif distro == "Ubuntu":
             ret = os.system("apt-get -y --force-yes install " + packages)
         elif distro == "openSUSE":
-	    ret = os.system("zypper -n install --oldpackage " + packages)
+            ret = os.system("zypper -n install --oldpackage " + packages)
         else:
             if auto:
                 return
@@ -691,7 +691,7 @@ class Config():
             if distro == "Ubuntu":
                 install_packages(distro, ["gcc", "texinfo", "m4", "flex", "bison", "libncurses5-dev", "libexpat1-dev", "python-dev", "wget"], auto)
             elif distro == "openSUSE":
-		install_packages(distro,
+                install_packages(distro,
                                  ["gcc", "texinfo", "m4", "flex",
                                   "bison","ncurses-devel", "libexpat-devel",
                                   "python-devel", "wget","make"],
@@ -723,7 +723,7 @@ class Config():
         kernel_version = get_cmd("uname -r")
         if auto \
            and kernel_version == self.set("kernel", "version"):
-	    #This part of code help other distro and auto reconfig.
+            #This part of code help other distro and auto reconfig.
             kernel_source = os.path.realpath(self.get("kernel", "source"))
             if kernel_source == "" or not os.path.isdir(kernel_source):
                 kernel_source = ""
@@ -774,21 +774,21 @@ class Config():
         elif distro == "Redhat" and os.system("rpm -q kernel-" + kernel_version) == 0:
             install_packages(distro, ["kernel-devel-" + kernel_version], auto)
             if os.system("rpm -q kernel-debuginfo-" + kernel_version) != 0:
-		call_cmd("debuginfo-install kernel",
-			 lang.string("Install Linux kernel debug image failed. "))
+                call_cmd("debuginfo-install kernel --skip-broken",
+                         lang.string("Install Linux kernel debug image failed. "))
             kernel_source = ""
             kernel_image = "/usr/lib/debug/lib/modules/" + kernel_version + "/vmlinux"
         elif distro == "openSUSE":
-	    kernel_version_list = kernel_version.split('-')
-	    if len(kernel_version_list) == 3:
-		kernel_version0 = kernel_version_list[2]
-		kernel_version1 = kernel_version_list[0] + '-' + kernel_version_list[1] + ".1"
-		if os.system("rpm -q kernel-" + kernel_version0 + "-" + kernel_version1) == 0:
-		    call_cmd("zypper modifyrepo --enable repo-debug repo-debug-update")
-		    install_packages(distro, ["kernel-" + kernel_version0 + "-devel-" + kernel_version1, "kernel-" + kernel_version0 + "-devel-debuginfo-" + kernel_version1, "kernel-" + kernel_version0 + "-debugsource-" + kernel_version1], auto)
-		    kernel_source = ""
-		    kernel_image = "/usr/lib/debug/boot/vmlinux-" + kernel_version + ".debug"
-	#Is not auto or didn't get kernel_image
+            kernel_version_list = kernel_version.split('-')
+            if len(kernel_version_list) == 3:
+                kernel_version0 = kernel_version_list[2]
+                kernel_version1 = kernel_version_list[0] + '-' + kernel_version_list[1] + ".1"
+                if os.system("rpm -q kernel-" + kernel_version0 + "-" + kernel_version1) == 0:
+                    call_cmd("zypper modifyrepo --enable repo-debug repo-debug-update")
+                    install_packages(distro, ["kernel-" + kernel_version0 + "-devel-" + kernel_version1, "kernel-" + kernel_version0 + "-devel-debuginfo-" + kernel_version1, "kernel-" + kernel_version0 + "-debugsource-" + kernel_version1], auto)
+                    kernel_source = ""
+                    kernel_image = "/usr/lib/debug/boot/vmlinux-" + kernel_version + ".debug"
+        #Is not auto or didn't get kernel_image
         if not auto or kernel_image == "":
             kernel_source = ""
             if distro == "Other":

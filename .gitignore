@@ -1,0 +1,22 @@
+# ignore the compiled files and other stuff
+getmod
+getframe
+putgtprsp
+*.o
+*.ko
+.tmp_versions/
+Module.symvers
+
+.gtp.ko.cmd
+.gtp.mod.o.cmd
+.gtp.o.cmd
+gtp.mod.c
+gtp.mod.o
+modules.order
+
+.DS_Store
+
+.plugin_example.ko.cmd
+.plugin_example.mod.o.cmd
+.plugin_example.o.cmd
+plugin_example.mod.c

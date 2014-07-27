@@ -1,4 +1,21 @@
+*** 20140510+
+
+* Lihang Li <licalmer@gmail.com>
+  Fix build warning in 32-bit.
+
+* Linyu Zhu <lynuszhu@gmail.com>
+  Lihang Li <licalmer@gmail.com>
+  Fix some issues of doc.
+
+* Linyu Zhu <lynuszhu@gmail.com>
+  Fix GTP_RB_RELEASE macro's issue in KGTP's ring buffer.
+
+* Hui Zhu <teawater@gmail.com>
+  Fix some issues of kgtp.py with Fedora.
+
 *** 20140510
+
+* https://lkml.org/lkml/2014/5/11/395
 
 * Remove txt documents because KGTP has pdf version documents now.
 

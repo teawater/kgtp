@@ -4,16 +4,16 @@ else
 obj-m := gtp.o
 endif
 
-MODULEVERSION := 20140510
+MODULEVERSION := 20140510+
 
-KERNELVERSION := $(shell uname -r)
-KERNELDIR := /lib/modules/$(KERNELVERSION)/build/
-CROSS_COMPILE :=
-MODULEDIR := /lib/modules/$(KERNELVERSION)/lib/
-#ARCH := i386
-#ARCH := x86_64
-#ARCH := mips
-#ARCH := arm
+KERNELVERSION ?= $(shell uname -r)
+KERNELDIR ?= /lib/modules/$(KERNELVERSION)/build/
+CROSS_COMPILE ?=
+MODULEDIR ?= /lib/modules/$(KERNELVERSION)/lib/
+#ARCH ?= i386
+#ARCH ?= x86_64
+#ARCH ?= mips
+#ARCH ?= arm
 
 export CONFIG_DEBUG_INFO=y
 
@@ -35,6 +35,9 @@ EXTRA_CFLAGS += -DGTP_CLOCK_CYCLE
 endif
 ifeq ($(USE_PROC),1)
 EXTRA_CFLAGS += -DUSE_PROC
+endif
+ifeq ($(NO_WARNING),1)
+EXTRA_CFLAGS += -DNO_WARNING
 endif
 
 DKMS_FILES := Makefile dkms.conf dkms_others_install.sh                  \
