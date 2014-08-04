@@ -13029,7 +13029,7 @@ gtpframe_pipe_read(struct file *file, char __user *buf, size_t size,
 
 #ifdef GTP_DEBUG
 	printk(GTP_DEBUG "gtpframe_pipe_read: size=%u *ppos=%lld\n",
-	       size, *ppos);
+	       (unsigned int)size, *ppos);
 #endif
 
 	if (!gtp_realloc_is_alloced(gps->grs)) {
@@ -13083,7 +13083,7 @@ gtpframe_pipe_read(struct file *file, char __user *buf, size_t size,
 #ifdef GTP_DEBUG
 	printk(GTP_DEBUG "gtpframe_pipe_read: gps->begin=%lld "
 			 "gps->grs->size=%u\n",
-	       gps->begin, gps->grs->size);
+	       gps->begin, (unsigned int)gps->grs->size);
 #endif
 
 	entry_offset = *ppos - gps->begin;
