@@ -649,7 +649,6 @@ static DEFINE_PER_CPU(struct cpumask, gtp_hwb_sync_cpu_mask);
 			break;			\
 		}				\
 	} while (0)
-
 static void
 gtp_set_debugreg(unsigned long val, int reg)
 {
@@ -5711,10 +5710,10 @@ gtp_frame_iter_open(void)
 	int	cpu;
 
 
-	for_each_online_cpu(cpu)
+	for_each_possible_cpu(cpu)
 		gtp_frame_iter[cpu] = ring_buffer_read_prepare(gtp_frame, cpu);
 	ring_buffer_read_prepare_sync();
-	for_each_online_cpu(cpu) {
+	for_each_possible_cpu(cpu) {
 		ring_buffer_read_start(gtp_frame_iter[cpu]);
 	}
 }
@@ -5724,7 +5723,7 @@ gtp_frame_iter_open(void)
 {
 	int	cpu;
 
-	for_each_online_cpu(cpu) {
+	for_each_possible_cpu(cpu) {
 		gtp_frame_iter[cpu] = ring_buffer_read_start(gtp_frame, cpu);
 		ring_buffer_iter_reset(gtp_frame_iter[cpu]);
 	}
@@ -5736,7 +5735,7 @@ gtp_frame_iter_reset(void)
 {
 	int	cpu;
 
-	for_each_online_cpu(cpu)
+	for_each_possible_cpu(cpu)
 		ring_buffer_iter_reset(gtp_frame_iter[cpu]);
 	gtp_frame_current_num = -1;
 }
@@ -5748,7 +5747,7 @@ gtp_frame_iter_peek_head(void)
 	int	ret = -1;
 	u64	min = 0;
 
-	for_each_online_cpu(cpu) {
+	for_each_possible_cpu(cpu) {
 		struct ring_buffer_event	*rbe;
 		char				*tmp;
 		u64				ts;
@@ -5783,7 +5782,7 @@ gtp_frame_iter_close(void)
 {
 	int	cpu;
 
-	for_each_online_cpu(cpu) {
+	for_each_possible_cpu(cpu) {
 		if (gtp_frame_iter[cpu]) {
 			ring_buffer_read_finish(gtp_frame_iter[cpu]);
 			gtp_frame_iter[cpu] = NULL;
@@ -6494,7 +6493,7 @@ gtp_gdbrsp_qtstop(void)
 	{
 		/* Init data of while-stepping.  */
 		int	cpu;
-		for_each_online_cpu(cpu) {
+		for_each_possible_cpu(cpu) {
 			struct gtp_step_s	*step = &per_cpu(gtp_step, cpu);
 
 			spin_lock(&step->lock);
@@ -8407,7 +8406,7 @@ next_list:
 		gtp_frame_reset();
 	}
 
-	for_each_online_cpu(cpu) {
+	for_each_possible_cpu(cpu) {
 #ifdef CONFIG_X86
 		per_cpu(rdtsc_current, cpu) = 0;
 		per_cpu(rdtsc_offset, cpu) = 0;
@@ -8421,7 +8420,7 @@ next_list:
 
 #ifdef GTP_PERF_EVENTS
 	/* Clear pc_pe_list.  */
-	for_each_online_cpu(cpu) {
+	for_each_possible_cpu(cpu) {
 		per_cpu(pc_pe_list, cpu) = NULL;
 		per_cpu(pc_pe_list_all_disabled, cpu) = 1;
 	}
@@ -8606,7 +8605,7 @@ next_list:
 		gtp_hwb_dr7 = GTP_HWB_DR7_DEF;
 
 		gtp_hwb_sync_count = 0;
-		for_each_online_cpu(cpu) {
+		for_each_possible_cpu(cpu) {
 			per_cpu(gtp_hwb_sync_count_local, cpu) = gtp_hwb_sync_count;
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,27))
 			cpumask_copy(&(per_cpu(gtp_hwb_sync_cpu_mask, cpu)),
@@ -9722,7 +9721,7 @@ gtp_gdbrsp_qtdv(char *pkg)
 				ret = -ENOMEM;
 				goto error_out;
 			}
-			for_each_online_cpu(cpu)
+			for_each_possible_cpu(cpu)
 				memset(per_cpu_ptr(var->u.pc.pc, cpu), '\0',
 				       sizeof(struct gtp_var_per_cpu));
 
@@ -10095,7 +10094,7 @@ gtp_get_status(struct gtp_entry *tpe, char *buf, int bufmax)
 
 			gtp_frame_iter_reset();
 
-			for_each_online_cpu(cpu) {
+			for_each_possible_cpu(cpu) {
 				char				*tmp;
 				struct ring_buffer_event	*rbe;
 
@@ -10126,7 +10125,7 @@ gtp_get_status(struct gtp_entry *tpe, char *buf, int bufmax)
 
 		rbws.flags = GTP_RB_WALK_PASS_PAGE | GTP_RB_WALK_CHECK_END;
 
-		for_each_online_cpu(cpu) {
+		for_each_possible_cpu(cpu) {
 			struct gtp_rb_s	*rb
 				= (struct gtp_rb_s *)per_cpu_ptr(gtp_rb, cpu);
 			void		*tmp;
@@ -10194,7 +10193,7 @@ gtp_get_status(struct gtp_entry *tpe, char *buf, int bufmax)
 		int			cpu;
 
 		tmpaddr = 0;
-		for_each_online_cpu(cpu) {
+		for_each_possible_cpu(cpu) {
 			struct gtp_rb_s	*rb
 				= (struct gtp_rb_s *)per_cpu_ptr(gtp_rb, cpu);
 			void		*tmp;
@@ -12402,7 +12401,7 @@ recheck:
 		if (atomic_read(&gtp_frame_create) != 0) {
 			int	cpu;
 
-			for_each_online_cpu(cpu) {
+			for_each_possible_cpu(cpu) {
 				struct gtp_rb_s	*rb
 				= (struct gtp_rb_s *)per_cpu_ptr(gtp_rb, cpu);
 				void		*tmp;
@@ -12685,7 +12684,7 @@ gtpframe_pipe_release(struct inode *inode, struct file *file)
 #ifdef GTP_RB
 		int	cpu;
 
-		for_each_online_cpu(cpu) {
+		for_each_possible_cpu(cpu) {
 			struct gtp_rb_s	*rb
 				= (struct gtp_rb_s *)per_cpu_ptr(gtp_rb, cpu);
 			if (gps->page[cpu])
@@ -12717,7 +12716,7 @@ gtpframe_pipe_peek(struct gtpframe_pipe_s *gps)
 
 	rbws.flags = 0;
 
-	for_each_online_cpu(cpu) {
+	for_each_possible_cpu(cpu) {
 		struct gtp_rb_s	*rb
 			= (struct gtp_rb_s *)per_cpu_ptr(gtp_rb, cpu);
 
@@ -12759,7 +12758,7 @@ gtpframe_pipe_peek(void)
 	char				*next;
 	int				ret = -1;
 
-	for_each_online_cpu(cpu) {
+	for_each_possible_cpu(cpu) {
 		while (1) {
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,35)) \
     && !defined(GTP_SELF_RING_BUFFER)
@@ -13393,7 +13392,7 @@ static int __init gtp_init(void)
 	{
 		int	cpu;
 
-		for_each_online_cpu(cpu)
+		for_each_possible_cpu(cpu)
 			gtp_frame_iter[cpu] = NULL;
 	}
 	gtp_frame_current_cpu = 0;
@@ -13421,7 +13420,7 @@ static int __init gtp_init(void)
 		int	cpu;
 
 		gtp_cpu_number = 0;
-		for_each_online_cpu(cpu) {
+		for_each_possible_cpu(cpu) {
 			if (cpu > gtp_cpu_number)
 				gtp_cpu_number = cpu;
 		}
@@ -13441,7 +13440,7 @@ static int __init gtp_init(void)
 	{
 		/* Init data of while-stepping.  */
 		int	cpu;
-		for_each_online_cpu(cpu) {
+		for_each_possible_cpu(cpu) {
 			struct gtp_step_s	*step = &per_cpu(gtp_step, cpu);
 			spin_lock_init(&step->lock);
 			step->step = 0;

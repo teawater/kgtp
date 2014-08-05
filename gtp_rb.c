@@ -78,7 +78,7 @@ gtp_rb_init(void)
 	if (!gtp_rb)
 		return -ENOMEM;
 
-	for_each_online_cpu(cpu) {
+	for_each_possible_cpu(cpu) {
 		struct gtp_rb_s	*rb
 			= (struct gtp_rb_s *)per_cpu_ptr(gtp_rb, cpu);
 		memset(rb, 0, sizeof(struct gtp_rb_s));
@@ -105,7 +105,7 @@ gtp_rb_reset(void)
 {
 	int	cpu;
 
-	for_each_online_cpu(cpu) {
+	for_each_possible_cpu(cpu) {
 		struct gtp_rb_s	*rb
 			= (struct gtp_rb_s *)per_cpu_ptr(gtp_rb, cpu);
 		rb->w = GTP_RB_DATA(rb->w);
@@ -147,7 +147,7 @@ gtp_rb_page_alloc(int size)
 {
 	int	cpu;
 
-	for_each_online_cpu(cpu) {
+	for_each_possible_cpu(cpu) {
 		struct gtp_rb_s	*rb
 			= (struct gtp_rb_s *)per_cpu_ptr(gtp_rb, cpu);
 		void		*last = NULL, *next = NULL;
@@ -193,7 +193,7 @@ gtp_rb_page_free(void)
 {
 	int	cpu;
 
-	for_each_online_cpu(cpu) {
+	for_each_possible_cpu(cpu) {
 		struct gtp_rb_s	*rb
 			= (struct gtp_rb_s *)per_cpu_ptr(gtp_rb, cpu);
 		void		*need_free = NULL;
@@ -439,7 +439,7 @@ gtp_rb_read_reset(void)
 {
 	int	cpu;
 
-	for_each_online_cpu(cpu) {
+	for_each_possible_cpu(cpu) {
 		struct gtp_rb_s	*rb
 			= (struct gtp_rb_s *)per_cpu_ptr(gtp_rb, cpu);
 
@@ -471,7 +471,7 @@ gtp_rb_read(void)
 
 	rbws.flags = GTP_RB_WALK_PASS_PAGE | GTP_RB_WALK_CHECK_END;
 
-	for_each_online_cpu(cpu) {
+	for_each_possible_cpu(cpu) {
 		struct gtp_rb_s	*rb
 			= (struct gtp_rb_s *)per_cpu_ptr(gtp_rb, cpu);
 
