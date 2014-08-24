@@ -626,9 +626,15 @@ class Config():
                 #Find GDB from PATH
                 gdb_dir_dict = {}
                 gdb_dir_dict[""] = "Input another GDB"
+                got_usr_local_bin = False
                 for p in os.environ.get("PATH").split(':'):
+                    if p == "/usr/local/bin":
+                        got_usr_local_bin = True
                     if os.path.isfile(p + "/gdb"):
                         gdb_dir_dict[p + "/gdb"] = ""
+                if not got_usr_local_bin:
+                    if os.path.isfile("/usr/local/bin/gdb"):
+                        gdb_dir_dict["/usr/local/bin/gdb"] = ""
                 if len(gdb_dir_dict) == 1:
                     gdb_dir = ""
                 else:
