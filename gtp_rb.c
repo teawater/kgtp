@@ -232,6 +232,12 @@ gtp_rb_prev_frame_set(struct gtp_rb_s *rb, void *prev_frame)
 	rb->prev_frame = prev_frame;
 }
 
+static inline size_t          
+gtp_rb_alloc_max(struct gtp_rb_s *rb)                                                                                                                
+{
+        return GTP_RB_END(rb->w) - rb->w;
+}
+
 static void *
 gtp_rb_alloc(struct gtp_rb_s *rb, size_t size, u64 id)
 {

@@ -4114,6 +4114,9 @@ gtp_action_memory_read(struct gtp_trace_s *gts, int reg, CORE_ADDR addr,
 #ifdef GTP_FTRACE_RING_BUFFER
 	struct ring_buffer_event	*rbe;
 #endif
+#ifdef GTP_RB
+	size_t 				left;
+#endif
 
 	if (reg >= 0)
 		addr += (CORE_ADDR) gtp_action_reg_read(gts, reg);
@@ -4124,24 +4127,56 @@ gtp_action_memory_read(struct gtp_trace_s *gts, int reg, CORE_ADDR addr,
 		if (gtp_action_head(gts))
 			return -1;
 	}
+#ifdef GTP_RB
+	        left = size;
+        while (left) {  
+                size_t  cur_size;
+                cur_size = gtp_rb_alloc_max(gts->next) - GTP_FRAME_MEM_SIZE;
+                if (cur_size <= 0) {
+                        cur_size = GTP_RB_DATA_MAX - GTP_FRAME_MEM_SIZE;
+                }
+                cur_size = min(cur_size, left);
+                tmp = gtp_rb_alloc(gts->next, GTP_FRAME_MEM_SIZE + cur_size, gts->id);
+                if (!tmp) {
+                        gts->tpe->reason = gtp_stop_frame_full;
+                        return -1;
+                }
+                
+                FID(tmp) = FID_MEM;
+                tmp += FID_SIZE;
 
+                fm = (struct gtp_frame_mem *)tmp;
+                fm->addr = addr + size - left;
+                fm->size = cur_size;
+                tmp += sizeof(struct gtp_frame_mem);
+                left -= cur_size;
+#ifdef GTP_DEBUG_V
+                printk(GTP_DEBUG_V "gtp_action_memory_read: id:%d addr:%p %p %u\n",
+                       (int)gts->tpe->num, (void *)(CORE_ADDR)gts->tpe->addr,
+                       (void *)fm->addr, (unsigned int)cur_size);
+#endif
+
+                if (gts->read_memory(tmp, (void *)fm->addr, cur_size)) {
+                        gts->tpe->reason = gtp_stop_efault;
+			GTP_RB_RELEASE(gts->next);
+                        printk(KERN_WARNING "gtp_action_memory_read: id:%d addr:%p "
+                                            "read %p %u get error.\n",
+                               (int)gts->tpe->num, (void *)(CORE_ADDR)gts->tpe->addr,
+                               (void *)fm->addr, (unsigned int)cur_size);
+                        return -1;
+                }
+        }
+#else 
 #ifdef GTP_FTRACE_RING_BUFFER
 	GTP_FRAME_RINGBUFFER_ALLOC(GTP_FRAME_MEM_SIZE + size);
 #endif
-#if defined(GTP_FRAME_SIMPLE) || defined(GTP_RB)
-#ifdef GTP_RB
-	tmp = gtp_rb_alloc(gts->next, GTP_FRAME_MEM_SIZE + size, gts->id);
-#endif
-#ifdef GTP_FRAME_SIMPLE
+#if defined(GTP_FRAME_SIMPLE) 
 	tmp = gtp_frame_alloc(GTP_FRAME_MEM_SIZE + size);
-#endif
 	if (!tmp) {
 		gts->tpe->reason = gtp_stop_frame_full;
 		return -1;
 	}
-#ifdef GTP_FRAME_SIMPLE
 	*gts->next = tmp;
-#endif
 #endif
 
 	FID(tmp) = FID_MEM;
@@ -4172,9 +4207,6 @@ gtp_action_memory_read(struct gtp_trace_s *gts, int reg, CORE_ADDR addr,
 #ifdef GTP_FTRACE_RING_BUFFER
 		ring_buffer_discard_commit(gtp_frame, rbe);
 #endif
-#ifdef GTP_RB
-		GTP_RB_RELEASE(gts->next);
-#endif
 		printk(KERN_WARNING "gtp_action_memory_read: id:%d addr:%p "
 				    "read %p %u get error.\n",
 		       (int)gts->tpe->num, (void *)(CORE_ADDR)gts->tpe->addr,
@@ -4185,7 +4217,7 @@ gtp_action_memory_read(struct gtp_trace_s *gts, int reg, CORE_ADDR addr,
 #ifdef GTP_FTRACE_RING_BUFFER
 	ring_buffer_unlock_commit(gtp_frame, rbe);
 #endif
-
+#endif
 	return 0;
 }
 
@@ -12996,7 +13028,7 @@ gtpframe_pipe_read(struct file *file, char __user *buf, size_t size,
 
 #ifdef GTP_DEBUG
 	printk(GTP_DEBUG "gtpframe_pipe_read: size=%u *ppos=%lld\n",
-	       size, *ppos);
+	       (unsigned int)size, *ppos);
 #endif
 
 	if (!gtp_realloc_is_alloced(gps->grs)) {
@@ -13050,7 +13082,7 @@ gtpframe_pipe_read(struct file *file, char __user *buf, size_t size,
 #ifdef GTP_DEBUG
 	printk(GTP_DEBUG "gtpframe_pipe_read: gps->begin=%lld "
 			 "gps->grs->size=%u\n",
-	       gps->begin, gps->grs->size);
+	       gps->begin, (unsigned int)gps->grs->size);
 #endif
 
 	entry_offset = *ppos - gps->begin;
