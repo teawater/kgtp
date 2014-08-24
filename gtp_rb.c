@@ -232,6 +232,7 @@ gtp_rb_prev_frame_set(struct gtp_rb_s *rb, void *prev_frame)
 	rb->prev_frame = prev_frame;
 }
 
+/* Return the max size for next gtp_rb_alloc.  */
 static inline size_t          
 gtp_rb_alloc_max(struct gtp_rb_s *rb)                                                                                                                
 {

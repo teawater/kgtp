@@ -963,8 +963,8 @@ struct gtp_var {
 };
 
 #define gtp_var_get_pc(var)	((struct gtp_var_per_cpu *)((var)->u.pc.cpu < 0 ?  \
-				                            this_cpu_ptr(var->u.pc.pc)  \
-				                            : per_cpu_ptr((var)->u.pc.pc, (var)->u.pc.cpu)))
+							    this_cpu_ptr(var->u.pc.pc)  \
+							    : per_cpu_ptr((var)->u.pc.pc, (var)->u.pc.cpu)))
 #ifdef GTP_PERF_EVENTS
 #define gtp_var_get_pc_pe(var)	(&(gtp_var_get_pc(var)->u.pe))
 #define gtp_var_get_pe(var)	((var)->type == gtp_var_perf_event_per_cpu  \
@@ -3909,7 +3909,7 @@ gtp_action_head(struct gtp_trace_s *gts)
 #ifdef GTP_RB
 	*(void **)tmp = gtp_rb_prev_frame_get(gts->next);
 	gtp_rb_prev_frame_set(gts->next, (void *)(tmp + sizeof(void *)
-					          - GTP_FRAME_HEAD_SIZE));
+						  - GTP_FRAME_HEAD_SIZE));
 #endif
 
 #ifdef GTP_FTRACE_RING_BUFFER
@@ -4128,45 +4128,53 @@ gtp_action_memory_read(struct gtp_trace_s *gts, int reg, CORE_ADDR addr,
 			return -1;
 	}
 #ifdef GTP_RB
-	        left = size;
-        while (left) {  
-                size_t  cur_size;
-                cur_size = gtp_rb_alloc_max(gts->next) - GTP_FRAME_MEM_SIZE;
-                if (cur_size <= 0) {
-                        cur_size = GTP_RB_DATA_MAX - GTP_FRAME_MEM_SIZE;
-                }
-                cur_size = min(cur_size, left);
-                tmp = gtp_rb_alloc(gts->next, GTP_FRAME_MEM_SIZE + cur_size, gts->id);
-                if (!tmp) {
-                        gts->tpe->reason = gtp_stop_frame_full;
-                        return -1;
-                }
-                
-                FID(tmp) = FID_MEM;
-                tmp += FID_SIZE;
+	left = size;
+	while (left) {
+		size_t 	cur_size;
 
-                fm = (struct gtp_frame_mem *)tmp;
-                fm->addr = addr + size - left;
-                fm->size = cur_size;
-                tmp += sizeof(struct gtp_frame_mem);
-                left -= cur_size;
+		/* Get cur_size.  */
+		if (gtp_rb_alloc_max(gts->next) < GTP_FRAME_MEM_SIZE) {
+			/* Current rb page is not big enough, return
+			   size of whole page because we will use next
+			   page.  */
+			cur_size = GTP_RB_DATA_MAX - GTP_FRAME_MEM_SIZE;
+		} else
+			cur_size = gtp_rb_alloc_max(gts->next) - GTP_FRAME_MEM_SIZE;
+		cur_size = min(cur_size, left);
+
+		/* Alloc buffer from RB.  */
+		tmp = gtp_rb_alloc(gts->next, GTP_FRAME_MEM_SIZE + cur_size, gts->id);
+		if (!tmp) {
+			gts->tpe->reason = gtp_stop_frame_full;
+			return -1;
+		}
+
+		/* Write data to buffer.  */
+		FID(tmp) = FID_MEM;
+		tmp += FID_SIZE;
+		fm = (struct gtp_frame_mem *)tmp;
+		fm->addr = addr + size - left;
+		fm->size = cur_size;
+		tmp += sizeof(struct gtp_frame_mem);
 #ifdef GTP_DEBUG_V
-                printk(GTP_DEBUG_V "gtp_action_memory_read: id:%d addr:%p %p %u\n",
-                       (int)gts->tpe->num, (void *)(CORE_ADDR)gts->tpe->addr,
-                       (void *)fm->addr, (unsigned int)cur_size);
+		printk(GTP_DEBUG_V "gtp_action_memory_read: id:%d addr:%p %p %u\n",
+		       (int)gts->tpe->num, (void *)(CORE_ADDR)gts->tpe->addr,
+		       (void *)fm->addr, (unsigned int)cur_size);
 #endif
 
-                if (gts->read_memory(tmp, (void *)fm->addr, cur_size)) {
-                        gts->tpe->reason = gtp_stop_efault;
+		if (gts->read_memory(tmp, (void *)fm->addr, cur_size)) {
+			gts->tpe->reason = gtp_stop_efault;
 			GTP_RB_RELEASE(gts->next);
-                        printk(KERN_WARNING "gtp_action_memory_read: id:%d addr:%p "
-                                            "read %p %u get error.\n",
-                               (int)gts->tpe->num, (void *)(CORE_ADDR)gts->tpe->addr,
-                               (void *)fm->addr, (unsigned int)cur_size);
-                        return -1;
-                }
-        }
-#else 
+			printk(KERN_WARNING "gtp_action_memory_read: id:%d addr:%p "
+					    "read %p %u get error.\n",
+			       (int)gts->tpe->num, (void *)(CORE_ADDR)gts->tpe->addr,
+			       (void *)fm->addr, (unsigned int)cur_size);
+			return -1;
+		}
+
+		left -= cur_size;
+	}
+#else
 #ifdef GTP_FTRACE_RING_BUFFER
 	GTP_FRAME_RINGBUFFER_ALLOC(GTP_FRAME_MEM_SIZE + size);
 #endif
@@ -4218,6 +4226,7 @@ gtp_action_memory_read(struct gtp_trace_s *gts, int reg, CORE_ADDR addr,
 	ring_buffer_unlock_commit(gtp_frame, rbe);
 #endif
 #endif
+
 	return 0;
 }
 
@@ -8472,7 +8481,7 @@ next_list:
 
 #ifdef GTP_DEBUG
 		printk(GTP_DEBUG "gtp_gdbrsp_qtstart:"
-			         "create perf_event CPU%d %d %d.\n",
+				 "create perf_event CPU%d %d %d.\n",
 		       (int)pe->cpu, (int)pe->attr.type, (int)pe->attr.config);
 #endif
 		
