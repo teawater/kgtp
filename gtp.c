@@ -240,7 +240,8 @@ enum {
 };
 
 /* GTP_FRAME_SIZE must align with FRAME_ALIGN_SIZE if use GTP_FRAME_SIMPLE.  */
-#define GTP_FRAME_SIZE		5242880
+#define GTP_FRAME_SIZE		    5242880 // 5*1024*1024 = 5MB
+#define GTP_FRAME_SIZE_MIN		12288   // 12*1024 = 12KB = 3 PAGES
 #if defined(GTP_FRAME_SIMPLE) || defined(GTP_RB)
 #define FRAME_ALIGN_SIZE	sizeof(unsigned int)
 #define FRAME_ALIGN(x)		((x + FRAME_ALIGN_SIZE - 1) \
@@ -484,6 +485,15 @@ static int			gtp_start;
 
 static int			gtp_disconnected_tracing;
 static int			gtp_circular;
+
+#define SET_TRACE_BUFFER_SIZE_HANDLER_SIMPLE 0
+static int          gtp_set_trace_buffer_size_handler; /* 0:simple, 1:normal */
+static ULONGEST     gtp_trace_buffer_size;
+static int          gtp_set_trace_buffer_size_simple(ULONGEST size);
+static int          gtp_set_trace_buffer_size(ULONGEST size);
+static void         gtp_tracebuffer_release(void);
+static int          gtp_tracebuffer_realloc(ULONGEST size);
+
 #if defined(GTP_FTRACE_RING_BUFFER)			\
     && (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,39))	\
     && !defined(GTP_SELF_RING_BUFFER)
@@ -3785,7 +3795,7 @@ gtp_frame_alloc(size_t size)
 
 	size = FRAME_ALIGN(size);
 
-	if (size > GTP_FRAME_SIZE)
+	if (size > gtp_trace_buffer_size)
 		return NULL;
 
 	spin_lock(&gtp_frame_lock);
@@ -5839,7 +5849,7 @@ gtp_frame_reset(void)
 #ifdef GTP_FRAME_SIMPLE
 	gtp_frame_r_start = gtp_frame;
 	gtp_frame_w_start = gtp_frame;
-	gtp_frame_end = gtp_frame + GTP_FRAME_SIZE;
+	gtp_frame_end = gtp_frame + gtp_trace_buffer_size;
 	gtp_frame_is_circular = 0;
 	gtp_frame_current = NULL;
 #endif
@@ -8423,7 +8433,7 @@ next_list:
 
 #ifdef GTP_RB
 	if (GTP_RB_PAGE_IS_EMPTY) {
-		if (gtp_rb_page_alloc(GTP_FRAME_SIZE) != 0) {
+		if (gtp_rb_page_alloc(gtp_trace_buffer_size) != 0) {
 			ret = -ENOMEM;
 			goto out;
 		}
@@ -8431,10 +8441,10 @@ next_list:
 #if defined(GTP_FRAME_SIMPLE) || defined(GTP_FTRACE_RING_BUFFER)
 	if (!gtp_frame) {
 #ifdef GTP_FRAME_SIMPLE
-		gtp_frame = vmalloc(GTP_FRAME_SIZE);
+		gtp_frame = vmalloc(gtp_trace_buffer_size);
 #endif
 #ifdef GTP_FTRACE_RING_BUFFER
-		gtp_frame = ring_buffer_alloc(GTP_FRAME_SIZE,
+		gtp_frame = ring_buffer_alloc(gtp_trace_buffer_size,
 					      gtp_circular ? RB_FL_OVERWRITE
 							     : 0);
 #endif
@@ -9164,6 +9174,11 @@ gtp_gdbrsp_qtdisconnected(char *pkg)
 static int
 gtp_gdbrsp_qtbuffer(char *pkg)
 {
+#ifdef GTP_DEBUG
+	printk(GTP_DEBUG "gtp_gdbrsp_qtbuffer\n");
+#endif
+
+    // Handle QTBuffer:circular:value
 	if (strncmp("circular:", pkg, 9) == 0) {
 		ULONGEST setting;
 
@@ -9187,8 +9202,220 @@ gtp_gdbrsp_qtbuffer(char *pkg)
 
 		return 0;
 	}
+    // Handle QTBuffer:size:size 
+    else if (strncmp("size:", pkg, 5) == 0) {
+
+        int ret;
+		ULONGEST size;
+        int unlimited_or_not = 0;
+
+        pkg += 5;
+
+		if (pkg[0] == '\0')
+			return -EINVAL;
+
+        // The size may equal to -1, so compare the pkg with "-1"
+        if((strncmp("-1", pkg, 2) == 0) && (*(pkg + 2) == '\0')) {
+            unlimited_or_not = 1;
+        }
+
+        if(unlimited_or_not == 1) {
+            // The user wants KGTP to choose the right size
+            // So we just ignore the request
+
+#ifdef GTP_DEBUG
+	printk(GTP_DEBUG "gtp_gdbrsp_qtbuffer:keep buffer size as the user tells KGTP to use unlimited size");
+#endif
+
+            return 0;
+        }
+
+        // User wants to change the buffer size
+        hex2ulongest(pkg, &size);
+
+        if (gtp_trace_buffer_size == size) {
+            // Trace buffer size unchanged, will do nothing
+#ifdef GTP_DEBUG
+	printk(GTP_DEBUG "gtp_gdbrsp_qtbuffer:trace buffer size unchanged as %lld, will do nothing\n", size);
+#endif
+            return 0;
+        }
+        else if (size < GTP_FRAME_SIZE_MIN) {
+            size = GTP_FRAME_SIZE_MIN;
+        }
+        else {
+        }
+
+        // New trace buffer size, drop them to the handlers
+#ifdef GTP_DEBUG
+	printk(GTP_DEBUG "gtp_gdbrsp_qtbuffer:setting buffer size to %lld\n", size);
+#endif
+
+        // Handler of the new ringbuffer size blow
+        if(gtp_set_trace_buffer_size_handler == SET_TRACE_BUFFER_SIZE_HANDLER_SIMPLE) {
+
+#ifdef GTP_DEBUG
+	printk(GTP_DEBUG "gtp_gdbrsp_qtbuffer:setting buffer size to %lld using simple handler\n", size);
+#endif
+            ret = gtp_set_trace_buffer_size_simple(size);
+        }
+        else {
+
+#ifdef GTP_DEBUG
+	printk(GTP_DEBUG "gtp_gdbrsp_qtbuffer:setting buffer size to %lld using normal handler\n", size);
+#endif
+            ret = gtp_set_trace_buffer_size(size);
+        }
+
+        if(ret == 0) {
+            // Set new size of trace buffer successfully
+
+#ifdef GTP_DEBUG
+	printk(GTP_DEBUG "gtp_gdbrsp_qtbuffer:set buffer size to %lld successfully!\n", size);
+#endif
+            gtp_trace_buffer_size = size;
+            return 0;
+        }
+        else {
+            // Error
+#ifdef GTP_DEBUG
+	printk(GTP_DEBUG "gtp_gdbrsp_qtbuffer:set buffer size to %lld failed!\n", size);
+#endif
+            return 1;
+        }
+    }
 
 	return 1;
+}
+
+/*
+ * Release the ring buffer
+ */
+static void 
+gtp_tracebuffer_release(void)
+{
+#ifdef GTP_RB
+	if (!GTP_RB_PAGE_IS_EMPTY)
+		gtp_rb_page_free();
+#endif
+#if defined(GTP_FRAME_SIMPLE) || defined(GTP_FTRACE_RING_BUFFER)
+	if (gtp_frame) {
+#ifdef GTP_FRAME_SIMPLE
+		vfree(gtp_frame);
+#endif
+#ifdef GTP_FTRACE_RING_BUFFER
+		ring_buffer_free(gtp_frame);
+#endif
+		gtp_frame = NULL;
+	}
+#endif
+}
+
+/*
+ * Realloc the trace buffer to size
+ */
+static int
+gtp_tracebuffer_realloc(ULONGEST size)
+{
+	int			ret = 0;
+
+#ifdef GTP_RB
+	if (GTP_RB_PAGE_IS_EMPTY) {
+		if (gtp_rb_page_alloc(size) != 0) {
+			ret = -ENOMEM;
+			goto out;
+		}
+#endif
+#if defined(GTP_FRAME_SIMPLE) || defined(GTP_FTRACE_RING_BUFFER)
+	if (!gtp_frame) {
+#ifdef GTP_FRAME_SIMPLE
+		gtp_frame = vmalloc(size);
+#endif
+#ifdef GTP_FTRACE_RING_BUFFER
+		gtp_frame = ring_buffer_alloc(size,
+					      gtp_circular ? RB_FL_OVERWRITE
+							     : 0);
+#endif
+		if (!gtp_frame) {
+			ret = -ENOMEM;
+			goto out;
+		}
+#endif
+
+		gtp_frame_reset();
+	}
+
+out:
+    return ret;
+}
+
+/*
+ * Set the trace frame buffer size specified by user the simple way
+ * Initialy we got GTP_FRAME_SIZE = 5242880 bytes = 5MB
+ * Despite the new_size compared with GTP_FRAME_SIZE, just drop all the old gtp frames and allocate a new Ring Buffer
+ * However, if the new_size is too small, return ERROR, currently we set GTP_FRAME_SIZE_MIN to 3KB
+ * Need to implement 3 strategies of Ring Buffer, GTP_FRAME_SIMPLE, GTP_FTRACE_RING_BUFFER and GTP_RB
+ */
+static int
+gtp_set_trace_buffer_size_simple(ULONGEST size)
+{
+    int ret = 0;
+    if(gtp_start) {
+    // Setting buffer size when trace is running is unsupported
+#ifdef GTP_DEBUG
+	printk(GTP_DEBUG "gtp_gdbrsp_qtbuffer:set buffer size when trace running is not supported!\n");
+#endif
+    ret = 1;
+    goto out;
+    }
+
+#ifdef GTP_RB
+	if (!GTP_RB_PAGE_IS_EMPTY)
+#elif defined(GTP_FRAME_SIMPLE) || defined(GTP_FTRACE_RING_BUFFER)
+	if (gtp_frame)
+#endif
+    {
+#ifdef GTP_DEBUG
+	printk(GTP_DEBUG "gtp_gdbrsp_qtbuffer:found gtp frames when setting buffer, will discard in simple mode !\n");
+#endif
+        gtp_tracebuffer_release();
+        ret = gtp_tracebuffer_realloc(size);
+        if (ret == 0) {
+            // Realloc is done
+        }
+        else {
+            // Realloc fails, fallback to previous trace buffer
+            gtp_tracebuffer_release();
+            ret = gtp_tracebuffer_realloc(gtp_trace_buffer_size);
+            ret = 1; // As fallback happens, mark the operation as fail
+
+#ifdef GTP_DEBUG
+	printk(GTP_DEBUG "gtp_gdbrsp_qtbuffer:set buffer size to %lld fails, fallback to previous working size %lld!\n", size, gtp_trace_buffer_size);
+#endif
+        }
+    }
+    else {
+        // gtp_frame == NULL || GTP_RB_IS_EMPTY, namely no Ring Buffer has been allocated
+        gtp_trace_buffer_size = size;
+        ret = 0;
+    }
+
+out:
+    return ret;
+}
+
+/*
+ * Set the trace frame buffer size specified by user the hard way
+ * Initialy we got GTP_FRAME_SIZE = 5242880 bytes = 5MB
+ * If new_size >= GTP_FRAME_SIZE, then allocate new Ring Buffer and copy data to new buffer
+ * Else allocate new Ring Buffer and discarding some data when copy to new buffer
+ * However, if the new_size is too small, return ERROR, currently we set GTP_FRAME_SIZE_MIN to 3KB
+ * Need to implement 3 strategies of Ring Buffer, GTP_FRAME_SIMPLE, GTP_FTRACE_RING_BUFFER and GTP_RB
+ */
+static int
+gtp_set_trace_buffer_size(ULONGEST size)
+{
+    return 0;
 }
 
 static int
@@ -10198,7 +10425,7 @@ gtp_get_status(struct gtp_entry *tpe, char *buf, int bufmax)
 	buf += strlen(buf);
 
 #ifdef GTP_FRAME_SIMPLE
-	snprintf(buf, bufmax, "tsize:%x;", GTP_FRAME_SIZE);
+	snprintf(buf, bufmax, "tsize:%x;", gtp_trace_buffer_size);
 #endif
 #ifdef GTP_FTRACE_RING_BUFFER
 	if (gtp_frame)
@@ -10206,7 +10433,7 @@ gtp_get_status(struct gtp_entry *tpe, char *buf, int bufmax)
 			 ring_buffer_size(gtp_frame));
 	else
 		snprintf(buf, bufmax, "tsize:%x;",
-			 GTP_FRAME_SIZE * num_online_cpus());
+			 gtp_trace_buffer_size * num_online_cpus());
 #endif
 #ifdef GTP_RB
 	snprintf(buf, bufmax, "tsize:%lx;",
@@ -10221,7 +10448,7 @@ gtp_get_status(struct gtp_entry *tpe, char *buf, int bufmax)
 	if (gtp_frame_is_circular)
 		tmpaddr = 0;
 	else
-		tmpaddr = GTP_FRAME_SIZE - (gtp_frame_w_start - gtp_frame);
+		tmpaddr = gtp_trace_buffer_size - (gtp_frame_w_start - gtp_frame);
 	spin_unlock(&gtp_frame_lock);
 #endif
 #ifdef GTP_FTRACE_RING_BUFFER
@@ -12430,7 +12657,7 @@ recheck:
 
 #ifdef GTP_FRAME_SIMPLE
 		if (gtp_frame_is_circular)
-			gr.real_size = GTP_FRAME_SIZE;
+			gr.real_size = gtp_trace_buffer_size;
 		else
 			gr.real_size = gtp_frame_w_start - gtp_frame;
 #endif
@@ -13409,6 +13636,8 @@ static int __init gtp_init(void)
 	gtp_start = 0;
 	gtp_disconnected_tracing = 0;
 	gtp_circular = 0;
+    gtp_set_trace_buffer_size_handler = 0; /* Default use the simple hanlder, discard all the old frames */
+    gtp_trace_buffer_size = GTP_FRAME_SIZE;
 #if defined(GTP_FTRACE_RING_BUFFER)			\
     && (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,39))	\
     && !defined(GTP_SELF_RING_BUFFER)
@@ -13576,6 +13805,22 @@ out:
 		gtp_release_all_mod();
 #ifdef GTP_DEBUG
 	printk(GTP_DEBUG "gtp inserted\n");
+#endif
+
+    // check the config of ring buffer
+#ifdef GTP_DEBUG
+#ifdef GTP_FTRACE_RING_BUFFER
+	printk(GTP_DEBUG "GTP_FTRACE_RING_BUFFER defined\n");
+#endif
+#ifdef GTP_RB
+	printk(GTP_DEBUG "GTP_RB defined\n");
+#endif
+#ifdef GTP_FRAME_SIMPLE
+	printk(GTP_DEBUG "GTP_FRAME_SIMPLE defined\n");
+#endif 
+#ifdef GTP_SELF_RING_BUFFER
+	printk(GTP_DEBUG "GTP_SELF_RING_BUFFER defined\n");
+#endif 
 #endif
 	return ret;
 }
