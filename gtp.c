@@ -126,7 +126,7 @@
 #else
 #include <asm/kdebug.h>
 #endif
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,0,0))
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
 #include <linux/hw_breakpoint.h>
 #endif
 #include "gtp.h"
@@ -608,7 +608,7 @@ struct gtp_hwb_s {
 	struct gtp_entry	*watch;
 };
 
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,0,0))
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
 static struct hw_breakpoint {
 	int			num;
 	struct perf_event	* __percpu *pev;
@@ -6077,7 +6077,7 @@ gtp_notifier_call(struct notifier_block *self, unsigned long cmd,
 	int		ret = NOTIFY_DONE;
 	unsigned long	flags;
 	struct die_args *args;
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(3,0,0))
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,33))
 	int		i;
 #endif
 	unsigned long	dr6;
@@ -6149,7 +6149,7 @@ gtp_notifier_call(struct notifier_block *self, unsigned long cmd,
 	}
 	spin_unlock(&__get_cpu_var(gtp_step).lock);
 
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(3,0,0))
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,33))
 	/* Handle watch traceppoint.  */
 	if ((dr6 & 0xf) == 0)
 		goto out;
@@ -6190,10 +6190,8 @@ gtp_notifier_call(struct notifier_block *self, unsigned long cmd,
 	read_unlock(&gtp_hwb_lock);
 #endif
 
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(3,0,0))
-out:
-#endif
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,33))
+out:
 	gtp_set_debugreg(dr6, 6);
 #endif
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
@@ -6218,7 +6216,7 @@ static struct notifier_block gtp_notifier = {
 #endif
 
 #ifdef CONFIG_X86
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,0,0))
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
 static void
 gtp_hw_breakpoint_handler(int num, struct pt_regs *regs)
 {
@@ -6524,7 +6522,7 @@ gtp_gdbrsp_qtstop(void)
 	}
 
 #ifdef CONFIG_X86
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(3,0,0))
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,33))
 	if (gtp_have_step || gtp_have_watch_tracepoint)
 #else
 	if (gtp_have_step)
@@ -6548,7 +6546,7 @@ gtp_gdbrsp_qtstop(void)
 #ifdef CONFIG_X86
 	/* Stop hwb.  */
 	if (gtp_have_watch_tracepoint) {
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,0,0))
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
 		{
 			int	i;
 
@@ -8575,7 +8573,7 @@ next_list:
 #ifdef CONFIG_X86
 	/* Start hwb.  */
 	if (gtp_have_watch_tracepoint) {
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,0,0))
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
 		{
 			struct perf_event_attr attr;
 
@@ -8707,7 +8705,7 @@ next_list:
 #endif
 
 #ifdef CONFIG_X86
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(3,0,0))
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,33))
 	if (gtp_have_step || gtp_have_watch_tracepoint) {
 #else
 	if (gtp_have_step) {
