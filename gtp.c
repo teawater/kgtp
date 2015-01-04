@@ -560,13 +560,18 @@ static DEFINE_PER_CPU(struct gtp_step_s, gtp_step);
 #endif
 
 #ifdef CONFIG_X86
-static int	gtp_have_watch_tracepoint;
 static int	gtp_have_step;
 #endif
 
-#ifdef CONFIG_X86
+#if defined(CONFIG_X86) || (defined(CONFIG_HAVE_HW_BREAKPOINT) && defined(CONFIG_ARM))
+#define GTP_HAVE_HAVE_HW_BREAKPOINT
+#endif
+
+#ifdef GTP_HAVE_HW_BREAKPOINT
 /* Following part is for watch tracepoint.  */
-/* This part is X86 special.  */
+static int	gtp_have_watch_tracepoint;
+
+#ifdef CONFIG_X86
 #define HWB_NUM			4
 
 static unsigned long		gtp_hwb_drx[HWB_NUM];
@@ -574,59 +579,6 @@ static unsigned long		gtp_hwb_dr7;
 
 #define GTP_HWB_DR7_DEF		(0x400UL)
 #define GTP_HWB_DR6_MASK	(0xe00fUL)
-
-/* This part is for all the arch.  */
-struct gtp_hwb_s {
-	struct list_head	node;
-
-	/* This is the number of this hardware breakpoint.  */
-	int			num;
-
-	/* This is the address, size and type of this
-	   hardware breakpoint.  */
-	CORE_ADDR		addr;
-	int			size;
-	int			type;
-
-	/* The previous of the address that this watch tracepoint
-	   watch on.  */
-	int64_t			prev_val;
-
-	/* This is the num and address that setup this hardware
-	   breakpoints.
-	   For the static watch, this is the num and address of this
-	   tracepoint.
-	   For the dynamic watch, this is the num and address of
-	   the tracepoint that call $watch_start.  */
-	ULONGEST		trace_num;
-	ULONGEST		trace_addr;
-
-	unsigned int		count;
-
-	/* Point to the watchpoint struct.
-	   If NULL, this hardware breakpoint is not used.  */
-	struct gtp_entry	*watch;
-};
-
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
-static struct hw_breakpoint {
-	int			num;
-	struct perf_event	* __percpu *pev;
-} breakinfo[HWB_NUM];
-#endif
-
-static struct gtp_hwb_s	gtp_hwb[HWB_NUM];
-
-static LIST_HEAD(gtp_hwb_used_list);
-static LIST_HEAD(gtp_hwb_unused_list);
-
-static DEFINE_RWLOCK(gtp_hwb_lock);
-
-static unsigned int	gtp_hwb_sync_count;
-static DEFINE_PER_CPU(unsigned int, gtp_hwb_sync_count_local);
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,27))
-static DEFINE_PER_CPU(struct cpumask, gtp_hwb_sync_cpu_mask);
-#endif
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,25))
 #define gtp_get_debugreg(val, reg)	get_debugreg(val, reg)
@@ -667,6 +619,84 @@ gtp_set_debugreg(unsigned long val, int reg)
 		break;
 	}
 }
+#endif
+
+#ifdef CONFIG_ARM
+static int hwb_num;
+#define HWB_NUM	hwb_num
+
+/* Determine debug architecture. */
+static u8 get_debug_arch(void)
+{
+	u32 didr;
+
+	/* Do we implement the extended CPUID interface? */
+	if (((read_cpuid_id() >> 16) & 0xf) != 0xf) {
+		pr_warn_once("CPUID feature registers not supported. "
+			     "Assuming v6 debug is present.\n");
+		return ARM_DEBUG_ARCH_V6;
+	}
+
+	ARM_DBG_READ(c0, c0, 0, didr);
+	return (didr >> 16) & 0xf;
+}
+#endif
+
+/* This part is for all the arch.  */
+struct gtp_hwb_s {
+	struct list_head	node;
+
+	/* This is the number of this hardware breakpoint.  */
+	int			num;
+
+	/* This is the address, size and type of this
+	   hardware breakpoint.  */
+	CORE_ADDR		addr;
+	int			size;
+	int			type;
+
+	/* The previous of the address that this watch tracepoint
+	   watch on.  */
+	int64_t			prev_val;
+
+	/* This is the num and address that setup this hardware
+	   breakpoints.
+	   For the static watch, this is the num and address of this
+	   tracepoint.
+	   For the dynamic watch, this is the num and address of
+	   the tracepoint that call $watch_start.  */
+	ULONGEST		trace_num;
+	ULONGEST		trace_addr;
+
+	unsigned int		count;
+
+	/* Point to the watchpoint struct.
+	   If NULL, this hardware breakpoint is not used.  */
+	struct gtp_entry	*watch;
+};
+
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
+struct hw_breakpoint {
+	int			num;
+	struct perf_event	* __percpu *pev;
+};
+static struct hw_breakpoint	*breakinfo = NULL;
+#endif
+
+static struct gtp_hwb_s	*gtp_hwb = NULL;
+
+
+static LIST_HEAD(gtp_hwb_used_list);
+static LIST_HEAD(gtp_hwb_unused_list);
+
+static DEFINE_RWLOCK(gtp_hwb_lock);
+
+static unsigned int	gtp_hwb_sync_count;
+static DEFINE_PER_CPU(unsigned int, gtp_hwb_sync_count_local);
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,27))
+static DEFINE_PER_CPU(struct cpumask, gtp_hwb_sync_cpu_mask);
+#endif
+
 #endif
 
 static void
@@ -13383,6 +13413,13 @@ gtp_release_all_mod(void)
 #endif
 
 	gtp_disable_release();
+
+#ifdef GTP_HAVE_HW_BREAKPOINT
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
+	kfree(breakinfo);
+#endif
+	kfree(gtp_hwb);
+#endif
 }
 
 static int __init gtp_init(void)
@@ -13486,6 +13523,31 @@ static int __init gtp_init(void)
 			step->tpe = NULL;
 		}
 	}
+#endif
+
+#ifdef GTP_HAVE_HW_BREAKPOINT
+#ifdef CONFIG_ARM
+	/* Initize hwb_num.  */
+	if (get_debug_arch() < ARM_DEBUG_ARCH_V7_1)
+		hwb_num = 1;
+	else {
+		u32 didr;
+		ARM_DBG_READ(c0, c0, 0, didr);
+		hwb_num = ((didr >> 28) & 0xf) + 1;
+	}
+#endif
+
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
+	/* Initize breakinfo.  */
+	breakinfo = kcalloc(hwb_num, sizeof(struct hw_breakpoint),
+			    GFP_KERNEL);
+	if (!breakinfo)
+		goto out;
+#endif
+	/* Initize gtp_hwb.  */
+	gtp_hwb = kcalloc(hwb_num, sizeof(struct gtp_hwb_s), GFP_KERNEL);
+	if (!gtp_hwb)
+		goto out;
 #endif
 
 #ifdef GTP_RB
