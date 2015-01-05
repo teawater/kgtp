@@ -121,6 +121,9 @@
 #ifdef CONFIG_X86
 #include <asm/debugreg.h>
 #endif
+#ifdef CONFIG_ARM
+#include <asm/cputype.h>
+#endif
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,22))
 #include <linux/kdebug.h>
 #else
@@ -564,83 +567,12 @@ static int	gtp_have_step;
 #endif
 
 #if defined(CONFIG_X86) || (defined(CONFIG_HAVE_HW_BREAKPOINT) && defined(CONFIG_ARM))
-#define GTP_HAVE_HAVE_HW_BREAKPOINT
+#define GTP_HAVE_HW_BREAKPOINT
 #endif
 
 #ifdef GTP_HAVE_HW_BREAKPOINT
 /* Following part is for watch tracepoint.  */
 static int	gtp_have_watch_tracepoint;
-
-#ifdef CONFIG_X86
-#define HWB_NUM			4
-
-static unsigned long		gtp_hwb_drx[HWB_NUM];
-static unsigned long		gtp_hwb_dr7;
-
-#define GTP_HWB_DR7_DEF		(0x400UL)
-#define GTP_HWB_DR6_MASK	(0xe00fUL)
-
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,25))
-#define gtp_get_debugreg(val, reg)	get_debugreg(val, reg)
-#define gtp_set_debugreg(val, reg)	set_debugreg(val, reg)
-#else
-#define gtp_get_debugreg(val, reg)		\
-	do {					\
-		switch(reg) {			\
-		case 0:				\
-			get_debugreg(val, 0);	\
-			break;			\
-		case 1:				\
-			get_debugreg(val, 1);	\
-			break;			\
-		case 2:				\
-			get_debugreg(val, 2);	\
-			break;			\
-		case 3:				\
-			get_debugreg(val, 3);	\
-			break;			\
-		}				\
-	} while (0)
-static void
-gtp_set_debugreg(unsigned long val, int reg)
-{
-	switch(reg) {
-	case 0:
-		gtp_set_debugreg(val, 0);
-		break;
-	case 1:
-		gtp_set_debugreg(val, 1);
-		break;
-	case 2:
-		gtp_set_debugreg(val, 2);
-		break;
-	case 3:
-		gtp_set_debugreg(val, 3);
-		break;
-	}
-}
-#endif
-
-#ifdef CONFIG_ARM
-static int hwb_num;
-#define HWB_NUM	hwb_num
-
-/* Determine debug architecture. */
-static u8 get_debug_arch(void)
-{
-	u32 didr;
-
-	/* Do we implement the extended CPUID interface? */
-	if (((read_cpuid_id() >> 16) & 0xf) != 0xf) {
-		pr_warn_once("CPUID feature registers not supported. "
-			     "Assuming v6 debug is present.\n");
-		return ARM_DEBUG_ARCH_V6;
-	}
-
-	ARM_DBG_READ(c0, c0, 0, didr);
-	return (didr >> 16) & 0xf;
-}
-#endif
 
 /* This part is for all the arch.  */
 struct gtp_hwb_s {
@@ -697,25 +629,69 @@ static DEFINE_PER_CPU(unsigned int, gtp_hwb_sync_count_local);
 static DEFINE_PER_CPU(struct cpumask, gtp_hwb_sync_cpu_mask);
 #endif
 
-#endif
+#ifdef CONFIG_X86
+#define HWB_NUM			4
+
+static unsigned long		gtp_hwb_drx[HWB_NUM];
+static unsigned long		gtp_hwb_dr7;
+
+#define GTP_HWB_DR7_DEF		(0x400UL)
+#define GTP_HWB_DR6_MASK	(0xe00fUL)
+
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,25))
+#define gtp_get_debugreg(val, reg)	get_debugreg(val, reg)
+#define gtp_set_debugreg(val, reg)	set_debugreg(val, reg)
+#else	/* (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,25)) */
+#define gtp_get_debugreg(val, reg)		\
+	do {					\
+		switch(reg) {			\
+		case 0:				\
+			get_debugreg(val, 0);	\
+			break;			\
+		case 1:				\
+			get_debugreg(val, 1);	\
+			break;			\
+		case 2:				\
+			get_debugreg(val, 2);	\
+			break;			\
+		case 3:				\
+			get_debugreg(val, 3);	\
+			break;			\
+		}				\
+	} while (0)
+static void
+gtp_set_debugreg(unsigned long val, int reg)
+{
+	switch(reg) {
+	case 0:
+		gtp_set_debugreg(val, 0);
+		break;
+	case 1:
+		gtp_set_debugreg(val, 1);
+		break;
+	case 2:
+		gtp_set_debugreg(val, 2);
+		break;
+	case 3:
+		gtp_set_debugreg(val, 3);
+		break;
+	}
+}
+#endif	/* (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,25)) */
 
 static void
-gtp_hwb_stop(void *data)
+arch_gtp_hwb_stop(void)
 {
-	read_lock(&gtp_hwb_lock);
-	__get_cpu_var(gtp_hwb_sync_count_local) = gtp_hwb_sync_count;
 	gtp_set_debugreg(0UL, 0);
 	gtp_set_debugreg(0UL, 1);
 	gtp_set_debugreg(0UL, 2);
 	gtp_set_debugreg(0UL, 3);
 	gtp_set_debugreg(GTP_HWB_DR7_DEF, 7);
-	read_unlock(&gtp_hwb_lock);
 }
 
 static void
-gtp_hwb_sync_local(void)
+arch_gtp_hwb_sync_local(void)
 {
-	__get_cpu_var(gtp_hwb_sync_count_local) = gtp_hwb_sync_count;
 	gtp_set_debugreg(gtp_hwb_drx[0], 0);
 	gtp_set_debugreg(gtp_hwb_drx[1], 1);
 	gtp_set_debugreg(gtp_hwb_drx[2], 2);
@@ -723,6 +699,357 @@ gtp_hwb_sync_local(void)
 	gtp_set_debugreg(gtp_hwb_dr7, 7);
 }
 
+static bool
+gtp_hwb_triggered_right(int num)
+{
+	unsigned long	addr;
+
+	gtp_get_debugreg(addr, num);
+
+	if (addr == gtp_hwb[num].addr)
+		return true;
+	
+	gtp_set_debugreg(gtp_hwb[num].addr, num);
+	return false;
+}
+
+static unsigned int
+gtp_hwb_size_to_arch(int size)
+{
+	unsigned int	ret;
+
+	switch (size) {
+	default:
+	case 1:
+		ret = 0;
+		break;
+	case 2:
+		ret = 1;
+		break;
+	case 4:
+		ret = 3;
+		break;
+	case 8:
+		ret = 2;
+		break;
+	}
+
+	return ret;
+}
+
+static unsigned int
+gtp_hwb_type_to_arch(int type)
+{
+	unsigned int	ret;
+
+	switch (type) {
+	default:
+	case gtp_watch_write:
+		ret = 1;
+		break;
+	case gtp_watch_exec:
+		ret = 0;
+		break;
+	case gtp_watch_read_write:
+		ret = 3;
+		break;
+	}
+
+	return ret;
+}
+
+static void
+arch_gtp_register_hwb(struct gtp_hwb_s *hwb)
+{
+	int num = hwb->num;
+
+	/* Update gtp_hwb_dr7 and gtp_hwb_drx[num].  */
+	/* Set Gx.  */
+	gtp_hwb_dr7 |= 2 << (num << 1);
+	/* Clear RWx and LENx.  */
+	gtp_hwb_dr7 &= ~(0xf0000 << (num << 2));
+	/* Set RWx and LENx.  */
+	gtp_hwb_dr7 |= ((gtp_hwb_size_to_arch(hwb->size) << 2)
+			| gtp_hwb_type_to_arch(hwb->type))
+			<< ((num << 2) + 16);
+	/* Update DRx.  */
+	gtp_hwb_drx[num] = hwb->addr;
+
+	/* Set gtp_hwb_dr7 and gtp_hwb_drx[num] to hwb.  */
+	gtp_set_debugreg(gtp_hwb_drx[num], num);
+	gtp_set_debugreg(gtp_hwb_dr7, 7);
+}
+
+static void
+arch_gtp_unregister_hwb(struct gtp_hwb_s *hwb, int sync)
+{
+	gtp_hwb_dr7 &= ~(2 << (hwb->num << 1));
+
+	if (sync)
+		gtp_set_debugreg(gtp_hwb_dr7, 7);
+}
+
+static ULONGEST
+arch_hwb_get_addr(int num)
+{
+	unsigned long	addr;
+
+	gtp_get_debugreg(addr, num);
+	return (ULONGEST)addr;
+}
+
+static void
+arch_gtp_hwb_init(void)
+{
+	int	i;
+
+	for (i = 0; i < HWB_NUM; i++)
+		gtp_hwb_drx[i] = 0;
+	gtp_hwb_dr7 = GTP_HWB_DR7_DEF;
+}
+#endif	/* CONFIG_X86 */
+
+#ifdef CONFIG_ARM
+static int arm_hwb_num;
+#define HWB_NUM	arm_hwb_num
+
+static u32	*gtp_hwb_addr;
+static u32	*gtp_hwb_ctrl;
+
+/* Determine debug architecture. */
+static u8 get_debug_arch(void)
+{
+	u32 didr;
+
+	/* Do we implement the extended CPUID interface? */
+	if (((read_cpuid_id() >> 16) & 0xf) != 0xf) {
+		pr_warn_once("CPUID feature registers not supported. "
+			     "Assuming v6 debug is present.\n");
+		return ARM_DEBUG_ARCH_V6;
+	}
+
+	ARM_DBG_READ(c0, c0, 0, didr);
+	return (didr >> 16) & 0xf;
+}
+
+#define READ_WB_REG_CASE(OP2, M, VAL)			\
+	case ((OP2 << 4) + M):				\
+		ARM_DBG_READ(c0, c ## M, OP2, VAL);	\
+		break
+
+#define WRITE_WB_REG_CASE(OP2, M, VAL)			\
+	case ((OP2 << 4) + M):				\
+		ARM_DBG_WRITE(c0, c ## M, OP2, VAL);	\
+		break
+
+#define GEN_READ_WB_REG_CASES(OP2, VAL)		\
+	READ_WB_REG_CASE(OP2, 0, VAL);		\
+	READ_WB_REG_CASE(OP2, 1, VAL);		\
+	READ_WB_REG_CASE(OP2, 2, VAL);		\
+	READ_WB_REG_CASE(OP2, 3, VAL);		\
+	READ_WB_REG_CASE(OP2, 4, VAL);		\
+	READ_WB_REG_CASE(OP2, 5, VAL);		\
+	READ_WB_REG_CASE(OP2, 6, VAL);		\
+	READ_WB_REG_CASE(OP2, 7, VAL);		\
+	READ_WB_REG_CASE(OP2, 8, VAL);		\
+	READ_WB_REG_CASE(OP2, 9, VAL);		\
+	READ_WB_REG_CASE(OP2, 10, VAL);		\
+	READ_WB_REG_CASE(OP2, 11, VAL);		\
+	READ_WB_REG_CASE(OP2, 12, VAL);		\
+	READ_WB_REG_CASE(OP2, 13, VAL);		\
+	READ_WB_REG_CASE(OP2, 14, VAL);		\
+	READ_WB_REG_CASE(OP2, 15, VAL)
+
+#define GEN_WRITE_WB_REG_CASES(OP2, VAL)	\
+	WRITE_WB_REG_CASE(OP2, 0, VAL);		\
+	WRITE_WB_REG_CASE(OP2, 1, VAL);		\
+	WRITE_WB_REG_CASE(OP2, 2, VAL);		\
+	WRITE_WB_REG_CASE(OP2, 3, VAL);		\
+	WRITE_WB_REG_CASE(OP2, 4, VAL);		\
+	WRITE_WB_REG_CASE(OP2, 5, VAL);		\
+	WRITE_WB_REG_CASE(OP2, 6, VAL);		\
+	WRITE_WB_REG_CASE(OP2, 7, VAL);		\
+	WRITE_WB_REG_CASE(OP2, 8, VAL);		\
+	WRITE_WB_REG_CASE(OP2, 9, VAL);		\
+	WRITE_WB_REG_CASE(OP2, 10, VAL);	\
+	WRITE_WB_REG_CASE(OP2, 11, VAL);	\
+	WRITE_WB_REG_CASE(OP2, 12, VAL);	\
+	WRITE_WB_REG_CASE(OP2, 13, VAL);	\
+	WRITE_WB_REG_CASE(OP2, 14, VAL);	\
+	WRITE_WB_REG_CASE(OP2, 15, VAL)
+
+static u32 read_wb_reg(int n)
+{
+	u32 val = 0;
+
+	switch (n) {
+	GEN_READ_WB_REG_CASES(ARM_OP2_WVR, val);
+	GEN_READ_WB_REG_CASES(ARM_OP2_WCR, val);
+	default:
+		pr_warning("attempt to read from unknown breakpoint "
+				"register %d\n", n);
+	}
+
+	return val;
+}
+
+static void write_wb_reg(int n, u32 val)
+{
+	switch (n) {
+	GEN_WRITE_WB_REG_CASES(ARM_OP2_WVR, val);
+	GEN_WRITE_WB_REG_CASES(ARM_OP2_WCR, val);
+	default:
+		pr_warning("attempt to write to unknown breakpoint "
+				"register %d\n", n);
+	}
+	isb();
+}
+
+static void
+arch_gtp_hwb_stop(void)
+{
+	int	i;
+	for (i = 0; i < HWB_NUM; i++) {
+		/* Setup the control register. */
+		write_wb_reg(ARM_BASE_WCR + i, 0);
+	}
+}
+
+static void
+arch_gtp_hwb_sync_local(void)
+{
+	int	i;
+
+	for (i = 0; i < HWB_NUM; i++) {
+		/* Setup the address register. */
+		if (gtp_hwb_ctrl[i])
+			write_wb_reg(ARM_BASE_WVR + i, gtp_hwb_addr[i]);
+
+		/* Setup the control register. */
+		write_wb_reg(ARM_BASE_WCR + i, gtp_hwb_ctrl[i]);
+	}
+}
+
+static bool
+gtp_hwb_triggered_right(int num)
+{
+	if (gtp_hwb_ctrl[num] == 0) {
+		write_wb_reg(ARM_BASE_WCR + num, 0);
+		return false;
+	}
+
+	if (read_wb_reg(ARM_BASE_WVR + num) == gtp_hwb[num].addr)
+		return true;
+	
+	write_wb_reg(ARM_BASE_WVR + num, gtp_hwb_addr[num]);
+	write_wb_reg(ARM_BASE_WCR + num, gtp_hwb_ctrl[num]);
+	return false;
+}
+
+static unsigned int
+gtp_hwb_size_to_arch(int size)
+{
+	unsigned int	ret;
+
+	switch (size) {
+	default:
+	case 1:
+		ret = ARM_BREAKPOINT_LEN_1;
+		break;
+	case 2:
+		ret = ARM_BREAKPOINT_LEN_2;
+		break;
+	case 4:
+		ret = ARM_BREAKPOINT_LEN_4;
+		break;
+	case 8:
+		ret = ARM_BREAKPOINT_LEN_8;
+		break;
+	}
+
+	return ret;
+}
+
+static unsigned int
+gtp_hwb_type_to_arch(int type)
+{
+	unsigned int	ret;
+
+	switch (type) {
+	default:
+	case gtp_watch_write:
+		ret = ARM_BREAKPOINT_STORE;
+		break;
+	case gtp_watch_exec:
+		ret = ARM_BREAKPOINT_EXECUTE;
+		break;
+	case gtp_watch_read_write:
+		ret = ARM_BREAKPOINT_LOAD | ARM_BREAKPOINT_STORE;
+		break;
+	}
+
+	return ret;
+}
+
+static void
+arch_gtp_register_hwb(struct gtp_hwb_s *hwb)
+{
+	int num = hwb->num;
+
+	gtp_hwb_ctrl[num] = (1 << 22) |
+			    (gtp_hwb_size_to_arch(hwb->size) << 5) |
+			    (gtp_hwb_type_to_arch(hwb->type) << 3) |
+			    (ARM_BREAKPOINT_PRIV << 1) | 1;
+	gtp_hwb_addr[num] = hwb->addr;
+
+	write_wb_reg(ARM_BASE_WVR + num, gtp_hwb_addr[num]);
+	write_wb_reg(ARM_BASE_WCR + num, gtp_hwb_ctrl[num]);
+}
+
+static void
+arch_gtp_unregister_hwb(struct gtp_hwb_s *hwb, int sync)
+{
+	gtp_hwb_ctrl[hwb->num] = 0;
+
+	if (sync)
+		write_wb_reg(ARM_BASE_WCR + hwb->num, 0);
+}
+
+static ULONGEST
+arch_hwb_get_addr(int num)
+{
+	return (ULONGEST)read_wb_reg(ARM_BASE_WVR + num);
+}
+
+static void
+arch_gtp_hwb_init(void)
+{
+	int	i;
+
+	for (i = 0; i < HWB_NUM; i++) {
+		gtp_hwb_ctrl[i] = 0;
+		gtp_hwb_addr[i] = 0;
+	}
+}
+#endif	/* CONFIG_ARM */
+
+static void
+gtp_hwb_stop(void *data)
+{
+	read_lock(&gtp_hwb_lock);
+	__get_cpu_var(gtp_hwb_sync_count_local) = gtp_hwb_sync_count;
+	arch_gtp_hwb_stop();
+	read_unlock(&gtp_hwb_lock);
+}
+
+static void
+gtp_hwb_sync_local(void)
+{
+	__get_cpu_var(gtp_hwb_sync_count_local) = gtp_hwb_sync_count;
+	arch_gtp_hwb_sync_local();
+}
+
+/* Sync hwb value to all CPU for wait mode.  */
 static void
 gtp_hwb_sync(void *data)
 {
@@ -730,6 +1057,7 @@ gtp_hwb_sync(void *data)
 }
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,27))
+/* Sync hwb value to all CPU for nowait mode.  */
 static int
 gtp_ipi_handler(struct kprobe *p, struct pt_regs *regs)
 {
@@ -747,7 +1075,7 @@ gtp_ipi_handler(struct kprobe *p, struct pt_regs *regs)
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,27))
 static struct kprobe gtp_ipi_kp;
 #endif
-#endif
+#endif	/* GTP_HAVE_HW_BREAKPOINT */
 
 static char *
 string2hex(char *pkg, char *out)
@@ -1661,7 +1989,7 @@ static struct gtp_var_hooks	gtp_enable_disable_hooks = {
 };
 #endif
 
-#ifdef CONFIG_X86
+#ifdef GTP_HAVE_HW_BREAKPOINT
 static int
 gtp_watch_type_hooks_set_val(struct gtp_trace_s *gts,
 			     struct gtp_var *gtv, int64_t val)
@@ -1930,9 +2258,7 @@ gtp_watch_prev_val_get_val(struct gtp_trace_s *gts, struct gtp_var *gtv,
 static struct gtp_var_hooks	gtp_watch_prev_val_hooks = {
 	.agent_get_val = gtp_watch_prev_val_get_val,
 };
-#endif
 
-#ifdef CONFIG_X86
 static int
 gtp_get_addr_val(CORE_ADDR addr, int size, int64_t *val)
 {
@@ -1994,7 +2320,7 @@ error:
 	       (void *)addr, size);
 	return ret;
 }
-#endif
+#endif	/* GTP_HAVE_HW_BREAKPOINT */
 
 #ifdef GTP_RB
 static int
@@ -2233,7 +2559,7 @@ gtp_var_special_add_all(void)
 		return PTR_ERR(var);
 #endif
 
-#ifdef CONFIG_X86
+#ifdef GTP_HAVE_HW_BREAKPOINT
 	var = gtp_var_special_add(GTP_WATCH_STATIC_ID, 0, 0,
 				  "watch_static", NULL);
 	if (IS_ERR(var))
@@ -2286,7 +2612,8 @@ gtp_var_special_add_all(void)
 				  "watch_count", &gtp_watch_get_hooks);
 	if (IS_ERR(var))
 		return PTR_ERR(var);
-#endif
+#endif	/* GTP_HAVE_HW_BREAKPOINT */
+
 	var = gtp_var_special_add(GTP_STEP_COUNT_ID, 0, 0,
 				  "step_count", &gtp_step_count_hooks);
 	if (IS_ERR(var))
@@ -6003,7 +6330,7 @@ gtp_src_add(char *begin, char *end, struct gtpsrc **src_list)
 	return 0;
 }
 
-#ifdef CONFIG_X86
+#ifdef GTP_HAVE_HW_BREAKPOINT
 static void
 gtp_hw_breakpoint_handler_1 (struct gtp_hwb_s *hwb, struct pt_regs *regs)
 {
@@ -6026,6 +6353,7 @@ gtp_hw_breakpoint_handler_1 (struct gtp_hwb_s *hwb, struct pt_regs *regs)
 		gtp_get_addr_val(hwb->addr, hwb->size, &(hwb->prev_val));
 }
 
+#ifdef CONFIG_X86
 #define ADDR_PREFIX_OPCODE 0x67
 #define DATA_PREFIX_OPCODE 0x66
 #define LOCK_PREFIX_OPCODE 0xf0
@@ -6243,9 +6571,8 @@ static struct notifier_block gtp_notifier = {
 	.notifier_call = gtp_notifier_call,
 	.priority = 0x7ffffffe /* we need to be notified after kprobe.  */
 };
-#endif
+#endif	/* CONFIG_X86 */
 
-#ifdef CONFIG_X86
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
 static void
 gtp_hw_breakpoint_handler(int num, struct pt_regs *regs)
@@ -6258,21 +6585,18 @@ gtp_hw_breakpoint_handler(int num, struct pt_regs *regs)
 
 	if (gtp_hwb[num].watch == NULL)
 		goto out;
-	if (__get_cpu_var(gtp_hwb_sync_count_local) != gtp_hwb_sync_count) {
-		unsigned long	addr;
 
-		gtp_get_debugreg(addr, num);
-		if (addr != gtp_hwb[num].addr) {
-			gtp_set_debugreg(gtp_hwb[num].addr, num);
-			goto out;
-		}
-	}
+	/* Check if the triggered breakpoint is what GTP want. */
+	if (__get_cpu_var(gtp_hwb_sync_count_local) != gtp_hwb_sync_count
+	    && !gtp_hwb_triggered_right(num))
+		goto out;
 
 	gtp_hw_breakpoint_handler_1(&gtp_hwb[num], regs);
 out:
 	read_unlock(&gtp_hwb_lock);
 }
 
+#ifdef CONFIG_X86
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,1,0))
 static void
 gtp_hw_breakpoint_0_handler(struct perf_event *bp, struct perf_sample_data *data,
@@ -6301,7 +6625,7 @@ gtp_hw_breakpoint_3_handler(struct perf_event *bp, struct perf_sample_data *data
 {
 	gtp_hw_breakpoint_handler(breakinfo[3].num, regs);
 }
-#else
+#else	/* (LINUX_VERSION_CODE >= KERNEL_VERSION(3,1,0)) */
 static void
 gtp_hw_breakpoint_0_handler(struct perf_event *bp, int nmi,
 			    struct perf_sample_data *data,
@@ -6333,53 +6657,36 @@ gtp_hw_breakpoint_3_handler(struct perf_event *bp, int nmi,
 {
 	gtp_hw_breakpoint_handler(breakinfo[3].num, regs);
 }
+#endif	/* (LINUX_VERSION_CODE >= KERNEL_VERSION(3,1,0)) */
+#else	/* CONFIG_X86 */
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,1,0))
+static void
+gtp_hw_breakpoint_0_handler(struct perf_event *bp, struct perf_sample_data *data,
+			    struct pt_regs *regs)
+#else
+static void
+gtp_hw_breakpoint_0_handler(struct perf_event *bp, int nmi,
+			    struct perf_sample_data *data,
+			    struct pt_regs *regs)
 #endif
-#endif
-
-static unsigned int
-gtp_hwb_size_to_arch(int size)
 {
-	unsigned int	ret;
+	if (HWB_NUM == 1) {
+		gtp_hw_breakpoint_handler(breakinfo[0].num, regs);
+		return;
+	} else {
+		int	num;
 
-	switch (size) {
-	default:
-	case 1:
-		ret = 0;
-		break;
-	case 2:
-		ret = 1;
-		break;
-	case 4:
-		ret = 3;
-		break;
-	case 8:
-		ret = 2;
-		break;
+		for (num = 0; num < HWB_NUM; num++) {
+			if (*(this_cpu_ptr(breakinfo[num].pev)) == bp) {
+				gtp_hw_breakpoint_handler(breakinfo[num].num,
+							  regs);
+				return;
+			}
+		}
 	}
-
-	return ret;
 }
-
-static unsigned int
-gtp_hwb_type_to_arch(int type)
-{
-	unsigned int	ret;
-
-	switch (type) {
-	default:
-	case gtp_watch_write:
-		ret = 1;
-		break;
-	case gtp_watch_exec:
-		ret = 0;
-		break;
-	case gtp_watch_read_write:
-		ret = 3;
-		break;
-	}
-
-	return ret;
-}
+#endif	/* CONFIG_X86 */
+#endif	/* (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33)) */
 
 static int
 gtp_register_hwb(const struct gtp_hwb_s *arg, int nowait)
@@ -6407,25 +6714,11 @@ gtp_register_hwb(const struct gtp_hwb_s *arg, int nowait)
 		hwb->num = num;
 		hwb->prev_val = prev_val;
 
-		/* Update gtp_hwb_dr7 and gtp_hwb_drx[num].  */
-		/* Set Gx.  */
-		gtp_hwb_dr7 |= 2 << (num << 1);
-		/* Clear RWx and LENx.  */
-		gtp_hwb_dr7 &= ~(0xf0000 << (num << 2));
-		/* Set RWx and LENx.  */
-		gtp_hwb_dr7 |= ((gtp_hwb_size_to_arch(hwb->size) << 2)
-				| gtp_hwb_type_to_arch(hwb->type))
-			       << ((num << 2) + 16);
-		/* Update DRx.  */
-		gtp_hwb_drx[num] = hwb->addr;
-
-		/* Set gtp_hwb_dr7 and gtp_hwb_drx[num] to hwb.  */
-		gtp_set_debugreg(gtp_hwb_drx[num], num);
-		gtp_set_debugreg(gtp_hwb_dr7, 7);
+		arch_gtp_register_hwb(hwb);
 
 		gtp_hwb_sync_count++;
 		hwb->count = gtp_hwb_sync_count;
-
+#ifdef CONFIG_X86
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,27))
 		if (nowait) {
 			/* Send ipi to let other cpu update.  */
@@ -6435,6 +6728,7 @@ gtp_register_hwb(const struct gtp_hwb_s *arg, int nowait)
 			arch_send_call_function_ipi(&__get_cpu_var(gtp_hwb_sync_cpu_mask));
 #endif
 		}
+#endif
 #endif
 
 		ret = 0;
@@ -6451,6 +6745,9 @@ out:
 
 	return ret;
 }
+
+/* If sync is 0, the hwb was already stopped by gtp_hwb_stop.
+   Just need clear the data but not debug registers.  */
 
 static int
 gtp_unregister_hwb(CORE_ADDR addr, int sync)
@@ -6471,22 +6768,18 @@ gtp_unregister_hwb(CORE_ADDR addr, int sync)
 		list_add_tail(&hwb->node, &gtp_hwb_unused_list);
 		hwb->watch = NULL;
 
-		/* Update gtp_hwb_dr7.  */
-		/* Clear Gx.  */
-		gtp_hwb_dr7 &= ~(2 << (hwb->num << 1));
+		arch_gtp_unregister_hwb(hwb, sync);
 
 		if (sync) {
 			gtp_hwb_sync_count++;
-
-			/* Sync gtp_hwb_dr7 update to hwb.  */
-			gtp_set_debugreg(gtp_hwb_dr7, 7);
-
+#ifdef CONFIG_X86
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,27))
 			/* Send ipi to let other cpu update.  */
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30))
 			arch_send_call_function_ipi_mask(&__get_cpu_var(gtp_hwb_sync_cpu_mask));
 #else
 			arch_send_call_function_ipi(&__get_cpu_var(gtp_hwb_sync_cpu_mask));
+#endif
 #endif
 #endif
 		}
@@ -6497,7 +6790,7 @@ gtp_unregister_hwb(CORE_ADDR addr, int sync)
 
 	return ret;
 }
-#endif
+#endif	/* GTP_HAVE_HW_BREAKPOINT */
 
 static int
 gtp_gdbrsp_qtstop(void)
@@ -6573,14 +6866,14 @@ gtp_gdbrsp_qtstop(void)
 	}
 #endif
 
-#ifdef CONFIG_X86
+#ifdef GTP_HAVE_HW_BREAKPOINT
 	/* Stop hwb.  */
 	if (gtp_have_watch_tracepoint) {
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
 		{
 			int	i;
 
-			/* Register hw breakpoints.  */
+			/* Unregister hw breakpoints.  */
 			for (i = 0; i < HWB_NUM; i++) {
 				unregister_wide_hw_breakpoint(breakinfo[i].pev);
 				breakinfo[i].pev = NULL;
@@ -6616,7 +6909,7 @@ gtp_gdbrsp_qtstop(void)
 		unregister_kprobe(&gtp_ipi_kp);
 #endif
 	}
-#endif
+#endif	/* GTP_HAVE_HW_BREAKPOINT */
 
 #ifdef GTP_PERF_EVENTS
 	list_for_each(cur, &gtp_var_list) {
@@ -8203,7 +8496,7 @@ gtp_gdbrsp_qtstart(void)
 	int			i;
 	struct gtp_var		*var;
 	struct list_head	*cur;
-#ifdef CONFIG_X86
+#ifdef GTP_HAVE_HW_BREAKPOINT
 	unsigned long		flags;
 #endif
 
@@ -8600,7 +8893,7 @@ next_list:
 #endif
 	}
 
-#ifdef CONFIG_X86
+#ifdef GTP_HAVE_HW_BREAKPOINT
 	/* Start hwb.  */
 	if (gtp_have_watch_tracepoint) {
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
@@ -8617,6 +8910,7 @@ next_list:
 				/* Step 1: Set the id to addr and let following code check it.
 				   Make sure the num of a hw. */
 				attr.bp_addr = i;
+#ifdef CONFIG_X86
 				switch (i) {
 				case 0:
 					triggered = gtp_hw_breakpoint_0_handler;
@@ -8631,6 +8925,9 @@ next_list:
 					triggered = gtp_hw_breakpoint_3_handler;
 					break;
 				}
+#else
+				triggered = gtp_hw_breakpoint_0_handler;
+#endif
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,1,0))
 				breakinfo[i].pev = register_wide_hw_breakpoint(&attr, triggered, NULL);
 #else
@@ -8647,10 +8944,7 @@ next_list:
 			/* Step 2: Make sure breakinfo[i] is which hw breakpoint and set
 			   it to breakinfo[i].num.  */
 			for (i = 0; i < HWB_NUM; i++) {
-				unsigned long	num;
-
-				gtp_get_debugreg(num, i);
-				breakinfo[num].num = i;
+				breakinfo[arch_hwb_get_addr(i)].num = i;
 			}
 		}
 #endif
@@ -8663,15 +8957,14 @@ next_list:
 #endif
 
 		write_lock_irqsave(&gtp_hwb_lock, flags);
+		arch_gtp_hwb_init();
 		INIT_LIST_HEAD(&gtp_hwb_used_list);
 		INIT_LIST_HEAD(&gtp_hwb_unused_list);
 		for (i = 0; i < HWB_NUM; i++) {
 			gtp_hwb[i].num = i;
 			gtp_hwb[i].watch = NULL;
-			gtp_hwb_drx[i] = 0;
 			list_add(&(gtp_hwb[i].node), &gtp_hwb_unused_list);
 		}
-		gtp_hwb_dr7 = GTP_HWB_DR7_DEF;
 
 		gtp_hwb_sync_count = 0;
 		for_each_possible_cpu(cpu) {
@@ -8732,7 +9025,7 @@ next_list:
 			tpe->flags |= GTP_ENTRY_FLAGS_REG;
 		}
 	}
-#endif
+#endif /* GTP_HAVE_HW_BREAKPOINT */
 
 #ifdef CONFIG_X86
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(2,6,33))
@@ -13419,6 +13712,11 @@ gtp_release_all_mod(void)
 	kfree(breakinfo);
 #endif
 	kfree(gtp_hwb);
+
+#ifdef CONFIG_ARM
+	kfree(gtp_hwb_addr);
+	kfree(gtp_hwb_ctrl);
+#endif
 #endif
 }
 
@@ -13526,26 +13824,38 @@ static int __init gtp_init(void)
 #endif
 
 #ifdef GTP_HAVE_HW_BREAKPOINT
+	ret = -ENOMEM;
+
 #ifdef CONFIG_ARM
-	/* Initize hwb_num.  */
+	/* Initize arm_hwb_num.  */
 	if (get_debug_arch() < ARM_DEBUG_ARCH_V7_1)
-		hwb_num = 1;
+		arm_hwb_num = 1;
 	else {
 		u32 didr;
 		ARM_DBG_READ(c0, c0, 0, didr);
-		hwb_num = ((didr >> 28) & 0xf) + 1;
+		arm_hwb_num = ((didr >> 28) & 0xf) + 1;
 	}
+
+	/* Initize gtp_hwb_addr.  */
+	gtp_hwb_addr = kcalloc(HWB_NUM, sizeof(u32), GFP_KERNEL);
+	if (!gtp_hwb_addr)
+		goto out;
+
+	/* Initize gtp_hwb_ctrl.  */
+	gtp_hwb_ctrl = kcalloc(HWB_NUM, sizeof(u32), GFP_KERNEL);
+	if (!gtp_hwb_ctrl)
+		goto out;
 #endif
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33))
 	/* Initize breakinfo.  */
-	breakinfo = kcalloc(hwb_num, sizeof(struct hw_breakpoint),
+	breakinfo = kcalloc(HWB_NUM, sizeof(struct hw_breakpoint),
 			    GFP_KERNEL);
 	if (!breakinfo)
 		goto out;
 #endif
 	/* Initize gtp_hwb.  */
-	gtp_hwb = kcalloc(hwb_num, sizeof(struct gtp_hwb_s), GFP_KERNEL);
+	gtp_hwb = kcalloc(HWB_NUM, sizeof(struct gtp_hwb_s), GFP_KERNEL);
 	if (!gtp_hwb)
 		goto out;
 #endif
