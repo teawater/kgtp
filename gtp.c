@@ -7375,7 +7375,7 @@ gtp_check_setv(struct gtp_check_s *check, int step, unsigned int pc,
 			} else
 				check->tpe->flags |= GTP_ENTRY_FLAGS_HAVE_PRINTK;
 			break;
-#ifdef CONFIG_X86
+#ifdef GTP_HAVE_HW_BREAKPOINT
 		case GTP_WATCH_STATIC_ID:
 			if (stack == NULL || top > 1) {
 				printk(KERN_WARNING "$watch_static just support set to 0 or 1.\n");
