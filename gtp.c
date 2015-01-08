@@ -813,6 +813,8 @@ arch_gtp_hwb_init(void)
 static int arm_hwb_num;
 #define HWB_NUM	arm_hwb_num
 
+static int core_num_brps = 0;
+
 static u32	*gtp_hwb_addr;
 static u32	*gtp_hwb_ctrl;
 
@@ -896,6 +898,8 @@ static u32 read_wb_reg(int n)
 static void write_wb_reg(int n, u32 val)
 {
 	switch (n) {
+	GEN_WRITE_WB_REG_CASES(ARM_OP2_BVR, val);
+	GEN_WRITE_WB_REG_CASES(ARM_OP2_BCR, val);
 	GEN_WRITE_WB_REG_CASES(ARM_OP2_WVR, val);
 	GEN_WRITE_WB_REG_CASES(ARM_OP2_WCR, val);
 	default:
@@ -991,15 +995,24 @@ gtp_hwb_type_to_arch(int type)
 	return ret;
 }
 
+/* encode_ctrl_reg */
+
+static inline u32
+gtp_encode_ctrl_reg(unsigned int size, unsigned int type)
+{
+	return (1 << 22) |
+	       (size << 5) |
+	       (type << 3) |
+	       (ARM_BREAKPOINT_PRIV << 1) | 1;
+}
+
 static void
 arch_gtp_register_hwb(struct gtp_hwb_s *hwb)
 {
 	int num = hwb->num;
 
-	gtp_hwb_ctrl[num] = (1 << 22) |
-			    (gtp_hwb_size_to_arch(hwb->size) << 5) |
-			    (gtp_hwb_type_to_arch(hwb->type) << 3) |
-			    (ARM_BREAKPOINT_PRIV << 1) | 1;
+	gtp_hwb_ctrl[num] = gtp_encode_ctrl_reg(gtp_hwb_size_to_arch(hwb->size),
+						gtp_hwb_type_to_arch(hwb->type));
 	gtp_hwb_addr[num] = hwb->addr;
 
 	write_wb_reg(ARM_BASE_WVR + num, gtp_hwb_addr[num]);
@@ -1030,6 +1043,14 @@ arch_gtp_hwb_init(void)
 		gtp_hwb_ctrl[i] = 0;
 		gtp_hwb_addr[i] = 0;
 	}
+}
+
+/* Determine number of BRP registers available. */
+static int get_num_brp_resources(void)
+{
+	u32 didr;
+	ARM_DBG_READ(c0, c0, 0, didr);
+	return ((didr >> 24) & 0xf) + 1;
 }
 #endif	/* CONFIG_ARM */
 
@@ -6661,27 +6682,51 @@ gtp_hw_breakpoint_3_handler(struct perf_event *bp, int nmi,
 #else	/* CONFIG_X86 */
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,1,0))
 static void
-gtp_hw_breakpoint_0_handler(struct perf_event *bp, struct perf_sample_data *data,
+gtp_hw_breakpoint_1_handler(struct perf_event *bp, struct perf_sample_data *data,
 			    struct pt_regs *regs)
 #else
 static void
-gtp_hw_breakpoint_0_handler(struct perf_event *bp, int nmi,
+gtp_hw_breakpoint_1_handler(struct perf_event *bp, int nmi,
 			    struct perf_sample_data *data,
 			    struct pt_regs *regs)
 #endif
 {
-	if (HWB_NUM == 1) {
-		gtp_hw_breakpoint_handler(breakinfo[0].num, regs);
-		return;
-	} else {
-		int	num;
+	struct arch_hw_breakpoint *info = counter_arch_bp(bp);
 
-		for (num = 0; num < HWB_NUM; num++) {
-			if (*(this_cpu_ptr(breakinfo[num].pev)) == bp) {
+	info->ctrl.mismatch  = 1;
+	info->ctrl.len	  = ARM_BREAKPOINT_LEN_8;
+	info->ctrl.type	  = ARM_BREAKPOINT_STORE;
+	info->ctrl.privilege = ARM_BREAKPOINT_PRIV;
+	info->ctrl.enabled  = 1;
+	info->trigger		  = gtp_hwb[breakinfo[0].num].addr;
+	info->step_ctrl.enabled = 1;
+ 	arch_gtp_hwb_stop();
+  	write_wb_reg(ARM_BASE_BCR + core_num_brps, gtp_encode_ctrl_reg(ARM_BREAKPOINT_LEN_4, ARM_BREAKPOINT_EXECUTE));
+  	write_wb_reg(ARM_BASE_BVR + core_num_brps, instruction_pointer(regs) & ~0x3);
+	printk (KERN_ERR "%p\n", (void *)instruction_pointer(regs));
+	//bp->overflow_handler = NULL;
+	gtp_hw_breakpoint_handler(breakinfo[0].num, regs);
+	return;
+}
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,1,0))
+static void
+gtp_hw_breakpoint_all_handler(struct perf_event *bp,
+			      struct perf_sample_data *data,
+			      struct pt_regs *regs)
+#else
+static void
+gtp_hw_breakpoint_all_handler(struct perf_event *bp, int nmi,
+			      struct perf_sample_data *data,
+			      struct pt_regs *regs)
+#endif
+{
+	int	num;
+
+	for (num = 0; num < HWB_NUM; num++) {
+		if (*(this_cpu_ptr(breakinfo[num].pev)) == bp) {
 				gtp_hw_breakpoint_handler(breakinfo[num].num,
 							  regs);
-				return;
-			}
+			return;
 		}
 	}
 }
@@ -8926,7 +8971,10 @@ next_list:
 					break;
 				}
 #else
-				triggered = gtp_hw_breakpoint_0_handler;
+				if (HWB_NUM == 1)
+					triggered = gtp_hw_breakpoint_1_handler;
+				else
+					triggered = gtp_hw_breakpoint_all_handler;
 #endif
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,1,0))
 				breakinfo[i].pev = register_wide_hw_breakpoint(&attr, triggered, NULL);
@@ -13827,13 +13875,20 @@ static int __init gtp_init(void)
 	ret = -ENOMEM;
 
 #ifdef CONFIG_ARM
-	/* Initize arm_hwb_num.  */
+	/* Initize arm_hwb_num. (get_num_wrps) */
 	if (get_debug_arch() < ARM_DEBUG_ARCH_V7_1)
 		arm_hwb_num = 1;
 	else {
 		u32 didr;
 		ARM_DBG_READ(c0, c0, 0, didr);
 		arm_hwb_num = ((didr >> 28) & 0xf) + 1;
+	}
+
+	/* Initize core_num_brps. (get_num_brps) */
+	core_num_brps = get_num_brp_resources();
+	if (get_debug_arch() >= ARM_DEBUG_ARCH_V7_ECP14
+	    && get_num_brp_resources() > 1) {
+			core_num_brps -= 1;
 	}
 
 	/* Initize gtp_hwb_addr.  */
