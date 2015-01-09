@@ -813,6 +813,14 @@ arch_gtp_hwb_init(void)
 static int arm_hwb_num;
 #define HWB_NUM	arm_hwb_num
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,5,0))
+#define GTP_ARM_DBG_READ(M, OP2, VAL)	ARM_DBG_READ(c0, M, OP2, VAL)
+#define GTP_ARM_DBG_WRITE(M, OP2, VAL)	ARM_DBG_WRITE(c0, M, OP2, VAL)
+#else
+#define GTP_ARM_DBG_READ(M, OP2, VAL)	ARM_DBG_READ(M, OP2, VAL)
+#define GTP_ARM_DBG_WRITE(M, OP2, VAL)	ARM_DBG_WRITE(M, OP2, VAL)
+#endif
+
 static int core_num_brps = 0;
 
 static u32	*gtp_hwb_addr;
@@ -830,18 +838,18 @@ static u8 get_debug_arch(void)
 		return ARM_DEBUG_ARCH_V6;
 	}
 
-	ARM_DBG_READ(c0, c0, 0, didr);
+	GTP_ARM_DBG_READ(c0, 0, didr);
 	return (didr >> 16) & 0xf;
 }
 
 #define READ_WB_REG_CASE(OP2, M, VAL)			\
 	case ((OP2 << 4) + M):				\
-		ARM_DBG_READ(c0, c ## M, OP2, VAL);	\
+		GTP_ARM_DBG_READ(c ## M, OP2, VAL);	\
 		break
 
 #define WRITE_WB_REG_CASE(OP2, M, VAL)			\
 	case ((OP2 << 4) + M):				\
-		ARM_DBG_WRITE(c0, c ## M, OP2, VAL);	\
+		GTP_ARM_DBG_WRITE(c ## M, OP2, VAL);	\
 		break
 
 #define GEN_READ_WB_REG_CASES(OP2, VAL)		\
@@ -1049,7 +1057,7 @@ arch_gtp_hwb_init(void)
 static int get_num_brp_resources(void)
 {
 	u32 didr;
-	ARM_DBG_READ(c0, c0, 0, didr);
+	GTP_ARM_DBG_READ(c0, 0, didr);
 	return ((didr >> 24) & 0xf) + 1;
 }
 #endif	/* CONFIG_ARM */
@@ -6701,8 +6709,8 @@ gtp_hw_breakpoint_1_handler(struct perf_event *bp, int nmi,
 	info->trigger		  = gtp_hwb[breakinfo[0].num].addr;
 	info->step_ctrl.enabled = 1;
  	arch_gtp_hwb_stop();
-  	write_wb_reg(ARM_BASE_BCR + core_num_brps, gtp_encode_ctrl_reg(ARM_BREAKPOINT_LEN_4, ARM_BREAKPOINT_EXECUTE));
-  	write_wb_reg(ARM_BASE_BVR + core_num_brps, instruction_pointer(regs) & ~0x3);
+  	//write_wb_reg(ARM_BASE_BCR + core_num_brps, gtp_encode_ctrl_reg(ARM_BREAKPOINT_LEN_4, ARM_BREAKPOINT_EXECUTE));
+  	//write_wb_reg(ARM_BASE_BVR + core_num_brps, instruction_pointer(regs) & ~0x3);
 	printk (KERN_ERR "%p\n", (void *)instruction_pointer(regs));
 	//bp->overflow_handler = NULL;
 	gtp_hw_breakpoint_handler(breakinfo[0].num, regs);
@@ -13880,7 +13888,7 @@ static int __init gtp_init(void)
 		arm_hwb_num = 1;
 	else {
 		u32 didr;
-		ARM_DBG_READ(c0, c0, 0, didr);
+		GTP_ARM_DBG_READ(c0, 0, didr);
 		arm_hwb_num = ((didr >> 28) & 0xf) + 1;
 	}
 
