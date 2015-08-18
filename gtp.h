@@ -67,6 +67,20 @@
 #define GTP_PC_NUM		15
 #endif
 
+#ifdef CONFIG_ARM64
+#define ULONGEST		uint64_t
+#define LONGEST			int64_t
+#define CORE_ADDR		unsigned long
+
+#define GTP_REGS_PC(regs)	((regs)->pc)
+
+#define GTP_REG_ASCII_SIZE	544
+#define GTP_REG_BIN_SIZE	272
+
+#define GTP_SP_NUM		31
+#define GTP_PC_NUM		32
+#endif
+
 struct gtp_var;
 
 struct gtp_trace_s {

@@ -200,8 +200,8 @@
 #endif
 #endif
 
-#if !defined CONFIG_X86 && !defined CONFIG_MIPS && !defined CONFIG_ARM
-#error "KGTP support X86_32, X86_64, MIPS and ARM."
+#if !defined CONFIG_X86 && !defined CONFIG_MIPS && !defined CONFIG_ARM && !defined CONFIG_ARM64
+#error "KGTP support X86_32, X86_64, MIPS, ARM and ARM64."
 #endif
 /* ---------------------------------------------------------------- */
 
@@ -3264,6 +3264,65 @@ gtp_regs2bin(struct pt_regs *regs, char *buf)
 #endif
 	memcpy(buf, &regs->uregs[16], 4);
 	buf += 4;
+}
+#endif
+
+#ifdef CONFIG_ARM64
+ULONGEST
+gtp_action_reg_read(struct gtp_trace_s *gts, int num)
+{
+	if (num >= 0 && num <= 30)
+		return gts->regs->regs[num];
+	else if (num == 31)
+		return gts->regs->sp;
+	else if (num == 32)
+		return gts->regs->pc;
+	else if (num == 33)
+		return gts->regs->pstate;
+
+	gts->tpe->reason = gtp_stop_access_wrong_reg;
+	return 0;
+}
+EXPORT_SYMBOL(gtp_action_reg_read);
+
+static void
+gtp_regs2ascii(struct pt_regs *regs, char *buf)
+{
+#ifdef __LITTLE_ENDIAN
+#define SWAB(a)		swab64(a)
+#else
+#define SWAB(a)		(a)
+#endif
+	int	i;
+
+	for (i = 0; i < 31; i++) {
+		sprintf(buf, "%016lx", (unsigned long) SWAB(regs->regs[i]));
+		buf += 16;
+	}
+	sprintf(buf, "%016lx", (unsigned long) SWAB(regs->sp));
+	buf += 16;
+	sprintf(buf, "%016lx", (unsigned long) SWAB(regs->pc));
+	buf += 16;
+	sprintf(buf, "%016lx", (unsigned long) SWAB(regs->pstate));
+	buf += 16;
+#undef SWAB
+}
+
+static void
+gtp_regs2bin(struct pt_regs *regs, char *buf)
+{
+	int	i;
+
+	for (i = 0; i < 31; i++) {
+		memcpy(buf, &regs->regs[i], 8);
+		buf += 8;
+	}
+	memcpy(buf, &regs->sp, 8);
+	buf += 8;
+	memcpy(buf, &regs->pc, 8);
+	buf += 8;
+	memcpy(buf, &regs->pstate, 8);
+	buf += 8;
 }
 #endif
 
