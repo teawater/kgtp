@@ -36,6 +36,19 @@ def format_file(name):
 		tmp += c
 	return tmp
 
+def get_mod_dir_name(name, search_dir):
+	#get mod_dir_name
+	full_name = ""
+	for root, dirs, files in os.walk(search_dir):
+		for afile in files:
+			tmp_file = format_file(afile)
+			if tmp_file == name:
+				full_name = os.path.join(root,afile)
+				break
+		if full_name != "":
+			break
+	return full_name
+
 #Check if the target is available
 if str(gdb.selected_thread()) == "None":
 	raise gdb.error("Please connect to Linux Kernel before use the script.")
@@ -103,16 +116,13 @@ while 1:
 	mod_name += ".ko"
 	mod_name = format_file(mod_name)
 
-	#get mod_dir_name
-	mod_dir_name = ""
-	for root, dirs, files in os.walk(mod_search_dir):
-		for afile in files:
-			tmp_file = format_file(afile)
-			if tmp_file == mod_name:
-				mod_dir_name = os.path.join(root,afile)
-				break
-		if mod_dir_name != "":
-			break
+	mod_dir_name = get_mod_dir_name(mod_name, mod_search_dir);
+
+	#Some Linux distrubutions may use different module name for debug binaries
+	#Give another try for RHEL/CentOS here
+	if mod_dir_name == "":
+		mod_name_debug = mod_name + ".debug"
+		mod_dir_name = get_mod_dir_name(mod_name_debug, mod_search_dir);
 
 	command = " "
 
