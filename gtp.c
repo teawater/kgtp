@@ -10701,11 +10701,25 @@ gtp_modules_traceframe_info_get(void)
 	list_for_each_entry_rcu(mod, &(THIS_MODULE->list), list) {
 		if (__module_address((unsigned long)mod)) {
 			char	buf[70];
+            unsigned long module_core;
+            unsigned long core_text_size;
+            //unsigned long core_size;
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4,4,0))
+/* The 4.5.0 and newer kernel move the module data in `module_layout`
+ * and in kernel 4.4.0 for Ubuntu merges this patch */
+            module_core = (unsigned long)mod->core_layout.base;
+            core_text_size = mod->core_layout.text_size;
+            //core_size = mod->core_layout.size;
+#else
+            module_core = (unsigned long)mod->module_core;
+            core_text_size = mod->core_text_size;
+            //core_size = mod->core_size;
+#endif
 			snprintf(buf, 70,
 				 "<memory start=\"0x%lx\" length=\"0x%lx\"/>\n",
-				 (unsigned long)mod->module_core,
-				 (unsigned long)mod->core_text_size);
+				 (unsigned long)module_core,
+				 (unsigned long)core_text_size);
 			ret = gtp_realloc_str(&grs, buf, 0);
 			if (ret)
 				goto out;
