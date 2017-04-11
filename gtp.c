@@ -669,6 +669,11 @@ gtp_set_debugreg(unsigned long val, int reg)
 }
 #endif
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,19,0)) && !defined(__get_cpu_var)
+/*  see include/asm-generic/percpu.h, linux 3.18.0  */
+#define __get_cpu_var(var) (*this_cpu_ptr(&(var)))
+#endif
+
 static void
 gtp_hwb_stop(void *data)
 {
@@ -2023,7 +2028,7 @@ gtp_task_pt_regs_get_val(struct gtp_trace_s *gts, struct gtp_var *gtv,
 {
 #if defined(CONFIG_X86_32) || defined(CONFIG_ARM) || defined(CONFIG_32BIT)
 	*val = (uint32_t)task_pt_regs(get_current());
-#else 
+#else
 	*val = (uint64_t)task_pt_regs(get_current());
 #endif
 	return 0;
@@ -2100,7 +2105,7 @@ gtp_var_special_add_all(void)
 
 #ifdef GTP_RB
 	var = gtp_var_special_add(GTP_VAR_GTP_RB_DISCARD_PAGE_NUMBER, 0, 0,
-				  "gtp_rb_discard_page_number", 
+				  "gtp_rb_discard_page_number",
 				  &gtp_rb_discard_page_number_hooks);
 	if (IS_ERR(var))
 		return PTR_ERR(var);
@@ -4178,7 +4183,7 @@ gtp_action_memory_read(struct gtp_trace_s *gts, int reg, CORE_ADDR addr,
 #ifdef GTP_FTRACE_RING_BUFFER
 	GTP_FRAME_RINGBUFFER_ALLOC(GTP_FRAME_MEM_SIZE + size);
 #endif
-#if defined(GTP_FRAME_SIMPLE) 
+#if defined(GTP_FRAME_SIMPLE)
 	tmp = gtp_frame_alloc(GTP_FRAME_MEM_SIZE + size);
 	if (!tmp) {
 		gts->tpe->reason = gtp_stop_frame_full;
@@ -5602,7 +5607,7 @@ gtp_tracepoint_stop(void *p)
 	       (int)tpe->num, (void *)(CORE_ADDR)tpe->addr);
 #endif
 
-	
+
 	if (tpe->type == gtp_entry_kprobe) {
 		if (tpe->flags & GTP_ENTRY_FLAGS_IS_KRETPROBE)
 			unregister_kretprobe(&tpe->u.kp.kpret);
@@ -8088,7 +8093,7 @@ gtpframe_pipe_wq_wake_up(unsigned long data)
 	   call wake up inside its handler, the kernel maybe will deadlock.
 	   "tasklet_schedule" is a small function and it can be
 	   very easy controlled to wake up softirqd or not
-	   (preempt_count_add(HARDIRQ_OFFSET) can control it). 
+	   (preempt_count_add(HARDIRQ_OFFSET) can control it).
 	   So KGTP just use it to wake up a task.  */
 	wake_up_interruptible_nr(&gtpframe_pipe_wq, 1);
 }
@@ -8482,7 +8487,7 @@ next_list:
 				 "create perf_event CPU%d %d %d.\n",
 		       (int)pe->cpu, (int)pe->attr.type, (int)pe->attr.config);
 #endif
-		
+
 		/* Get event.  */
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3,1,0)) \
        || (RHEL_RELEASE_CODE >= RHEL_RELEASE_VERSION(6,3))
@@ -10696,11 +10701,25 @@ gtp_modules_traceframe_info_get(void)
 	list_for_each_entry_rcu(mod, &(THIS_MODULE->list), list) {
 		if (__module_address((unsigned long)mod)) {
 			char	buf[70];
+            unsigned long module_core;
+            unsigned long core_text_size;
+            //unsigned long core_size;
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4,4,0))
+/* The 4.5.0 and newer kernel move the module data in `module_layout`
+ * and in kernel 4.4.0 for Ubuntu merges this patch */
+            module_core = (unsigned long)mod->core_layout.base;
+            core_text_size = mod->core_layout.text_size;
+            //core_size = mod->core_layout.size;
+#else
+            module_core = (unsigned long)mod->module_core;
+            core_text_size = mod->core_text_size;
+            //core_size = mod->core_size;
+#endif
 			snprintf(buf, 70,
 				 "<memory start=\"0x%lx\" length=\"0x%lx\"/>\n",
-				 (unsigned long)mod->module_core,
-				 (unsigned long)mod->core_text_size);
+				 (unsigned long)module_core,
+				 (unsigned long)core_text_size);
 			ret = gtp_realloc_str(&grs, buf, 0);
 			if (ret)
 				goto out;
@@ -11341,7 +11360,7 @@ gtp_gdbrsp_qRcmd(char *pkg)
 			/* List all disable address.  */
 			struct list_head	*cur;
 
-			string2hex ("KGTP address disable list:\n", gtp_rw_bufp); 
+			string2hex ("KGTP address disable list:\n", gtp_rw_bufp);
 			gtp_rw_size += strlen(gtp_rw_bufp);
 			gtp_rw_bufp += strlen(gtp_rw_bufp);
 			list_for_each(cur, &gtp_disable_list) {
@@ -11558,7 +11577,7 @@ gtp_gdbrsp_step_reverse(void)
 							: gtp_frame_current_rb->r);
 	if (tmp == NULL)
 		goto end_out;
-	
+
 	if (gtp_replay_step_begin == NULL) {
 		/* Get a new entry but still not have gtp_replay_step_begin.
 		   Need check if this is a entry of current step first.  */
@@ -11632,7 +11651,7 @@ gtp_frame_count_get(void)
 {
 	if (gtp_frame_count == 0)
 		gtp_plugin_mod_get();
-	
+
 	gtp_frame_count++;
 }
 
